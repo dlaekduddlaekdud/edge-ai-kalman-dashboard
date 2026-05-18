@@ -1,300 +1,291 @@
 "use client";
 
 import { ChangeEvent, useState } from "react";
+import { parseKFCSV } from "@/lib/csv-parser";
+import { useKFStore, resolveAlgorithmUpload } from "@/lib/store";
 import {
-  NULLABLE_COLUMNS,
-  parseKFCSV,
-  REQUIRED_COLUMNS,
-  type KFColumn,
-  type KFRow,
-} from "@/lib/csv-parser";
-import { useKFStore } from "@/lib/store";
+  ALL_SCENARIOS,
+  SCENARIO_ALGORITHM_SLOTS,
+  ALGORITHM_LABELS,
+  type AlgorithmId,
+  type ScenarioLabel,
+} from "@/lib/dataset";
 
-const NULLABLE_COLUMN_SET: ReadonlySet<string> = new Set(NULLABLE_COLUMNS);
+// ── 슬롯 배지 색상 ────────────────────────────────────────────────
+const SLOT_COLORS: Record<AlgorithmId, { bg: string; text: string; border: string }> = {
+  raw:    { bg: "#fff7ed", text: "#9a3412", border: "#fed7aa" },
+  fixed:  { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
+  cm:     { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },
+  tinyml: { bg: "#faf5ff", text: "#7e22ce", border: "#e9d5ff" },
+};
 
-const KEY_COLUMNS = [
-  "timestamp_ms",
-  "tof_distance_mm",
-  "encoder_distance_mm",
-  "kf_estimate_mm",
-  "gt_distance_mm",
-  "tof_residual",
-  "R_label",
-  "kalman_gain",
-  "innovation_cov",
-  "scenario_id",
-] as const satisfies readonly KFColumn[];
-
-type PreviewMode = "key" | "all";
-
-function formatErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Unknown CSV parsing error.";
+function SlotBadge({ id }: { id: AlgorithmId }) {
+  const c = SLOT_COLORS[id];
+  return (
+    <span
+      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+      className="rounded-md px-2 py-0.5 text-xs font-semibold"
+    >
+      {ALGORITHM_LABELS[id]}
+    </span>
+  );
 }
 
-function formatCellValue(value: KFRow[KFColumn]): string {
-  return value === null ? "NULL" : String(value);
+interface SlotState {
+  fileName: string | null;
+  rowCount: number | null;
+  error: string | null;
+  loading: boolean;
 }
 
-
-function PreviewCell({ value }: { value: KFRow[KFColumn] }) {
-  if (value === null) {
-    return (
-      <span className="inline-flex rounded-md bg-[#fef3c7] px-2 py-1 text-xs font-semibold text-[#92400e]">
-        NULL
-      </span>
-    );
-  }
-
-  return <span>{formatCellValue(value)}</span>;
+function emptySlot(): SlotState {
+  return { fileName: null, rowCount: null, error: null, loading: false };
 }
 
 export default function UploadPage() {
-  const { rows, fileName, scenarioIds, setData } = useKFStore();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isParsing, setIsParsing] = useState(false);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>("key");
+  const { activeScenario, algorithms, setActiveScenario, setAlgorithmData, removeAlgorithmData } =
+    useKFStore();
 
-  const previewRows = rows.slice(0, 5);
-  const previewColumns = previewMode === "key" ? KEY_COLUMNS : REQUIRED_COLUMNS;
-  const previewModeDescription =
-    previewMode === "key"
-      ? "Showing key columns only. Switch to All columns to inspect the full CSV schema."
-      : "Showing all 18 columns from the README Data Format schema.";
+  const [slotStates, setSlotStates] = useState<Partial<Record<AlgorithmId, SlotState>>>({});
 
-  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  const slots = SCENARIO_ALGORITHM_SLOTS[activeScenario];
+
+  function getSlotState(id: AlgorithmId): SlotState {
+    return slotStates[id] ?? emptySlot();
+  }
+
+  function patchSlotState(id: AlgorithmId, patch: Partial<SlotState>) {
+    setSlotStates((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] ?? emptySlot()), ...patch },
+    }));
+  }
+
+  async function handleFileChange(
+    event: ChangeEvent<HTMLInputElement>,
+    expectedId: AlgorithmId
+  ) {
     const file = event.target.files?.[0];
+    if (!file) return;
 
-    setErrorMessage(null);
+    // 파일명에서 알고리즘/시나리오 파싱
+    const resolved = resolveAlgorithmUpload(file.name);
 
-    if (!file) {
+    if (!resolved) {
+      patchSlotState(expectedId, {
+        error: `파일명에서 알고리즘/시나리오를 파싱할 수 없습니다. (예: E1_run1_${expectedId}.csv)`,
+        loading: false,
+        fileName: null,
+        rowCount: null,
+      });
+      event.target.value = "";
       return;
     }
 
-    setIsParsing(true);
+    if (resolved.algorithmId !== expectedId) {
+      patchSlotState(expectedId, {
+        error: `이 슬롯은 "${ALGORITHM_LABELS[expectedId]}" 파일만 허용합니다. (감지된 알고리즘: ${resolved.algorithmId})`,
+        loading: false,
+        fileName: null,
+        rowCount: null,
+      });
+      event.target.value = "";
+      return;
+    }
+
+    if (resolved.scenario !== activeScenario) {
+      patchSlotState(expectedId, {
+        error: `현재 시나리오(${activeScenario})와 파일의 시나리오(${resolved.scenario})가 다릅니다.`,
+        loading: false,
+        fileName: null,
+        rowCount: null,
+      });
+      event.target.value = "";
+      return;
+    }
+
+    patchSlotState(expectedId, { loading: true, error: null });
 
     try {
       const csvText = await file.text();
-      const parsedRows = parseKFCSV(csvText);
-      setData(parsedRows, file.name);
+      const rows = parseKFCSV(csvText);
+      setAlgorithmData(expectedId, rows, file.name);
+      patchSlotState(expectedId, {
+        loading: false,
+        fileName: file.name,
+        rowCount: rows.length,
+        error: null,
+      });
+      // store에 저장 후 콘솔 확인 (Day 1 검증용)
+      console.log(`[upload] ${expectedId} loaded: ${rows.length} rows`, {
+        scenario: activeScenario,
+        sampleIndex0: rows[0],
+      });
     } catch (error) {
-      setErrorMessage(formatErrorMessage(error));
+      const message = error instanceof Error ? error.message : "CSV 파싱 오류";
+      patchSlotState(expectedId, { loading: false, error: message, fileName: null, rowCount: null });
+      removeAlgorithmData(expectedId);
     } finally {
-      setIsParsing(false);
       event.target.value = "";
     }
   }
 
+  function handleScenarioChange(scenario: ScenarioLabel) {
+    setActiveScenario(scenario);
+    setSlotStates({});
+  }
+
+  // 업로드된 슬롯 수 (행 수 일치 여부 경고용)
+  const uploadedSlots = Object.entries(algorithms).filter(([, v]) => v !== undefined);
+  const rowCounts = uploadedSlots.map(([, v]) => v!.rows.length);
+  const rowMismatch = rowCounts.length > 1 && new Set(rowCounts).size > 1;
+
   return (
     <div className="space-y-6">
+      {/* 헤더 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
           Upload
         </p>
         <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
-          CSV 업로드 및 18컬럼 검증
+          알고리즘별 CSV 업로드
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
-          실험 CSV를 업로드하면 README Data Format 기준의 18개 컬럼을 검증하고,
-          첫 5개 row를 미리보기로 확인합니다. 업로드된 데이터는 전역 상태에
-          저장되어 Dashboard에서 바로 확인할 수 있습니다.
+          시나리오를 선택한 뒤 알고리즘별 슬롯에 CSV를 업로드하세요. 파일명은{" "}
+          <code className="rounded bg-[#f1f5f9] px-1 text-sm">
+            {"{scenario}_run{N}_{algorithm}.csv"}
+          </code>{" "}
+          규칙을 따라야 합니다.
         </p>
       </section>
 
+      {/* 시나리오 선택 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-          <div>
-            <h3 className="text-lg font-semibold text-[#111827]">
-              실험 CSV 선택
-            </h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
-              헤더 row에는 README에 정의된 18개 컬럼이 모두 있어야 합니다.
-              nullable 컬럼의 빈 문자열은 `null`로 처리됩니다. `scenario_id`는
-              숫자 또는 `E0` 같은 시나리오 label을 허용하고, 그 외 잘못된 숫자
-              문자열은 에러로 표시됩니다.
-            </p>
-            <label className="mt-5 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[#94a3b8] bg-[#f8fafc] px-6 py-10 text-center transition hover:border-[#2563eb] hover:bg-[#eff6ff]">
-              <span className="text-sm font-semibold text-[#1d4ed8]">
-                CSV 파일 선택
-              </span>
-              <span className="mt-2 text-sm text-[#64748b]">
-                `.csv` 또는 `text/csv` 파일을 업로드하세요.
-              </span>
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={handleFileChange}
-                className="sr-only"
-              />
-            </label>
-          </div>
+        <h3 className="text-lg font-semibold text-[#111827]">시나리오 선택</h3>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {ALL_SCENARIOS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => handleScenarioChange(s)}
+              className={`rounded-lg border px-5 py-2 text-sm font-semibold transition ${
+                activeScenario === s
+                  ? "border-[#2563eb] bg-[#eff6ff] text-[#1d4ed8]"
+                  : "border-[#d9e0ea] bg-white text-[#475569] hover:border-[#94a3b8]"
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-[#64748b]">
+          {activeScenario === "E0"
+            ? "E0: 합성 데이터 — fixed 슬롯 1개"
+            : `${activeScenario}: 실측 데이터 — raw / fixed / cm / tinyml 4개 슬롯`}
+        </p>
+      </section>
 
-          <aside className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-5">
-            <h3 className="text-sm font-semibold text-[#111827]">
-              Nullable Columns
-            </h3>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {NULLABLE_COLUMNS.map((column) => (
-                <span
-                  key={column}
-                  className="rounded-md border border-[#d9e0ea] bg-white px-2 py-1 text-xs font-medium text-[#475569]"
-                >
-                  {column}
-                </span>
-              ))}
-            </div>
-            <p className="mt-4 text-sm leading-6 text-[#64748b]">
-              미리보기 테이블에서 빈 nullable 값은 노란색 `NULL` 배지로 표시됩니다.
+      {/* 알고리즘 슬롯 */}
+      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
+        <h3 className="text-lg font-semibold text-[#111827]">
+          {activeScenario} 알고리즘 슬롯
+        </h3>
+
+        {rowMismatch && (
+          <div className="mt-4 rounded-lg border border-[#fecaca] bg-[#fff7f7] px-4 py-3">
+            <p className="text-sm font-semibold text-[#dc2626]">행 수 불일치 경고</p>
+            <p className="mt-1 text-sm text-[#7f1d1d]">
+              업로드된 CSV 간 행 수가 다릅니다 (
+              {uploadedSlots
+                .map(([id, v]) => `${id}: ${v!.rows.length}행`)
+                .join(", ")}
+              ). 동일 시나리오·동일 run의 파일인지 확인하세요.
             </p>
-          </aside>
+          </div>
+        )}
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {slots.map((id) => {
+            const slot = getSlotState(id);
+            const uploaded = algorithms[id];
+            const c = SLOT_COLORS[id];
+
+            return (
+              <div
+                key={id}
+                style={{ borderColor: uploaded ? c.border : "#d9e0ea" }}
+                className="rounded-lg border bg-white p-5"
+              >
+                <div className="flex items-center justify-between">
+                  <SlotBadge id={id} />
+                  {uploaded && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeAlgorithmData(id);
+                        patchSlotState(id, emptySlot());
+                      }}
+                      className="text-xs text-[#94a3b8] hover:text-[#64748b]"
+                    >
+                      제거
+                    </button>
+                  )}
+                </div>
+
+                <p className="mt-2 text-xs text-[#64748b]">
+                  예: {activeScenario}_run1_{id}.csv
+                </p>
+
+                {slot.loading ? (
+                  <p className="mt-4 text-sm text-[#64748b]">파싱 중...</p>
+                ) : uploaded ? (
+                  <div className="mt-4 space-y-1">
+                    <p className="text-sm font-semibold text-[#111827]">{uploaded.fileName}</p>
+                    <p className="text-sm text-[#16a34a]">{uploaded.rows.length}행 로드됨</p>
+                  </div>
+                ) : (
+                  <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[#94a3b8] bg-[#f8fafc] px-4 py-6 text-center transition hover:border-[#2563eb] hover:bg-[#eff6ff]">
+                    <span className="text-sm font-semibold text-[#1d4ed8]">CSV 선택</span>
+                    <span className="mt-1 text-xs text-[#94a3b8]">.csv</span>
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      onChange={(e) => handleFileChange(e, id)}
+                      className="sr-only"
+                    />
+                  </label>
+                )}
+
+                {slot.error && (
+                  <p className="mt-3 rounded-md bg-[#fff7f7] px-3 py-2 text-xs text-[#dc2626]">
+                    {slot.error}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      {isParsing ? (
-        <section className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-          <p className="text-sm font-medium text-[#64748b]">
-            CSV를 읽고 18컬럼을 검증하는 중입니다.
+      {/* 업로드 현황 요약 */}
+      {uploadedSlots.length > 0 && (
+        <section className="rounded-lg border border-[#bbf7d0] bg-white p-6 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#16a34a]">
+            업로드 현황
           </p>
-        </section>
-      ) : null}
-
-      {errorMessage ? (
-        <section className="rounded-lg border border-[#fecaca] bg-[#fff7f7] p-5 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#dc2626]">
-            Parse Failed
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-[#991b1b]">
-            CSV 검증에 실패했습니다.
-          </h3>
-          <p className="mt-3 rounded-md bg-white px-4 py-3 font-mono text-sm text-[#7f1d1d]">
-            {errorMessage}
-          </p>
-        </section>
-      ) : null}
-
-      {rows.length > 0 ? (
-        <section className="space-y-5 rounded-lg border border-[#bbf7d0] bg-white p-6 shadow-sm">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#16a34a]">
-              Parse Success
-            </p>
-            <h3 className="mt-2 text-xl font-semibold text-[#111827]">
-              CSV 검증 완료
-            </h3>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-4">
-              <p className="text-sm text-[#64748b]">File name</p>
-              <p className="mt-2 break-all text-base font-semibold text-[#111827]">
-                {fileName}
-              </p>
-            </div>
-            <div className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-4">
-              <p className="text-sm text-[#64748b]">Total rows</p>
-              <p className="mt-2 text-2xl font-semibold text-[#111827]">
-                {rows.length}
-              </p>
-            </div>
-            <div className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-4">
-              <p className="text-sm text-[#64748b]">Scenario IDs</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {scenarioIds.map((scenarioId) => (
-                  <span
-                    key={String(scenarioId)}
-                    className="rounded-md bg-[#dbeafe] px-2 py-1 text-sm font-semibold text-[#1d4ed8]"
-                  >
-                    {scenarioId}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-[#111827]">
-                  Preview: first 5 rows
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[#64748b]">
-                  {previewModeDescription}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {uploadedSlots.map(([id, data]) => (
+              <div key={id} className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-4">
+                <SlotBadge id={id as AlgorithmId} />
+                <p className="mt-2 text-xs text-[#64748b]">{data!.fileName}</p>
+                <p className="mt-1 text-lg font-semibold text-[#111827]">
+                  {data!.rows.length}행
                 </p>
               </div>
-              <div
-                aria-label="Preview column mode"
-                className="inline-flex w-full rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-1 md:w-auto"
-              >
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode("key")}
-                  className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold transition md:flex-none ${
-                    previewMode === "key"
-                      ? "bg-white text-[#1d4ed8] shadow-sm"
-                      : "text-[#64748b] hover:text-[#334155]"
-                  }`}
-                  aria-pressed={previewMode === "key"}
-                >
-                  Key columns
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode("all")}
-                  className={`flex-1 rounded-md px-4 py-2 text-sm font-semibold transition md:flex-none ${
-                    previewMode === "all"
-                      ? "bg-white text-[#1d4ed8] shadow-sm"
-                      : "text-[#64748b] hover:text-[#334155]"
-                  }`}
-                  aria-pressed={previewMode === "all"}
-                >
-                  All columns
-                </button>
-              </div>
-            </div>
-            <div className="mt-3 overflow-x-auto rounded-lg border border-[#d9e0ea]">
-              <table className="min-w-max border-collapse bg-white text-left text-sm">
-                <thead className="bg-[#f1f5f9] text-[#334155]">
-                  <tr>
-                    {previewColumns.map((column) => (
-                      <th
-                        key={column}
-                        scope="col"
-                        className="border-b border-r border-[#d9e0ea] px-3 py-3 font-semibold last:border-r-0"
-                      >
-                        <div className="flex items-center gap-2 whitespace-nowrap">
-                          <span>{column}</span>
-                          {NULLABLE_COLUMN_SET.has(column) ? (
-                            <span className="rounded bg-[#fef3c7] px-1.5 py-0.5 text-[10px] font-semibold text-[#92400e]">
-                              nullable
-                            </span>
-                          ) : null}
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewRows.map((row, rowIndex) => (
-                    <tr key={`${row.timestamp_ms}-${rowIndex}`}>
-                      {previewColumns.map((column) => (
-                        <td
-                          key={column}
-                          className="border-b border-r border-[#e2e8f0] px-3 py-3 text-[#334155] last:border-r-0"
-                        >
-                          <PreviewCell value={row[column]} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            ))}
           </div>
         </section>
-      ) : null}
+      )}
     </div>
   );
 }
