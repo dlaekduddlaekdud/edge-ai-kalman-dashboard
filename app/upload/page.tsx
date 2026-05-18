@@ -1,14 +1,14 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import {
   NULLABLE_COLUMNS,
   parseKFCSV,
   REQUIRED_COLUMNS,
   type KFColumn,
   type KFRow,
-  type ScenarioId,
 } from "@/lib/csv-parser";
+import { useKFStore } from "@/lib/store";
 
 const NULLABLE_COLUMN_SET: ReadonlySet<string> = new Set(NULLABLE_COLUMNS);
 
@@ -39,13 +39,6 @@ function formatCellValue(value: KFRow[KFColumn]): string {
   return value === null ? "NULL" : String(value);
 }
 
-function getScenarioSortValue(scenarioId: ScenarioId): number {
-  if (typeof scenarioId === "number") {
-    return scenarioId;
-  }
-
-  return Number(scenarioId.slice(1));
-}
 
 function PreviewCell({ value }: { value: KFRow[KFColumn] }) {
   if (value === null) {
@@ -60,17 +53,10 @@ function PreviewCell({ value }: { value: KFRow[KFColumn] }) {
 }
 
 export default function UploadPage() {
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [rows, setRows] = useState<KFRow[]>([]);
+  const { rows, fileName, scenarioIds, setData } = useKFStore();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("key");
-
-  const scenarioIds = useMemo(() => {
-    return Array.from(new Set(rows.map((row) => row.scenario_id))).sort(
-      (left, right) => getScenarioSortValue(left) - getScenarioSortValue(right),
-    );
-  }, [rows]);
 
   const previewRows = rows.slice(0, 5);
   const previewColumns = previewMode === "key" ? KEY_COLUMNS : REQUIRED_COLUMNS;
@@ -82,21 +68,18 @@ export default function UploadPage() {
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
-    setRows([]);
     setErrorMessage(null);
 
     if (!file) {
-      setFileName(null);
       return;
     }
 
-    setFileName(file.name);
     setIsParsing(true);
 
     try {
       const csvText = await file.text();
       const parsedRows = parseKFCSV(csvText);
-      setRows(parsedRows);
+      setData(parsedRows, file.name);
     } catch (error) {
       setErrorMessage(formatErrorMessage(error));
     } finally {
@@ -116,8 +99,8 @@ export default function UploadPage() {
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
           실험 CSV를 업로드하면 README Data Format 기준의 18개 컬럼을 검증하고,
-          첫 5개 row를 미리보기로 확인합니다. 업로드 데이터는 아직 dashboard로
-          전달하지 않고 이 페이지 내부 상태로만 관리합니다.
+          첫 5개 row를 미리보기로 확인합니다. 업로드된 데이터는 전역 상태에
+          저장되어 Dashboard에서 바로 확인할 수 있습니다.
         </p>
       </section>
 
