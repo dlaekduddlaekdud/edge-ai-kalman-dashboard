@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { type KFRow, type ScenarioId } from "@/lib/csv-parser";
+import { type KFRow } from "@/lib/csv-parser";
 import {
   type AlgorithmId,
   type AlgorithmData,
@@ -19,33 +19,7 @@ interface AlgorithmStore {
   clearAllAlgorithms: () => void;
 }
 
-interface LegacyKFStore {
-  rows: KFRow[];
-  fileName: string | null;
-  scenarioIds: ScenarioId[];
-  setData: (rows: KFRow[], fileName: string) => void;
-  clearData: () => void;
-}
-
-function extractScenarioIds(rows: KFRow[]): ScenarioId[] {
-  const unique = Array.from(new Set(rows.map((row) => row.scenario_id)));
-  return unique.sort((a, b) => {
-    const toNum = (id: ScenarioId) =>
-      typeof id === "number" ? id : Number(id.slice(1));
-    return toNum(a) - toNum(b);
-  });
-}
-
-export const useKFStore = create<LegacyKFStore & AlgorithmStore>((set) => ({
-  // ── Legacy (단일 CSV 미리보기용) ──────────────────────────────
-  rows: [],
-  fileName: null,
-  scenarioIds: [],
-  setData: (rows, fileName) =>
-    set({ rows, fileName, scenarioIds: extractScenarioIds(rows) }),
-  clearData: () => set({ rows: [], fileName: null, scenarioIds: [] }),
-
-  // ── Multi-algorithm ──────────────────────────────────────────
+export const useKFStore = create<AlgorithmStore>((set) => ({
   activeScenario: "E1",
   algorithms: {},
   setActiveScenario: (scenario) => set({ activeScenario: scenario, algorithms: {} }),
