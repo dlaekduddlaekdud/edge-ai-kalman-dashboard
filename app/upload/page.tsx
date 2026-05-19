@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useState } from "react";
+import Link from "next/link";
 import { parseKFCSV } from "@/lib/csv-parser";
 import { useKFStore, resolveAlgorithmUpload } from "@/lib/store";
 import {
@@ -283,6 +284,14 @@ export default function UploadPage() {
                 </p>
               </div>
             ))}
+          </div>
+          <div className="mt-5 flex justify-end">
+            <Link
+              href="/dashboard"
+              className="rounded-md bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+            >
+              대시보드에서 확인하기 →
+            </Link>
           </div>
         </section>
       )}

@@ -85,8 +85,8 @@ export default function E3View({ algorithms }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
+        <table className="min-w-full text-sm">
           <thead className="bg-[#f8fafc]">
             <tr>
               <th className="px-4 py-3 text-left font-semibold text-[#475569]">알고리즘</th>

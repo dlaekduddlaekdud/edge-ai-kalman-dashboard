@@ -30,7 +30,7 @@ export default function RootLayout({
             <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between">
               <Link href="/" className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
-                  MVP Planning
+                  졸업연구
                 </p>
                 <h1 className="text-xl font-semibold text-[#111827]">
                   Edge AI Kalman Dashboard
