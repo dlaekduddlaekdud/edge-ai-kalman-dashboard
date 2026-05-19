@@ -26,14 +26,17 @@ export default function E1View({ algorithms }: Props) {
 
         try { rmse = calculateRMSE(estimates, gt); } catch { /* empty */ }
         try { mae = calculateMAE(estimates, gt); } catch { /* empty */ }
-        try {
-          if (validPairs.length > 0) {
-            nis = calculateNISPassRate(
-              validPairs.map((p) => p.nu),
-              validPairs.map((p) => p.s),
-            );
-          }
-        } catch { /* empty */ }
+        // NIS는 KF를 적용한 알고리즘에만 유효 (raw는 KF innovation이 없음)
+        if (algoId !== "raw") {
+          try {
+            if (validPairs.length > 0) {
+              nis = calculateNISPassRate(
+                validPairs.map((p) => p.nu),
+                validPairs.map((p) => p.s),
+              );
+            }
+          } catch { /* empty */ }
+        }
 
         return { algoId, rmse, mae, nis };
       });
@@ -64,7 +67,13 @@ export default function E1View({ algorithms }: Props) {
                   {mae != null ? `${mae.toFixed(2)} mm` : "—"}
                 </td>
                 <td className="px-4 py-3 text-right text-[#111827]">
-                  {nis != null ? `${(nis * 100).toFixed(1)}%` : "—"}
+                  {algoId === "raw" ? (
+                    <span className="text-[#94a3b8]">N/A</span>
+                  ) : nis != null ? (
+                    `${(nis * 100).toFixed(1)}%`
+                  ) : (
+                    "—"
+                  )}
                 </td>
               </tr>
             ))}
