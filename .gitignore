@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # system
 .DS_Store
+
+# playwright mcp logs
+.playwright-mcp/
