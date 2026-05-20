@@ -209,14 +209,15 @@ export default function UploadPage() {
           Upload
         </p>
         <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
-          알고리즘별 CSV 업로드
+          실험 CSV 업로드
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
-          시나리오를 선택한 뒤 알고리즘별 슬롯에 CSV를 업로드하세요. 파일명은{" "}
-          <code className="rounded bg-[#f1f5f9] px-1 text-sm">
-            {"{scenario}_run{N}_{algorithm}.csv"}
-          </code>{" "}
-          규칙을 따라야 합니다.
+          시나리오를 선택한 뒤 CSV를 업로드하세요.{" "}
+          <strong className="font-semibold text-[#111827]">E1</strong>은 런별 파일(
+          <code className="rounded bg-[#f1f5f9] px-1 text-sm">E1_run01.csv</code>),{" "}
+          나머지 시나리오는 알고리즘별 파일(
+          <code className="rounded bg-[#f1f5f9] px-1 text-sm">{"{scenario}_run{N}_{algorithm}.csv"}</code>
+          ) 형식을 사용합니다.
         </p>
       </section>
 

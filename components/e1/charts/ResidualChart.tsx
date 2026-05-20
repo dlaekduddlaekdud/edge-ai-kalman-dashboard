@@ -90,6 +90,7 @@ export default function ResidualChart() {
               stroke={E1_ALGORITHM_COLORS.fixed}
               strokeWidth={1.2}
               dot={false}
+              connectNulls={false}
             />
           )}
           {selectedAlgorithms.includes("cm") && (
@@ -100,6 +101,7 @@ export default function ResidualChart() {
               stroke={E1_ALGORITHM_COLORS.cm}
               strokeWidth={1.2}
               dot={false}
+              connectNulls={false}
             />
           )}
         </LineChart>
