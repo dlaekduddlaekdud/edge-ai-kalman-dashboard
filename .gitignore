@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # playwright mcp logs
 .playwright-mcp/
+
+# Claude Code local settings (machine-specific paths)
+.claude/settings.local.json
