@@ -121,7 +121,7 @@ gt[k]      = base − encoder_distance_mm[k]
 - [x] E1_run01.csv 단독 업로드 → Run1 선택 → GT 복원 확인
 - [ ] 정지구간 자동제외 ON/OFF → 메트릭 값 변화 확인
 - [ ] TrimTail = 10 → 마지막 10행 제외 후 메트릭 재계산
-- [ ] 5개 런 전부 업로드 → All 선택 → 평균 메트릭 확인
+- [x] 5개 런 전부 업로드 → All 선택 → 평균 메트릭 확인
 - [ ] CM만 토글 → CM 라인만 차트 표시
 - [x] 25컬럼 CSV → TinyML 토글 disabled 확인
 - [x] `npm run typecheck` + `npm run build` 통과
