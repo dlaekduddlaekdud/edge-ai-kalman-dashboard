@@ -1,86 +1,87 @@
 "use client";
 
-import { useMemo } from "react";
-import { type AlgorithmId, type AlgorithmData, ALGORITHM_LABELS } from "@/lib/dataset";
-import { calculateMAE, calculateNISPassRate, calculateRMSE } from "@/lib/metrics";
-import EstimateLineChart from "@/components/charts/EstimateLineChart";
+import Link from "next/link";
+import { useE1Store } from "@/lib/e1-store";
+import RunSelector from "@/components/e1/RunSelector";
+import AlgorithmToggle from "@/components/e1/AlgorithmToggle";
+import TrimControl from "@/components/e1/TrimControl";
+import E1MetricCards from "@/components/e1/E1MetricCards";
+import PositionChart from "@/components/e1/charts/PositionChart";
+import ResidualChart from "@/components/e1/charts/ResidualChart";
+import CMRChart from "@/components/e1/charts/CMRChart";
+import KalmanGainChart from "@/components/e1/charts/KalmanGainChart";
 
-interface Props {
-  algorithms: Partial<Record<AlgorithmId, AlgorithmData>>;
-}
+export default function E1View() {
+  const { runs } = useE1Store();
+  const hasAnyRun = Object.values(runs).some((r) => r !== undefined);
 
-export default function E1View({ algorithms }: Props) {
-  const metricRows = useMemo(() => {
-    return (Object.entries(algorithms) as [AlgorithmId, AlgorithmData][])
-      .filter(([, v]) => v !== undefined)
-      .map(([algoId, data]) => {
-        const estimates = data.rows.map((r) => r.kf_estimate_mm);
-        const gt = data.rows.map((r) => r.gt_distance_mm);
-        const validPairs = data.rows
-          .map((r) => ({ nu: r.tof_residual, s: r.innovation_cov }))
-          .filter(({ s }) => s > 0);
-
-        let rmse: number | null = null;
-        let mae: number | null = null;
-        let nis: number | null = null;
-
-        try { rmse = calculateRMSE(estimates, gt); } catch { /* empty */ }
-        try { mae = calculateMAE(estimates, gt); } catch { /* empty */ }
-        // NIS는 KF를 적용한 알고리즘에만 유효 (raw는 KF innovation이 없음)
-        if (algoId !== "raw") {
-          try {
-            if (validPairs.length > 0) {
-              nis = calculateNISPassRate(
-                validPairs.map((p) => p.nu),
-                validPairs.map((p) => p.s),
-              );
-            }
-          } catch { /* empty */ }
-        }
-
-        return { algoId, rmse, mae, nis };
-      });
-  }, [algorithms]);
+  if (!hasAnyRun) {
+    return (
+      <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
+        <p className="text-base font-semibold text-[#92400e]">
+          E1 런 CSV가 업로드되지 않았습니다.
+        </p>
+        <p className="mt-2 text-sm text-[#78350f]">
+          업로드 페이지에서 E1_run01.csv ~ E1_run05.csv를 업로드하세요.
+        </p>
+        <Link
+          href="/upload"
+          className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+        >
+          CSV 업로드하러 가기
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
-        <table className="min-w-full text-sm">
-          <thead className="bg-[#f8fafc]">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold text-[#475569]">알고리즘</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">RMSE</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">MAE</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">NIS pass rate</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#e2e8f0]">
-            {metricRows.map(({ algoId, rmse, mae, nis }) => (
-              <tr key={algoId}>
-                <td className="px-4 py-3 font-medium text-[#111827]">
-                  {ALGORITHM_LABELS[algoId]}
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {rmse != null ? `${rmse.toFixed(2)} mm` : "—"}
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {mae != null ? `${mae.toFixed(2)} mm` : "—"}
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {algoId === "raw" ? (
-                    <span className="text-[#94a3b8]">N/A</span>
-                  ) : nis != null ? (
-                    `${(nis * 100).toFixed(1)}%`
-                  ) : (
-                    "—"
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="space-y-6">
+      {/* 컨트롤 패널 */}
+      <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              런 선택
+            </p>
+            <RunSelector />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              알고리즘
+            </p>
+            <AlgorithmToggle />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              트림 설정
+            </p>
+            <TrimControl />
+          </div>
+        </div>
       </div>
-      <EstimateLineChart algorithms={algorithms} title="E1 — KF Estimate vs Ground Truth" />
+
+      {/* 메트릭 카드 4개 */}
+      <E1MetricCards />
+
+      {/* 차트 1: 위치 추정 */}
+      <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+        <PositionChart />
+      </div>
+
+      {/* 차트 2, 3: 잔차 + CM-R */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <ResidualChart />
+        </div>
+        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <CMRChart />
+        </div>
+      </div>
+
+      {/* 차트 4: Kalman Gain */}
+      <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+        <KalmanGainChart />
+      </div>
     </div>
   );
 }
