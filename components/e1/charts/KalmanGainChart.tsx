@@ -96,6 +96,7 @@ export default function KalmanGainChart() {
               stroke={E1_ALGORITHM_COLORS.fixed}
               strokeWidth={1.5}
               dot={false}
+              connectNulls={false}
             />
           )}
           {showCM && (
@@ -106,6 +107,7 @@ export default function KalmanGainChart() {
               stroke={E1_ALGORITHM_COLORS.cm}
               strokeWidth={1.5}
               dot={false}
+              connectNulls={false}
             />
           )}
         </LineChart>

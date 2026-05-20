@@ -109,6 +109,7 @@ export default function PositionChart() {
             strokeWidth={1.5}
             strokeDasharray="4 2"
             dot={false}
+            connectNulls={false}
           />
           {activeAlgos.map((id) => (
             <Line
@@ -119,6 +120,7 @@ export default function PositionChart() {
               stroke={E1_ALGORITHM_COLORS[id]}
               strokeWidth={1.5}
               dot={false}
+              connectNulls={false}
             />
           ))}
         </LineChart>
