@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useKFStore } from "@/lib/store";
+import { useE1Store } from "@/lib/e1-store";
 import {
   ALGORITHM_LABELS,
   type AlgorithmId,
@@ -23,12 +24,17 @@ const SCENARIO_DESCRIPTIONS: Record<ScenarioLabel, string> = {
 
 export default function DashboardPage() {
   const { algorithms, activeScenario } = useKFStore();
+  const { runs: e1Runs } = useE1Store();
 
   const uploadedEntries = (Object.entries(algorithms) as [AlgorithmId, AlgorithmData][]).filter(
     ([, v]) => v !== undefined
   );
+  const hasE1Data = Object.values(e1Runs).some((r) => r !== undefined);
 
-  if (uploadedEntries.length === 0) {
+  // E1은 e1-store 기준, 나머지는 KFStore 기준으로 비어 있으면 업로드 안내
+  const isEmpty = activeScenario === "E1" ? !hasE1Data : uploadedEntries.length === 0;
+
+  if (isEmpty) {
     return (
       <div className="space-y-6">
         <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
@@ -89,7 +95,7 @@ export default function DashboardPage() {
 
       <section>
         {activeScenario === "E1" ? (
-          <E1View algorithms={algorithms} />
+          <E1View />
         ) : activeScenario === "E3" ? (
           <E3View algorithms={algorithms} />
         ) : (
