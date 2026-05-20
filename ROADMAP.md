@@ -63,26 +63,26 @@
 
 #### 신규 파일
 
-- [ ] `lib/e1-csv-parser.ts` — E1Row 타입(25/28컬럼), parseE1CSV(), TinyML 컬럼 감지
-- [ ] `lib/e1-metrics.ts` — GT 복원 (encoder 기반), Moving phase 트림, CM-R 통계
-- [ ] `lib/e1-store.ts` — Zustand run별 슬롯 (run1~run5), activeRun, AlgorithmToggle 상태, TrimControl 상태
+- [x] `lib/e1-csv-parser.ts` — E1Row 타입(25/28컬럼), parseE1CSV(), TinyML 컬럼 감지
+- [x] `lib/e1-metrics.ts` — GT 복원 (encoder 기반), Moving phase 트림, CM-R 통계
+- [x] `lib/e1-store.ts` — Zustand run별 슬롯 (run1~run5), activeRun, AlgorithmToggle 상태, TrimControl 상태
 
 #### 수정 파일
 
-- [ ] `app/upload/page.tsx` — E1 런별 업로드 섹션 추가 (Run1~Run5 슬롯)
-- [ ] `components/views/E1View.tsx` — 전면 교체 (새 컴포넌트 조합)
-- [ ] `app/dashboard/page.tsx` — E1 분기 시 새 E1View 연결
+- [x] `app/upload/page.tsx` — E1 런별 업로드 섹션 추가 (Run1~Run5 슬롯)
+- [x] `components/views/E1View.tsx` — 전면 교체 (새 컴포넌트 조합)
+- [x] `app/dashboard/page.tsx` — E1 분기 시 새 E1View 연결
 
 #### 신규 컴포넌트
 
-- [ ] `components/e1/RunSelector.tsx` — Run1~Run5 탭 + All (업로드된 런만 활성)
-- [ ] `components/e1/AlgorithmToggle.tsx` — Raw/Fixed/CM/TinyML (TinyML: disabled + "수집 후 활성화" 툴팁)
-- [ ] `components/e1/TrimControl.tsx` — 정지구간 자동제외 체크박스 + N행 제외 입력 (기본값 0)
-- [ ] `components/e1/E1MetricCards.tsx` — RMSE / MAE / NIS 95% pass rate / CM-R 평균·범위
-- [ ] `components/e1/charts/PositionChart.tsx` — GT · Raw · Fixed · CM 위치 시계열
-- [ ] `components/e1/charts/ResidualChart.tsx` — fixed_residual · cm_residual
-- [ ] `components/e1/charts/CMRChart.tsx` — cm_R + cm_residual_var 비교
-- [ ] `components/e1/charts/KalmanGainChart.tsx` — fixed_kalman_gain · cm_kalman_gain
+- [x] `components/e1/RunSelector.tsx` — Run1~Run5 탭 + All (업로드된 런만 활성)
+- [x] `components/e1/AlgorithmToggle.tsx` — Raw/Fixed/CM/TinyML (TinyML: disabled + "수집 후 활성화" 툴팁)
+- [x] `components/e1/TrimControl.tsx` — 정지구간 자동제외 체크박스 + N행 제외 입력 (기본값 0)
+- [x] `components/e1/E1MetricCards.tsx` — RMSE / MAE / NIS 95% pass rate / CM-R 평균·범위
+- [x] `components/e1/charts/PositionChart.tsx` — GT · Raw · Fixed · CM 위치 시계열
+- [x] `components/e1/charts/ResidualChart.tsx` — fixed_residual · cm_residual
+- [x] `components/e1/charts/CMRChart.tsx` — cm_R + cm_residual_var 비교
+- [x] `components/e1/charts/KalmanGainChart.tsx` — fixed_kalman_gain · cm_kalman_gain
 
 #### GT 복원 공식
 
@@ -118,13 +118,13 @@ gt[k]      = base − encoder_distance_mm[k]
 
 #### 검증 시나리오
 
-- [ ] E1_run01.csv 단독 업로드 → Run1 선택 → GT 복원 확인
+- [x] E1_run01.csv 단독 업로드 → Run1 선택 → GT 복원 확인
 - [ ] 정지구간 자동제외 ON/OFF → 메트릭 값 변화 확인
 - [ ] TrimTail = 10 → 마지막 10행 제외 후 메트릭 재계산
 - [ ] 5개 런 전부 업로드 → All 선택 → 평균 메트릭 확인
 - [ ] CM만 토글 → CM 라인만 차트 표시
-- [ ] 25컬럼 CSV → TinyML 토글 disabled 확인
-- [ ] `npm run typecheck` + `npm run build` 통과
+- [x] 25컬럼 CSV → TinyML 토글 disabled 확인
+- [x] `npm run typecheck` + `npm run build` 통과
 
 ---
 
