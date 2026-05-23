@@ -1,7 +1,6 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { ChangeEvent, useRef, useState } from "react";
 import Link from "next/link";
 import {
   parseE1CSV,
@@ -13,6 +12,11 @@ import {
 import { useE1Store, type E2Surface } from "@/lib/e1-store";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 import type { ScenarioLabel } from "@/lib/dataset";
+import E1View from "@/components/views/E1View";
+import E2View from "@/components/views/E2View";
+import E3View from "@/components/views/E3View";
+import E4View from "@/components/views/E4View";
+import E5View from "@/components/views/E5View";
 
 // ── 시나리오별 설정 ─────────────────────────────────────────────────────────
 
@@ -84,13 +88,14 @@ function getSchemaLabel(rows: Array<{ tinyml_estimate_mm?: number }>): string {
 // ── 컴포넌트 ────────────────────────────────────────────────────────────────
 
 export default function DataPage() {
-  const router = useRouter();
   const { runs, activeScenario, activeE2Surface, setRun, removeRun, setActiveScenario, setActiveE2Surface } =
     useE1Store();
 
   const [loadState, setLoadState] = useState<LoadState>(emptyLoadState());
   const [runSlotStates, setRunSlotStates] = useState<Partial<Record<RunId, RunSlotState>>>({});
   const [showManual, setShowManual] = useState(false);
+  const [showInlineDashboard, setShowInlineDashboard] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   function patchRunSlotState(id: RunId, patch: Partial<RunSlotState>) {
     setRunSlotStates((prev) => ({
@@ -104,6 +109,7 @@ export default function DataPage() {
     setActiveScenario(scenario);
     setRunSlotStates({});
     setLoadState(emptyLoadState());
+    setShowInlineDashboard(false);
   }
 
   // ── 데이터 자동 로드 ──────────────────────────────────────────────────────
@@ -135,7 +141,11 @@ export default function DataPage() {
       }
 
       setLoadState({ loading: false, done: true, error: null, totalRows, durationMs });
-      router.push("/dashboard");
+      setShowInlineDashboard(true);
+      // 로드 완료 후 대시보드 섹션으로 스크롤
+      setTimeout(() => {
+        dashboardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     } catch (err) {
       const message = err instanceof Error ? err.message : "데이터 로드 실패";
       setLoadState({ loading: false, done: false, error: message, totalRows: null, durationMs: null });
@@ -370,18 +380,65 @@ export default function DataPage() {
             </div>
           )}
 
-          {/* 로드 후 대시보드 이동 */}
-          {hasAnyRun && !loadState.loading && (
+          {/* 로드 완료 후 아래 대시보드로 이동 안내 */}
+          {loadState.done && !showInlineDashboard && (
             <div className="mt-4 flex justify-end">
-              <Link
-                href="/dashboard"
+              <button
+                type="button"
+                onClick={() => {
+                  setShowInlineDashboard(true);
+                  setTimeout(() => dashboardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+                }}
                 className="rounded-md bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
               >
-                대시보드에서 확인하기 →
-              </Link>
+                대시보드 열기 ↓
+              </button>
             </div>
           )}
         </section>
+      )}
+
+      {/* ── 인라인 대시보드 (데이터 로드 성공 후 표시) ── */}
+      {showInlineDashboard && loadState.done && (
+        <div ref={dashboardRef}>
+          {/* 대시보드 헤더 */}
+          <section className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#16a34a]">
+                  분석 결과
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-[#111827]">
+                  {activeCfg?.title ?? activeScenario} 대시보드
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard"
+                  className="rounded-md border border-[#2563eb] px-4 py-2 text-sm font-semibold text-[#2563eb] hover:bg-[#eff6ff]"
+                >
+                  전체 대시보드 →
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowInlineDashboard(false)}
+                  className="rounded-md border border-[#d9e0ea] px-3 py-2 text-sm text-[#64748b] hover:bg-[#f8fafc]"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* 시나리오별 뷰 */}
+          <section className="mt-4">
+            {activeScenario === "E1" ? <E1View /> :
+             activeScenario === "E2" ? <E2View /> :
+             activeScenario === "E3" ? <E3View /> :
+             activeScenario === "E4" ? <E4View /> :
+             activeScenario === "E5" ? <E5View /> : null}
+          </section>
+        </div>
       )}
 
       {/* 고급: 직접 CSV 업로드 (collapse) */}
