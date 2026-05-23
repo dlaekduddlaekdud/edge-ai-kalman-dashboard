@@ -338,6 +338,88 @@ function Table4_10Card() {
   );
 }
 
+// 표 5-3 하드코딩 카드 (3-feature hold-out 위치 RMSE — 항상 표시)
+function Table5_3Card() {
+  const { TABLE_5_3 } = PAPER_RESULTS;
+  return (
+    <div className="rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
+      <div className="border-b border-[#f1f5f9] px-6 py-4">
+        <h3 className="text-base font-semibold text-[#111827]">{TABLE_5_3.title}</h3>
+        <p className="mt-0.5 text-xs text-[#94a3b8]">{TABLE_5_3.description}</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-[#e2e8f0] text-sm">
+          <thead>
+            <tr className="bg-[#f8fafc]">
+              <th className="px-4 py-3 text-left font-semibold text-[#374151]">시나리오</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">N</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#10b981]">Fixed KF</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#2563eb]">CM-AKF</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">TinyML 3f</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">CM vs 3f</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f1f5f9] bg-white">
+            {TABLE_5_3.rows.map((row, idx) => (
+              <tr key={row.scenario} className={idx % 2 === 1 ? "bg-[#fafafa]" : ""}>
+                <td className="px-4 py-3">
+                  <p className="font-medium text-[#111827]">{row.scenario}</p>
+                  {"diverged" in row && row.diverged && (
+                    <p className="text-xs text-[#dc2626]">⚠ 3f 모델 폭발</p>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-right text-[#64748b]">{row.n}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#10b981]">{row.fixed.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#2563eb]">{row.cm.toFixed(2)}</td>
+                <td
+                  className="px-4 py-3 text-right font-mono"
+                  style={{
+                    color: "diverged" in row && row.diverged ? "#dc2626" : "#7c3aed",
+                    fontWeight: "diverged" in row && row.diverged ? 700 : 400,
+                  }}
+                >
+                  {row.tinyml3f.toFixed(2)}
+                  {"diverged" in row && row.diverged && " ★"}
+                </td>
+                <td
+                  className="px-4 py-3 text-right font-mono"
+                  style={{ color: row.cmVs3fDiff > 0 ? "#dc2626" : "#16a34a" }}
+                >
+                  {row.cmVs3fDiff > 0 ? "+" : ""}{row.cmVs3fDiff.toFixed(2)}
+                </td>
+              </tr>
+            ))}
+            {/* 가중 평균 행 */}
+            <tr className="border-t-2 border-[#d9e0ea] bg-[#f8fafc] font-semibold">
+              <td className="px-4 py-3 text-[#111827]">가중 평균 (N={TABLE_5_3.weightedAvg.n})</td>
+              <td className="px-4 py-3 text-right text-[#64748b]">{TABLE_5_3.weightedAvg.n}</td>
+              <td className="px-4 py-3 text-right font-mono text-[#10b981]">
+                {TABLE_5_3.weightedAvg.fixed.toFixed(2)}
+              </td>
+              <td className="px-4 py-3 text-right font-mono text-[#2563eb]">
+                {TABLE_5_3.weightedAvg.cm.toFixed(2)}
+              </td>
+              <td className="px-4 py-3 text-right font-mono text-[#dc2626]">
+                {TABLE_5_3.weightedAvg.tinyml3f.toFixed(2)}
+              </td>
+              <td className="px-4 py-3 text-right font-mono text-[#dc2626]">
+                +{TABLE_5_3.weightedAvg.cmVs3fDiff.toFixed(2)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="space-y-1 px-6 py-3 text-xs text-[#64748b]">
+        <p>단위: mm (위치 RMSE). CM vs 3f: 양수 = 3f가 CM보다 높음 (성능 열화).</p>
+        <p>
+          ⚠ E2 acryl run03: 3-feature 모델이 {TABLE_5_3.rows[2].tinyml3f.toFixed(0)}mm RMSE로 폭발 — signal_rate 제거의 위험성 입증.
+        </p>
+        <p>{TABLE_5_3.note}</p>
+      </div>
+    </div>
+  );
+}
+
 // 메인 페이지
 export default function AblationPage() {
   const { slots, clearAll } = useAblationStore();
@@ -448,6 +530,14 @@ export default function AblationPage() {
           논문 확정 결과 — 표 4-10
         </h3>
         <Table4_10Card />
+      </section>
+
+      {/* 표 5-3 — 3-feature hold-out 위치 RMSE (항상 표시) */}
+      <section>
+        <h3 className="mb-3 text-sm font-semibold text-[#374151]">
+          논문 확정 결과 — 표 5-3
+        </h3>
+        <Table5_3Card />
       </section>
     </div>
   );

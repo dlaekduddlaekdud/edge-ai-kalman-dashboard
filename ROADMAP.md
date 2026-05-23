@@ -224,13 +224,13 @@ gt[k]      = base − encoder_distance_mm[k]
 
 ---
 
-## Phase P2: 시나리오 확장 + 발표 페이지 (2026-05-27-29 예정)
+## Phase P2: 시나리오 확장 + 발표 페이지 (2026-05-23 완료)
 
-- [ ] `components/views/E0View.tsx` — 신규 (합성 데이터 결과 카드)
-- [ ] `components/views/E2View.tsx` — 신규 (표면별 막대 차트 + 표)
-- [ ] `components/views/E4View.tsx` — 신규 (추론 시간 게이지 + drift CV)
-- [ ] `components/views/E5View.tsx` — 신규 (미지 표면 RMSE + anomaly)
-- [ ] `app/dashboard/page.tsx` — E0/E2/E4/E5 분기 추가
-- [ ] `app/realtime/page.tsx` — placeholder → 실제 구현
-- [ ] `app/method/page.tsx` — placeholder → 실제 구현
-- [ ] `app/ablation/page.tsx` — 표 5-3 hold-out RMSE 섹션 추가
+- [x] `components/views/E0View.tsx` — 신규 (합성 결과 카드 + NIS 구간 배너)
+- [x] `components/views/E2View.tsx` — 신규 (표면별 그룹 막대 차트 + 상세 지표 표)
+- [x] `components/views/E4View.tsx` — 신규 (TinyML/루프 게이지 + R̂ drift CV + 마진 카드)
+- [x] `components/views/E5View.tsx` — 신규 (미지 표면 RMSE + Run5 anomaly + 일반화 한계)
+- [x] `app/dashboard/page.tsx` — E0/E2/E4/E5 분기 추가 (E0/E2/E4/E5 CSV 없이도 표시)
+- [x] `app/realtime/page.tsx` — 실시간 성능 게이지 + DWT 변환 + 마진 카드 구현
+- [x] `app/method/page.tsx` — 필터 파라미터 섹션 추가 (NIS 범위, W=20, Tconv 기준, INT8)
+- [x] `app/ablation/page.tsx` — 표 5-3 hold-out 위치 RMSE 섹션 추가

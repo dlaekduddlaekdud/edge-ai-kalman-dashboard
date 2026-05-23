@@ -117,6 +117,61 @@ export default function MethodPage() {
           </p>
         </div>
       </section>
+
+      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-[#111827]">필터 파라미터 및 구현 세부사항</h3>
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-[#f8fafc]">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-[#475569]">항목</th>
+                <th className="px-4 py-3 text-left font-semibold text-[#475569]">값 / 방식</th>
+                <th className="px-4 py-3 text-left font-semibold text-[#475569]">비고</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e2e8f0]">
+              {[
+                {
+                  item: "NIS 기각역",
+                  value: "[0.00098, 5.024]",
+                  note: "chi-square(df=1) 양측 95%",
+                },
+                {
+                  item: "슬라이딩 윈도우 W",
+                  value: "W = 20",
+                  note: "초기 100ms(50Hz) warm-up 제외. 분산 추정 안정성 vs 환경 반응 trade-off.",
+                },
+                {
+                  item: "수렴 시간 Tconv 기준",
+                  value: "슬라이딩 RMSE ≤ 1.1 × RMSEss",
+                  note: "직전 50 frame(1초) 윈도우 기준 최초 충족 시각(ms)",
+                },
+                {
+                  item: "수치 안정화",
+                  value: "log1p / expm1",
+                  note: "R 추정값 폭발 방지. cm_R이 이상 커지는 경우 대비.",
+                },
+                {
+                  item: "INT8 양자화",
+                  value: "TFLite INT8",
+                  note: "STM32F411 MCU 온보드. f32 대비 최대 −23.6% MAE_R (6f 기준).",
+                },
+                {
+                  item: "MCU 클록",
+                  value: "180 MHz",
+                  note: "DWT 사이클 카운터 기반 추론 시간 측정.",
+                },
+              ].map(({ item, value, note }) => (
+                <tr key={item}>
+                  <td className="px-4 py-3 font-medium text-[#111827]">{item}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[#2563eb]">{value}</td>
+                  <td className="px-4 py-3 text-[#64748b]">{note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

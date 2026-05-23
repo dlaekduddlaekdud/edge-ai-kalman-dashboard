@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useE1Store } from "@/lib/e1-store";
 import { type ScenarioLabel } from "@/lib/dataset";
+import E0View from "@/components/views/E0View";
 import E1View from "@/components/views/E1View";
+import E2View from "@/components/views/E2View";
 import E3View from "@/components/views/E3View";
+import E4View from "@/components/views/E4View";
+import E5View from "@/components/views/E5View";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 
 const SCENARIO_DESCRIPTIONS: Record<ScenarioLabel, string> = {
@@ -20,8 +24,9 @@ export default function DashboardPage() {
   const { runs, activeScenario } = useE1Store();
   const hasData = Object.values(runs).some((r) => r !== undefined);
 
-  // E0는 CSV 없이도 표시, 나머지는 데이터가 있어야 함
-  const isEmpty = activeScenario !== "E0" && !hasData;
+  // E0/E2/E4/E5는 CSV 없이도 하드코딩 카드 표시. E1/E3만 데이터 필요.
+  const csvRequired = activeScenario === "E1" || activeScenario === "E3";
+  const isEmpty = csvRequired && !hasData;
 
   if (isEmpty) {
     return (
@@ -75,33 +80,17 @@ export default function DashboardPage() {
       </section>
 
       <section>
-        {activeScenario === "E1" ? (
-          <E1View />
-        ) : activeScenario === "E3" ? (
-          <E3View />
-        ) : activeScenario === "E0" ? (
-          <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] p-6 shadow-sm">
-            <p className="text-base font-semibold text-[#1d4ed8]">E0 — Python 합성 시뮬레이션</p>
-            <p className="mt-2 text-sm text-[#1e40af]">
-              E0는 CSV 업로드 없이 논문 확정 수치 카드로 표시됩니다.
-              (P2에서 E0View 구현 예정)
-            </p>
-          </div>
-        ) : (
+        {activeScenario === "E0" ? <E0View /> :
+         activeScenario === "E1" ? <E1View /> :
+         activeScenario === "E2" ? <E2View /> :
+         activeScenario === "E3" ? <E3View /> :
+         activeScenario === "E4" ? <E4View /> :
+         activeScenario === "E5" ? <E5View /> :
+         (
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
             <p className="text-sm font-semibold text-[#94a3b8]">
-              {activeScenario} — 데이터 없음 / 업로드 후 확인
+              {activeScenario} — 지원하지 않는 시나리오
             </p>
-            <p className="mt-2 text-sm text-[#64748b]">
-              {activeScenario} 전용 뷰는 P2에서 구현 예정입니다.
-              런별 CSV를 업로드한 후 이 화면을 새로 고침하세요.
-            </p>
-            <Link
-              href="/upload"
-              className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
-            >
-              CSV 업로드하러 가기
-            </Link>
           </div>
         )}
       </section>
