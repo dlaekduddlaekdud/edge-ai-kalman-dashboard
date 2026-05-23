@@ -12,8 +12,8 @@ import {
   Cell,
 } from "recharts";
 import { useAblationStore, type AblationSetId } from "@/lib/ablation-store";
-import { parseKFCSV } from "@/lib/csv-parser";
-import { calculateRMSE, calculateMAE } from "@/lib/metrics";
+import { parseKFCSV, type KFRow } from "@/lib/csv-parser";
+import { PAPER_RESULTS } from "@/lib/paper-results";
 
 // W=20 warm-up 제외
 const WARMUP_ROWS = 20;
@@ -28,11 +28,6 @@ const ABLATION_SETS: Record<
       "tof_dist, residual, residual_var, residual_mean, signal_rate, range_status",
     color: "#2563eb",
   },
-  "5f": {
-    label: "5-feature",
-    features: "signal_rate 제외",
-    color: "#16a34a",
-  },
   "3f": {
     label: "3-feature",
     features: "residual, residual_var, residual_mean",
@@ -40,41 +35,36 @@ const ABLATION_SETS: Record<
   },
 };
 
-const SET_ORDER: AblationSetId[] = ["6f", "5f", "3f"];
+const SET_ORDER: AblationSetId[] = ["6f", "3f"];
 
 interface SlotMetrics {
-  rmse: number | null;
-  mae: number | null;
+  maeR: number | null;    // MAE(tinyml_R, cm_R)
+  mapeR: number | null;   // MAPE(tinyml_R, cm_R)
   rowCount: number;
 }
 
-function computeMetrics(rows: import("@/lib/csv-parser").KFRow[]): SlotMetrics {
+function computeMetrics(rows: KFRow[]): SlotMetrics {
   const sliced = rows.slice(WARMUP_ROWS);
-  const rowCount = sliced.length;
+  if (sliced.length === 0) return { maeR: null, mapeR: null, rowCount: rows.length };
 
-  if (rowCount === 0) {
-    return { rmse: null, mae: null, rowCount: rows.length };
-  }
+  // tinyml_R이 없으면 null 반환
+  const hasTinyml = sliced.every((r) => r.tinyml_R !== undefined);
+  if (!hasTinyml) return { maeR: null, mapeR: null, rowCount: rows.length };
 
-  const estimates = sliced.map((r) => r.kf_estimate_mm);
-  const gt = sliced.map((r) => r.gt_distance_mm);
+  const predR = sliced.map((r) => r.tinyml_R!);
+  const labelR = sliced.map((r) => r.cm_R);
 
-  let rmse: number | null = null;
-  let mae: number | null = null;
+  const N = sliced.length;
+  const maeR = predR.reduce((s, v, i) => s + Math.abs(v - labelR[i]), 0) / N;
+  const mapeR =
+    (predR.reduce((s, v, i) => {
+      if (labelR[i] === 0) return s;
+      return s + Math.abs(v - labelR[i]) / Math.abs(labelR[i]);
+    }, 0) /
+      N) *
+    100;
 
-  try {
-    rmse = calculateRMSE(estimates, gt);
-  } catch (err) {
-    console.warn("[ablation] RMSE 계산 실패:", err);
-  }
-
-  try {
-    mae = calculateMAE(estimates, gt);
-  } catch (err) {
-    console.warn("[ablation] MAE 계산 실패:", err);
-  }
-
-  return { rmse, mae, rowCount: rows.length };
+  return { maeR, mapeR, rowCount: rows.length };
 }
 
 // 슬롯 업로드 카드 컴포넌트
@@ -106,7 +96,6 @@ function UploadSlot({ id }: { id: AblationSetId }) {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
-    // input 초기화 (같은 파일 재업로드 허용)
     e.target.value = "";
   }
 
@@ -195,10 +184,10 @@ function MetricsTable({
               Feature Set
             </th>
             <th className="px-4 py-3 text-right font-semibold text-[#374151]">
-              RMSE (mm)
+              MAE_R (mm²)
             </th>
             <th className="px-4 py-3 text-right font-semibold text-[#374151]">
-              MAE (mm)
+              MAPE_R (%)
             </th>
             <th className="px-4 py-3 text-right font-semibold text-[#374151]">
               Row count
@@ -219,10 +208,10 @@ function MetricsTable({
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-[#111827]">
-                  {m.rmse != null ? m.rmse.toFixed(3) : "—"}
+                  {m.maeR != null ? m.maeR.toFixed(2) : "—"}
                 </td>
                 <td className="px-4 py-3 text-right font-mono text-[#111827]">
-                  {m.mae != null ? m.mae.toFixed(3) : "—"}
+                  {m.mapeR != null ? `${m.mapeR.toFixed(1)}%` : "—"}
                 </td>
                 <td className="px-4 py-3 text-right text-[#64748b]">
                   {m.rowCount.toLocaleString()}
@@ -236,16 +225,16 @@ function MetricsTable({
   );
 }
 
-// RMSE BarChart 컴포넌트
-function RmseBarChart({
+// MAE_R 바 차트 컴포넌트
+function MaeRBarChart({
   metrics,
 }: {
   metrics: Partial<Record<AblationSetId, SlotMetrics>>;
 }) {
   const data = SET_ORDER.flatMap((id) => {
     const m = metrics[id];
-    if (!m || m.rmse == null) return [];
-    return [{ name: ABLATION_SETS[id].label, rmse: m.rmse, id }];
+    if (!m || m.maeR == null) return [];
+    return [{ name: ABLATION_SETS[id].label, maeR: m.maeR, id }];
   });
 
   if (data.length === 0) return null;
@@ -267,9 +256,9 @@ function RmseBarChart({
           tick={{ fontSize: 11, fill: "#64748b" }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(v: number) => `${v.toFixed(1)}`}
+          tickFormatter={(v: number) => `${v.toFixed(0)}`}
           label={{
-            value: "RMSE (mm)",
+            value: "MAE_R (mm²)",
             angle: -90,
             position: "insideLeft",
             offset: 4,
@@ -279,7 +268,7 @@ function RmseBarChart({
         <Tooltip
           formatter={(value) => {
             const num = typeof value === "number" ? value : Number(value);
-            return [`${num.toFixed(3)} mm`, "RMSE"];
+            return [`${num.toFixed(2)} mm²`, "MAE_R"];
           }}
           contentStyle={{
             borderRadius: 8,
@@ -287,13 +276,65 @@ function RmseBarChart({
             fontSize: 12,
           }}
         />
-        <Bar dataKey="rmse" radius={[4, 4, 0, 0]}>
+        <Bar dataKey="maeR" radius={[4, 4, 0, 0]}>
           {data.map((entry) => (
             <Cell key={entry.id} fill={ABLATION_SETS[entry.id].color} />
           ))}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+// 표 4-10 하드코딩 카드 (논문 확정값 — 슬롯 업로드 여부와 무관하게 항상 표시)
+function Table4_10Card() {
+  const { TABLE_4_10 } = PAPER_RESULTS;
+  return (
+    <div className="rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
+      <div className="border-b border-[#f1f5f9] px-6 py-4">
+        <h3 className="text-base font-semibold text-[#111827]">{TABLE_4_10.title}</h3>
+        <p className="mt-0.5 text-xs text-[#94a3b8]">{TABLE_4_10.description}</p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-[#e2e8f0] text-sm">
+          <thead>
+            <tr className="bg-[#f8fafc]">
+              <th className="px-4 py-3 text-left font-semibold text-[#374151]">Feature Set</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">Params</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">TFLite (KB)</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">MAE_R f32 (mm²)</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">MAPE_R f32 (%)</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">MAE_R int8 (mm²)</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#374151]">int8 Delta (%)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#f1f5f9] bg-white">
+            {TABLE_4_10.rows.map((row) => (
+              <tr key={row.featureSet} className="hover:bg-[#f8fafc]">
+                <td className="px-4 py-3">
+                  <p className="font-medium text-[#111827]">{row.featureSet}</p>
+                  <p className="text-xs text-[#94a3b8]">{row.features}</p>
+                </td>
+                <td className="px-4 py-3 text-right font-mono text-[#111827]">{row.params}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#111827]">{row.tfliteKB.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#111827]">{row.maeR_f32.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#111827]">{row.mapeR_f32.toFixed(1)}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#111827]">{row.maeR_int8.toFixed(2)}</td>
+                <td
+                  className="px-4 py-3 text-right font-mono"
+                  style={{ color: row.int8DeltaPct < 0 ? "#16a34a" : "#dc2626" }}
+                >
+                  {row.int8DeltaPct > 0 ? "+" : ""}{row.int8DeltaPct.toFixed(1)}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-6 py-3 text-xs text-[#64748b]">
+        6-feature: maeR 절댓값은 낮지만 mapeR은 높음 (cm_R 스케일 의존). 3-feature ablation 시 maeR 8.5% 증가, 파라미터 19% 감소.
+      </div>
+    </div>
   );
 }
 
@@ -325,15 +366,15 @@ export default function AblationPage() {
           Feature set 비교
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
-          논문 기준: TinyML-AKF 입력 feature를 6개 / 5개(signal_rate 제외) /
-          3개(잔차 통계만) 로 줄였을 때의 RMSE·MAE 변화를 비교합니다. 각
-          feature set으로 훈련된 모델의 추론 결과 CSV를 슬롯에 업로드하세요.
+          논문 기준: TinyML-AKF 입력 feature를 6개(메인) / 3개(잔차 통계만)로
+          줄였을 때의 R 라벨 추적도(MAE_R/MAPE_R) 변화를 비교합니다.
+          각 feature set으로 훈련된 모델의 추론 결과 CSV(28컬럼)를 슬롯에 업로드하세요.
         </p>
 
         {/* 논문 기준 배너 */}
         <div className="mt-4 rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-4 py-3 text-xs text-[#1e40af]">
-          W=20 warm-up 구간(초기 100 ms) 제외 후 계산 · 메트릭 기준: 논문
-          4.3.1 RMSE = sqrt(1/N · sum((x_hat - x_gt)^2))
+          W=20 warm-up 구간(초기 100 ms) 제외 후 계산 ·
+          메트릭 기준: MAE_R = mean(|tinyml_R − cm_R|), MAPE_R = mean(|tinyml_R − cm_R| / cm_R) × 100
         </div>
       </section>
 
@@ -342,7 +383,7 @@ export default function AblationPage() {
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-[#374151]">
             CSV 업로드{" "}
-            <span className="ml-1 text-[#94a3b8]">({filledCount}/3)</span>
+            <span className="ml-1 text-[#94a3b8]">({filledCount}/2)</span>
           </h3>
           {hasAnySlot && (
             <button
@@ -353,7 +394,7 @@ export default function AblationPage() {
             </button>
           )}
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           {SET_ORDER.map((id) => (
             <UploadSlot key={id} id={id} />
           ))}
@@ -367,25 +408,25 @@ export default function AblationPage() {
           <div className="rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
             <div className="border-b border-[#f1f5f9] px-6 py-4">
               <h3 className="text-base font-semibold text-[#111827]">
-                RMSE / MAE 비교
+                MAE_R / MAPE_R 비교
               </h3>
               <p className="mt-0.5 text-xs text-[#94a3b8]">
-                warm-up {WARMUP_ROWS}행 제외 기준
+                warm-up {WARMUP_ROWS}행 제외 기준 · tinyml_R vs cm_R 라벨 추적도
               </p>
             </div>
             <MetricsTable metrics={metrics} />
           </div>
 
-          {/* RMSE 바 차트 */}
+          {/* MAE_R 바 차트 */}
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
             <h3 className="text-base font-semibold text-[#111827]">
-              RMSE 비교 (막대 그래프)
+              MAE_R 비교 (막대 그래프)
             </h3>
             <p className="mt-0.5 text-xs text-[#94a3b8]">
               데이터가 있는 슬롯만 표시됩니다.
             </p>
             <div className="mt-4">
-              <RmseBarChart metrics={metrics} />
+              <MaeRBarChart metrics={metrics} />
             </div>
           </div>
         </section>
@@ -396,10 +437,18 @@ export default function AblationPage() {
             CSV를 업로드하면 비교 결과가 표시됩니다
           </p>
           <p className="mt-2 text-sm text-[#cbd5e1]">
-            슬롯에 각 feature set 추론 결과 CSV를 업로드하세요.
+            슬롯에 각 feature set 추론 결과 CSV(28컬럼)를 업로드하세요.
           </p>
         </section>
       )}
+
+      {/* 표 4-10 — 논문 확정값 (항상 표시) */}
+      <section>
+        <h3 className="mb-3 text-sm font-semibold text-[#374151]">
+          논문 확정 결과 — 표 4-10
+        </h3>
+        <Table4_10Card />
+      </section>
     </div>
   );
 }

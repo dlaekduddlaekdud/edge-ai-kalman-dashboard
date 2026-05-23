@@ -1,43 +1,45 @@
 import Papa from "papaparse";
 
-export const REQUIRED_COLUMNS = [
-  "timestamp_ms",
-  "tof_distance_mm",
-  "tof_signal_rate",
-  "tof_range_status",
-  "us_distance_mm",
-  "encoder_distance_mm",
-  "encoder_speed_mms",
-  "kf_estimate_mm",
-  "tof_residual",
-  "tof_residual_var",
-  "tof_residual_mean",
-  "sensor_disagree",
-  "tof_meas_rate",
-  "gt_distance_mm",
-  "R_label",
-  "kalman_gain",
-  "innovation_cov",
-  "scenario_id",
+// 공통 12컬럼
+const COMMON_COLUMNS = [
+  "seq", "timestamp_ms", "tof_distance_mm", "tof_signal_rate", "tof_range_status",
+  "us_distance_mm", "encoder_distance_mm", "encoder_speed_mms", "sensor_disagree",
+  "tof_meas_rate", "gt_distance_mm", "scenario_id",
 ] as const;
 
-export const NULLABLE_COLUMNS = [
-  "tof_signal_rate",
-  "tof_range_status",
-  "us_distance_mm",
-  "tof_residual_var",
-  "tof_residual_mean",
-  "sensor_disagree",
-  "tof_meas_rate",
-  "R_label",
+// Fixed KF 6컬럼
+const FIXED_KF_COLUMNS = [
+  "fixed_estimate_mm", "fixed_residual", "fixed_residual_var",
+  "fixed_residual_mean", "fixed_kalman_gain", "fixed_innovation_cov",
 ] as const;
 
-export type KFColumn = (typeof REQUIRED_COLUMNS)[number];
-type NullableColumn = (typeof NULLABLE_COLUMNS)[number];
-type RequiredNumberColumn = Exclude<KFColumn, NullableColumn | "scenario_id">;
+// CM-AKF 7컬럼
+const CM_AKF_COLUMNS = [
+  "cm_estimate_mm", "cm_residual", "cm_residual_var", "cm_residual_mean",
+  "cm_kalman_gain", "cm_innovation_cov", "cm_R",
+] as const;
+
+// TinyML 3컬럼 (2차 측정에만 존재)
+const TINYML_COLUMNS = [
+  "tinyml_estimate_mm", "tinyml_R", "tinyml_infer_us",
+] as const;
+
+export const REQUIRED_COLUMNS_25 = [
+  ...COMMON_COLUMNS, ...FIXED_KF_COLUMNS, ...CM_AKF_COLUMNS,
+] as const;
+
+// nullable 컬럼 집합
+const NULLABLE_COLUMN_SET = new Set<string>([
+  "tof_signal_rate", "tof_range_status", "us_distance_mm", "sensor_disagree", "tof_meas_rate",
+  "fixed_residual_var", "fixed_residual_mean",
+  "cm_residual_var", "cm_residual_mean",
+]);
+
 export type ScenarioId = number | `E${number}`;
 
 export interface KFRow {
+  // 공통 12
+  seq: number;
   timestamp_ms: number;
   tof_distance_mm: number;
   tof_signal_rate: number | null;
@@ -45,217 +47,151 @@ export interface KFRow {
   us_distance_mm: number | null;
   encoder_distance_mm: number;
   encoder_speed_mms: number;
-  kf_estimate_mm: number;
-  tof_residual: number;
-  tof_residual_var: number | null;
-  tof_residual_mean: number | null;
   sensor_disagree: number | null;
   tof_meas_rate: number | null;
   gt_distance_mm: number;
-  R_label: number | null;
-  kalman_gain: number;
-  innovation_cov: number;
   scenario_id: ScenarioId;
+  // Fixed KF 6
+  fixed_estimate_mm: number;
+  fixed_residual: number;
+  fixed_residual_var: number | null;
+  fixed_residual_mean: number | null;
+  fixed_kalman_gain: number;
+  fixed_innovation_cov: number;
+  // CM-AKF 7
+  cm_estimate_mm: number;
+  cm_residual: number;
+  cm_residual_var: number | null;
+  cm_residual_mean: number | null;
+  cm_kalman_gain: number;
+  cm_innovation_cov: number;
+  cm_R: number;
+  // TinyML 3 (optional — 1차 측정 CSV에는 없음)
+  tinyml_estimate_mm?: number;
+  tinyml_R?: number;
+  tinyml_infer_us?: number;
 }
 
-type RawKFRow = Record<string, string | undefined>;
+type RawRow = Record<string, string | undefined>;
 
-const NULLABLE_COLUMN_SET: ReadonlySet<KFColumn> = new Set(NULLABLE_COLUMNS);
-
-function isNullableColumn(column: KFColumn): column is NullableColumn {
-  return NULLABLE_COLUMN_SET.has(column);
+function normalizeHeader(h: string): string {
+  return h.trim();
 }
 
-function normalizeHeader(value: string): string {
-  return value.trim();
+/** 28컬럼 TinyML 헤더가 모두 있는지 확인 */
+export function hasTinyMLColumns(headers: string[]): boolean {
+  return TINYML_COLUMNS.every((col) => headers.includes(col));
 }
 
-function assertCSVText(csvText: string): void {
-  if (typeof csvText !== "string") {
-    throw new TypeError("csvText must be a string.");
-  }
-
-  if (csvText.trim().length === 0) {
-    throw new RangeError("CSV text must not be empty.");
-  }
-}
-
-function validateHeaders(fields: readonly string[] | undefined): void {
-  if (!fields || fields.length === 0) {
-    throw new RangeError("CSV header row is required.");
-  }
-
-  const normalizedFields = fields.map(normalizeHeader);
-  const missingColumns = REQUIRED_COLUMNS.filter(
-    (column) => !normalizedFields.includes(column),
-  );
-
-  if (missingColumns.length > 0) {
-    throw new RangeError(
-      `CSV header is missing required column(s): ${missingColumns.join(", ")}.`,
-    );
-  }
-}
-
-function parseNumberCell(
-  row: RawKFRow,
-  column: KFColumn,
-  rowNumber: number,
-): number | null {
-  const rawValue = row[column];
-  const label = `row ${rowNumber}, column "${column}"`;
-
-  if (rawValue === undefined) {
-    throw new RangeError(`${label} is missing.`);
-  }
-
-  const trimmedValue = rawValue.trim();
-
-  if (trimmedValue.length === 0) {
-    if (isNullableColumn(column)) {
-      return null;
-    }
-
+function parseCell(row: RawRow, col: string, rowNum: number): number | null {
+  const raw = row[col];
+  const label = `row ${rowNum}, column "${col}"`;
+  if (raw === undefined) throw new RangeError(`${label} is missing.`);
+  const trimmed = raw.trim();
+  if (trimmed === "") {
+    if (NULLABLE_COLUMN_SET.has(col)) return null;
     throw new TypeError(`${label} must be a number and cannot be empty.`);
   }
-
-  const numericValue = Number(trimmedValue);
-
-  if (!Number.isFinite(numericValue)) {
-    throw new TypeError(
-      `${label} must be a finite number. Received "${rawValue}".`,
-    );
-  }
-
-  return numericValue;
+  const num = Number(trimmed);
+  if (!Number.isFinite(num))
+    throw new TypeError(`${label} must be a finite number. Received "${raw}".`);
+  return num;
 }
 
-function parseRequiredNumberCell(
-  row: RawKFRow,
-  column: RequiredNumberColumn,
-  rowNumber: number,
-): number {
-  const value = parseNumberCell(row, column, rowNumber);
-
-  if (value === null) {
-    throw new TypeError(
-      `row ${rowNumber}, column "${column}" must be a number and cannot be empty.`,
-    );
-  }
-
-  return value;
+function parseRequired(row: RawRow, col: string, rowNum: number): number {
+  const val = parseCell(row, col, rowNum);
+  if (val === null)
+    throw new TypeError(`row ${rowNum}, column "${col}" cannot be empty.`);
+  return val;
 }
 
-function parseNullableNumberCell(
-  row: RawKFRow,
-  column: NullableColumn,
-  rowNumber: number,
-): number | null {
-  return parseNumberCell(row, column, rowNumber);
-}
-
-function parseScenarioIdCell(row: RawKFRow, rowNumber: number): ScenarioId {
-  const column = "scenario_id";
-  const rawValue = row[column];
-  const label = `row ${rowNumber}, column "${column}"`;
-
-  if (rawValue === undefined) {
-    throw new RangeError(`${label} is missing.`);
-  }
-
-  const trimmedValue = rawValue.trim();
-
-  if (trimmedValue.length === 0) {
-    throw new TypeError(`${label} must not be empty.`);
-  }
-
-  const numericValue = Number(trimmedValue);
-
-  if (Number.isFinite(numericValue)) {
-    return numericValue;
-  }
-
-  if (/^E\d+$/i.test(trimmedValue)) {
-    return trimmedValue.toUpperCase() as ScenarioId;
-  }
-
+function parseScenarioId(row: RawRow, rowNum: number): ScenarioId {
+  const raw = row["scenario_id"];
+  const label = `row ${rowNum}, column "scenario_id"`;
+  if (raw === undefined) throw new RangeError(`${label} is missing.`);
+  const trimmed = raw.trim();
+  if (trimmed === "") throw new TypeError(`${label} must not be empty.`);
+  const num = Number(trimmed);
+  if (Number.isFinite(num)) return num;
+  if (/^E\d+$/i.test(trimmed)) return trimmed.toUpperCase() as ScenarioId;
   throw new TypeError(
-    `${label} must be a finite number or scenario label like "E0". Received "${rawValue}".`,
+    `${label} must be a finite number or scenario label like "E0". Received "${raw}".`,
   );
-}
-
-function parseRawRow(row: RawKFRow, rowNumber: number): KFRow {
-  return {
-    timestamp_ms: parseRequiredNumberCell(row, "timestamp_ms", rowNumber),
-    tof_distance_mm: parseRequiredNumberCell(row, "tof_distance_mm", rowNumber),
-    tof_signal_rate: parseNullableNumberCell(row, "tof_signal_rate", rowNumber),
-    tof_range_status: parseNullableNumberCell(row, "tof_range_status", rowNumber),
-    us_distance_mm: parseNullableNumberCell(row, "us_distance_mm", rowNumber),
-    encoder_distance_mm: parseRequiredNumberCell(
-      row,
-      "encoder_distance_mm",
-      rowNumber,
-    ),
-    encoder_speed_mms: parseRequiredNumberCell(
-      row,
-      "encoder_speed_mms",
-      rowNumber,
-    ),
-    kf_estimate_mm: parseRequiredNumberCell(row, "kf_estimate_mm", rowNumber),
-    tof_residual: parseRequiredNumberCell(row, "tof_residual", rowNumber),
-    tof_residual_var: parseNullableNumberCell(row, "tof_residual_var", rowNumber),
-    tof_residual_mean: parseNullableNumberCell(
-      row,
-      "tof_residual_mean",
-      rowNumber,
-    ),
-    sensor_disagree: parseNullableNumberCell(row, "sensor_disagree", rowNumber),
-    tof_meas_rate: parseNullableNumberCell(row, "tof_meas_rate", rowNumber),
-    gt_distance_mm: parseRequiredNumberCell(row, "gt_distance_mm", rowNumber),
-    R_label: parseNullableNumberCell(row, "R_label", rowNumber),
-    kalman_gain: parseRequiredNumberCell(row, "kalman_gain", rowNumber),
-    innovation_cov: parseRequiredNumberCell(row, "innovation_cov", rowNumber),
-    scenario_id: parseScenarioIdCell(row, rowNumber),
-  };
 }
 
 /**
- * README Data Format 기준 CSV 18컬럼을 파싱하고 KFRow 배열로 변환한다.
- *
- * 필수 헤더가 누락되면 에러를 던진다. 모든 셀은 유한한 숫자로 변환되어야 하며,
- * nullable 컬럼만 빈 문자열을 null로 허용한다. `scenario_id`는 숫자 또는
- * E0, E1 같은 시나리오 label을 허용한다. 가능한 경우 에러 메시지에 CSV row
- * 번호와 column 이름을 포함한다.
+ * 논문 최종 스키마 기준 CSV 파싱 (25컬럼 또는 28컬럼).
+ * 25컬럼 미만(REQUIRED_COLUMNS_25 기준) 또는 필수 컬럼 누락 시 RangeError.
+ * 28컬럼(hasTinyMLColumns)이면 TinyML 3컬럼도 파싱.
  */
 export function parseKFCSV(csvText: string): KFRow[] {
-  assertCSVText(csvText);
+  if (typeof csvText !== "string" || csvText.trim().length === 0) {
+    throw new RangeError("CSV text must not be empty.");
+  }
 
-  const result = Papa.parse<RawKFRow>(csvText, {
+  const result = Papa.parse<RawRow>(csvText, {
     header: true,
     skipEmptyLines: "greedy",
     transformHeader: normalizeHeader,
     dynamicTyping: false,
   });
 
-  const fatalParseError = result.errors.find(
-    (error) => error.code !== "UndetectableDelimiter",
-  );
-
-  if (fatalParseError) {
-    const firstError = fatalParseError;
-    const rowSuffix =
-      typeof firstError.row === "number" ? ` at row ${firstError.row + 2}` : "";
-
-    throw new SyntaxError(
-      `CSV parse error${rowSuffix}: ${firstError.message}`,
-    );
+  const fatalError = result.errors.find((e) => e.code !== "UndetectableDelimiter");
+  if (fatalError) {
+    const suffix = typeof fatalError.row === "number" ? ` at row ${fatalError.row + 2}` : "";
+    throw new SyntaxError(`CSV parse error${suffix}: ${fatalError.message}`);
   }
 
-  validateHeaders(result.meta.fields);
+  const headers = result.meta.fields ?? [];
+  const missingCols = REQUIRED_COLUMNS_25.filter((col) => !headers.includes(col));
+  if (missingCols.length > 0) {
+    throw new RangeError(
+      `CSV header is missing required column(s): ${missingCols.join(", ")}.`,
+    );
+  }
 
   if (result.data.length === 0) {
     throw new RangeError("CSV must contain at least one data row.");
   }
 
-  return result.data.map((row, index) => parseRawRow(row, index + 2));
+  const withTinyML = hasTinyMLColumns(headers);
+
+  return result.data.map((row, i) => {
+    const rowNum = i + 2;
+    const parsed: KFRow = {
+      seq: parseRequired(row, "seq", rowNum),
+      timestamp_ms: parseRequired(row, "timestamp_ms", rowNum),
+      tof_distance_mm: parseRequired(row, "tof_distance_mm", rowNum),
+      tof_signal_rate: parseCell(row, "tof_signal_rate", rowNum),
+      tof_range_status: parseCell(row, "tof_range_status", rowNum),
+      us_distance_mm: parseCell(row, "us_distance_mm", rowNum),
+      encoder_distance_mm: parseRequired(row, "encoder_distance_mm", rowNum),
+      encoder_speed_mms: parseRequired(row, "encoder_speed_mms", rowNum),
+      sensor_disagree: parseCell(row, "sensor_disagree", rowNum),
+      tof_meas_rate: parseCell(row, "tof_meas_rate", rowNum),
+      gt_distance_mm: parseRequired(row, "gt_distance_mm", rowNum),
+      scenario_id: parseScenarioId(row, rowNum),
+      fixed_estimate_mm: parseRequired(row, "fixed_estimate_mm", rowNum),
+      fixed_residual: parseRequired(row, "fixed_residual", rowNum),
+      fixed_residual_var: parseCell(row, "fixed_residual_var", rowNum),
+      fixed_residual_mean: parseCell(row, "fixed_residual_mean", rowNum),
+      fixed_kalman_gain: parseRequired(row, "fixed_kalman_gain", rowNum),
+      fixed_innovation_cov: parseRequired(row, "fixed_innovation_cov", rowNum),
+      cm_estimate_mm: parseRequired(row, "cm_estimate_mm", rowNum),
+      cm_residual: parseRequired(row, "cm_residual", rowNum),
+      cm_residual_var: parseCell(row, "cm_residual_var", rowNum),
+      cm_residual_mean: parseCell(row, "cm_residual_mean", rowNum),
+      cm_kalman_gain: parseRequired(row, "cm_kalman_gain", rowNum),
+      cm_innovation_cov: parseRequired(row, "cm_innovation_cov", rowNum),
+      cm_R: parseRequired(row, "cm_R", rowNum),
+    };
+
+    if (withTinyML) {
+      parsed.tinyml_estimate_mm = parseRequired(row, "tinyml_estimate_mm", rowNum);
+      parsed.tinyml_R = parseRequired(row, "tinyml_R", rowNum);
+      parsed.tinyml_infer_us = parseRequired(row, "tinyml_infer_us", rowNum);
+    }
+
+    return parsed;
+  });
 }

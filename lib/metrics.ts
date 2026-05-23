@@ -34,16 +34,6 @@ function validateFiniteNumberArray(values: readonly number[], name: string): voi
   });
 }
 
-function validateNonNegativeNumberArray(values: readonly number[], name: string): void {
-  validateFiniteNumberArray(values, name);
-
-  values.forEach((value, index) => {
-    if (value < 0) {
-      throw new RangeError(`${name}[${index}] must be greater than or equal to 0.`);
-    }
-  });
-}
-
 /**
  * README / 논문 4.3.1 기준 RMSE.
  *
@@ -124,45 +114,94 @@ export function calculateNISPassRate(
 }
 
 /**
- * README / 논문 4.3.1 기준 R estimation RMSE.
- *
- * Definition: sqrt(1/N * sum((R_hat - R_label)^2)).
- * `rEst`와 `rLabel`은 같은 길이의 유한한 숫자 배열이어야 하며,
- * null, undefined, NaN, Infinity는 입력 오류로 처리한다.
+ * 논문 4.3.1 기준 RMSEss (steady-state RMSE).
+ * 측정 후반 50 frame (1초 @ 50Hz) 기준 RMSE.
+ * 행이 50개 미만이면 전체로 계산.
  */
-export function calculateRRMSE(
-  rEst: readonly number[],
-  rLabel: readonly number[],
+export function calculateRMSEss(
+  estimates: readonly number[],
+  gt: readonly number[],
 ): number {
-  assertEqualLength(rEst, rLabel, "rEst", "rLabel");
-  validateFiniteNumberArray(rEst, "rEst");
-  validateFiniteNumberArray(rLabel, "rLabel");
-
-  return calculateRMSE(rEst, rLabel);
+  const SS_FRAMES = 50;
+  if (estimates.length < SS_FRAMES) {
+    return calculateRMSE(estimates, gt);
+  }
+  const ssEst = estimates.slice(-SS_FRAMES);
+  const ssGt = gt.slice(-SS_FRAMES);
+  return calculateRMSE(ssEst, ssGt);
 }
 
 /**
- * README / 논문 4.3.1 기준 convergence time.
- *
- * Definition: RMSE <= 1.1 * RMSE_ss가 되는 최초 시점.
- * 현재 함수는 별도 timestamp 입력 없이 `rmseTS` 배열에서 조건을 처음 만족하는
- * 0-based index를 반환한다. 조건을 만족하는 값이 없으면 null을 반환한다.
- * `rmseTS`는 0 이상의 유한한 숫자 배열이어야 하며, `ssRmse`도 0 이상의
- * 유한한 숫자여야 한다. null, undefined, NaN, Infinity는 입력 오류로 처리한다.
+ * 논문 4.3.1 기준 Tconv (수렴 시간).
+ * 직전 50 frame 슬라이딩 윈도우 RMSE가 1.1 × RMSEss 이하로 최초 진입하는 시각(ms 단위).
+ * 50 frame 미만이거나 조건 미충족 시 null 반환.
  */
 export function calculateTconv(
-  rmseTS: readonly number[],
-  ssRmse: number,
+  estimates: readonly number[],
+  gt: readonly number[],
+  timestamps: readonly number[], // timestamp_ms
 ): number | null {
-  validateNonNegativeNumberArray(rmseTS, "rmseTS");
-  assertFiniteNumber(ssRmse, "ssRmse");
+  if (estimates.length < 50) return null;
+  const rmseSS = calculateRMSEss(estimates, gt);
+  const threshold = 1.1 * rmseSS;
+  const WINDOW = 50;
 
-  if (ssRmse < 0) {
-    throw new RangeError("ssRmse must be greater than or equal to 0.");
+  for (let i = WINDOW; i <= estimates.length; i++) {
+    const windowEst = estimates.slice(i - WINDOW, i);
+    const windowGt = gt.slice(i - WINDOW, i);
+    const windowRmse = calculateRMSE(windowEst, windowGt);
+    if (windowRmse <= threshold) {
+      return timestamps[i - 1]; // ms 단위 반환
+    }
   }
+  return null;
+}
 
-  const threshold = 1.1 * ssRmse;
-  const convergenceIndex = rmseTS.findIndex((rmse) => rmse <= threshold);
+/**
+ * E0 전용 Tconv. 절대 임계 epsilon(기본 5mm) 기준.
+ * |estimate - gt| <= epsilon 조건을 최초 만족하는 시각(ms).
+ */
+export function calculateTconvE0(
+  estimates: readonly number[],
+  gt: readonly number[],
+  timestamps: readonly number[],
+  epsilon = 5,
+): number | null {
+  for (let i = 0; i < estimates.length; i++) {
+    if (Math.abs(estimates[i] - gt[i]) <= epsilon) {
+      return timestamps[i];
+    }
+  }
+  return null;
+}
 
-  return convergenceIndex === -1 ? null : convergenceIndex;
+/**
+ * R 추정값 평균 (cm_R 표면별 단조성 분석용).
+ */
+export function calculateRMean(rValues: readonly number[]): number {
+  validateFiniteNumberArray(rValues, "rValues");
+  return rValues.reduce((s, v) => s + v, 0) / rValues.length;
+}
+
+/**
+ * R drift CV (변동계수). 30분 장기 안정성 E4 평가용.
+ * CV = std(R) / mean(R) × 100. 단위: %.
+ */
+export function calculateRDriftCV(rValues: readonly number[]): number {
+  validateFiniteNumberArray(rValues, "rValues");
+  const mean = calculateRMean(rValues);
+  if (mean === 0) return 0;
+  const variance = rValues.reduce((s, v) => s + (v - mean) ** 2, 0) / rValues.length;
+  return (Math.sqrt(variance) / mean) * 100;
+}
+
+/**
+ * TinyML R 라벨 추적도.
+ * MAE(predR, labelR) 반환.
+ */
+export function calculateLabelTracking(
+  predR: readonly number[],
+  labelR: readonly number[],
+): number {
+  return calculateMAE(predR, labelR);
 }

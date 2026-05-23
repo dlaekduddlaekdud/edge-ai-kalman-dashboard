@@ -2,50 +2,11 @@
 
 import { ChangeEvent, useState } from "react";
 import Link from "next/link";
-import { parseKFCSV } from "@/lib/csv-parser";
-import { useKFStore, resolveAlgorithmUpload } from "@/lib/store";
 import { parseE1CSV, parseRunFromFileName, ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { useE1Store } from "@/lib/e1-store";
-import {
-  ALL_SCENARIOS,
-  SCENARIO_ALGORITHM_SLOTS,
-  ALGORITHM_LABELS,
-  type AlgorithmId,
-  type ScenarioLabel,
-} from "@/lib/dataset";
+import { ALL_SCENARIOS, type ScenarioLabel } from "@/lib/dataset";
 
-// ── 슬롯 배지 색상 ────────────────────────────────────────────────
-const SLOT_COLORS: Record<AlgorithmId, { bg: string; text: string; border: string }> = {
-  raw:    { bg: "#fff7ed", text: "#9a3412", border: "#fed7aa" },
-  fixed:  { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },
-  cm:     { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },
-  tinyml: { bg: "#faf5ff", text: "#7e22ce", border: "#e9d5ff" },
-};
-
-function SlotBadge({ id }: { id: AlgorithmId }) {
-  const c = SLOT_COLORS[id];
-  return (
-    <span
-      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
-      className="rounded-md px-2 py-0.5 text-xs font-semibold"
-    >
-      {ALGORITHM_LABELS[id]}
-    </span>
-  );
-}
-
-interface SlotState {
-  fileName: string | null;
-  rowCount: number | null;
-  error: string | null;
-  loading: boolean;
-}
-
-function emptySlot(): SlotState {
-  return { fileName: null, rowCount: null, error: null, loading: false };
-}
-
-// ── E1 런 슬롯 상태 ───────────────────────────────────────────────
+// ── 런 슬롯 상태 ─────────────────────────────────────────────────────────
 interface RunSlotState {
   fileName: string | null;
   rowCount: number | null;
@@ -57,95 +18,19 @@ function emptyRunSlot(): RunSlotState {
   return { fileName: null, rowCount: null, error: null, loading: false };
 }
 
+// ── 시나리오별 설명 ────────────────────────────────────────────────────────
+const SCENARIO_DESCRIPTIONS: Record<ScenarioLabel, string> = {
+  E0: "합성 데이터 — 업로드 불필요 (결과 카드로 표시됨)",
+  E1: "런별 CSV 업로드 — 파일명: E1_run01.csv ~ E1_run05.csv",
+  E2: "런별 CSV 업로드 — 파일명: E2_run01.csv ~ E2_run05.csv",
+  E3: "런별 CSV 업로드 — 파일명: E3_run01.csv ~ E3_run05.csv",
+  E4: "런별 CSV 업로드 — 파일명: E4_run01.csv ~ E4_run05.csv",
+  E5: "런별 CSV 업로드 — 파일명: E5_run01.csv ~ E5_run05.csv",
+};
+
 export default function UploadPage() {
-  const { activeScenario, algorithms, setActiveScenario, setAlgorithmData, removeAlgorithmData } =
-    useKFStore();
-  const { runs: e1Runs, setRun: setE1Run, removeRun: removeE1Run } = useE1Store();
-
-  const [slotStates, setSlotStates] = useState<Partial<Record<AlgorithmId, SlotState>>>({});
+  const { runs, activeScenario, setRun, removeRun, setActiveScenario } = useE1Store();
   const [runSlotStates, setRunSlotStates] = useState<Partial<Record<RunId, RunSlotState>>>({});
-
-  const slots = SCENARIO_ALGORITHM_SLOTS[activeScenario];
-
-  function getSlotState(id: AlgorithmId): SlotState {
-    return slotStates[id] ?? emptySlot();
-  }
-
-  function patchSlotState(id: AlgorithmId, patch: Partial<SlotState>) {
-    setSlotStates((prev) => ({
-      ...prev,
-      [id]: { ...(prev[id] ?? emptySlot()), ...patch },
-    }));
-  }
-
-  async function handleFileChange(
-    event: ChangeEvent<HTMLInputElement>,
-    expectedId: AlgorithmId
-  ) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // 파일명에서 알고리즘/시나리오 파싱
-    const resolved = resolveAlgorithmUpload(file.name);
-
-    if (!resolved) {
-      patchSlotState(expectedId, {
-        error: `파일명에서 알고리즘/시나리오를 파싱할 수 없습니다. (예: E1_run1_${expectedId}.csv)`,
-        loading: false,
-        fileName: null,
-        rowCount: null,
-      });
-      event.target.value = "";
-      return;
-    }
-
-    if (resolved.algorithmId !== expectedId) {
-      patchSlotState(expectedId, {
-        error: `이 슬롯은 "${ALGORITHM_LABELS[expectedId]}" 파일만 허용합니다. (감지된 알고리즘: ${resolved.algorithmId})`,
-        loading: false,
-        fileName: null,
-        rowCount: null,
-      });
-      event.target.value = "";
-      return;
-    }
-
-    if (resolved.scenario !== activeScenario) {
-      patchSlotState(expectedId, {
-        error: `현재 시나리오(${activeScenario})와 파일의 시나리오(${resolved.scenario})가 다릅니다.`,
-        loading: false,
-        fileName: null,
-        rowCount: null,
-      });
-      event.target.value = "";
-      return;
-    }
-
-    patchSlotState(expectedId, { loading: true, error: null });
-
-    try {
-      const csvText = await file.text();
-      const rows = parseKFCSV(csvText);
-      setAlgorithmData(expectedId, rows, file.name);
-      patchSlotState(expectedId, {
-        loading: false,
-        fileName: file.name,
-        rowCount: rows.length,
-        error: null,
-      });
-      // store에 저장 후 콘솔 확인 (Day 1 검증용)
-      console.log(`[upload] ${expectedId} loaded: ${rows.length} rows`, {
-        scenario: activeScenario,
-        sampleIndex0: rows[0],
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "CSV 파싱 오류";
-      patchSlotState(expectedId, { loading: false, error: message, fileName: null, rowCount: null });
-      removeAlgorithmData(expectedId);
-    } finally {
-      event.target.value = "";
-    }
-  }
 
   function patchRunSlotState(id: RunId, patch: Partial<RunSlotState>) {
     setRunSlotStates((prev) => ({
@@ -154,14 +39,14 @@ export default function UploadPage() {
     }));
   }
 
-  async function handleE1RunFileChange(event: ChangeEvent<HTMLInputElement>, expectedId: RunId) {
+  async function handleRunFileChange(event: ChangeEvent<HTMLInputElement>, expectedId: RunId) {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const detectedRun = parseRunFromFileName(file.name);
     if (!detectedRun) {
       patchRunSlotState(expectedId, {
-        error: `파일명에서 런 번호를 파싱할 수 없습니다. (예: E1_run01.csv)`,
+        error: `파일명에서 런 번호를 파싱할 수 없습니다. (예: ${activeScenario}_run01.csv)`,
         loading: false, fileName: null, rowCount: null,
       });
       event.target.value = "";
@@ -180,12 +65,17 @@ export default function UploadPage() {
     try {
       const csvText = await file.text();
       const rows = parseE1CSV(csvText);
-      setE1Run(expectedId, rows, file.name);
-      patchRunSlotState(expectedId, { loading: false, fileName: file.name, rowCount: rows.length, error: null });
+      setRun(expectedId, rows, file.name);
+      patchRunSlotState(expectedId, {
+        loading: false,
+        fileName: file.name,
+        rowCount: rows.length,
+        error: null,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "CSV 파싱 오류";
       patchRunSlotState(expectedId, { loading: false, error: message, fileName: null, rowCount: null });
-      removeE1Run(expectedId);
+      removeRun(expectedId);
     } finally {
       event.target.value = "";
     }
@@ -193,13 +83,13 @@ export default function UploadPage() {
 
   function handleScenarioChange(scenario: ScenarioLabel) {
     setActiveScenario(scenario);
-    setSlotStates({});
+    setRunSlotStates({});
   }
 
-  // 업로드된 슬롯 수 (행 수 일치 여부 경고용)
-  const uploadedSlots = Object.entries(algorithms).filter(([, v]) => v !== undefined);
-  const rowCounts = uploadedSlots.map(([, v]) => v!.rows.length);
+  const uploadedRuns = Object.entries(runs).filter(([, v]) => v !== undefined);
+  const rowCounts = uploadedRuns.map(([, v]) => v!.rows.length);
   const rowMismatch = rowCounts.length > 1 && new Set(rowCounts).size > 1;
+  const hasAnyRun = uploadedRuns.length > 0;
 
   return (
     <div className="space-y-6">
@@ -212,12 +102,10 @@ export default function UploadPage() {
           실험 CSV 업로드
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
-          시나리오를 선택한 뒤 CSV를 업로드하세요.{" "}
-          <strong className="font-semibold text-[#111827]">E1</strong>은 런별 파일(
-          <code className="rounded bg-[#f1f5f9] px-1 text-sm">E1_run01.csv</code>),{" "}
-          나머지 시나리오는 알고리즘별 파일(
-          <code className="rounded bg-[#f1f5f9] px-1 text-sm">{"{scenario}_run{N}_{algorithm}.csv"}</code>
-          ) 형식을 사용합니다.
+          시나리오를 선택한 뒤 런별 CSV를 업로드하세요.
+          파일명은{" "}
+          <code className="rounded bg-[#f1f5f9] px-1 text-sm">{"{시나리오}_run01.csv"}</code>{" "}
+          형식이어야 합니다. E0는 합성 데이터로 업로드가 불필요합니다.
         </p>
       </section>
 
@@ -241,25 +129,59 @@ export default function UploadPage() {
           ))}
         </div>
         <p className="mt-3 text-sm text-[#64748b]">
-          {activeScenario === "E0"
-            ? "E0: 합성 데이터 — fixed 슬롯 1개"
-            : `${activeScenario}: 실측 데이터 — raw / fixed / cm / tinyml 4개 슬롯`}
+          {SCENARIO_DESCRIPTIONS[activeScenario]}
         </p>
       </section>
 
-      {/* E1 런 슬롯 (E1 시나리오에서만 표시) */}
-      {activeScenario === "E1" && (
+      {/* E0: 업로드 불필요 안내 */}
+      {activeScenario === "E0" && (
+        <section className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] p-6 shadow-sm">
+          <p className="text-base font-semibold text-[#1d4ed8]">E0 — 합성 데이터</p>
+          <p className="mt-2 text-sm text-[#1e40af]">
+            E0는 Python 합성 시뮬레이션 결과로, 실제 CSV 업로드가 필요 없습니다.
+            대시보드에서 논문 확정 수치 카드를 확인하세요.
+          </p>
+          <Link
+            href="/dashboard"
+            className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+          >
+            대시보드에서 확인하기 →
+          </Link>
+        </section>
+      )}
+
+      {/* E1~E5: 런별 슬롯 */}
+      {activeScenario !== "E0" && (
         <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-[#111827]">E1 런별 CSV 업로드</h3>
+          <h3 className="text-lg font-semibold text-[#111827]">
+            {activeScenario} 런별 CSV 업로드
+          </h3>
           <p className="mt-2 text-sm text-[#64748b]">
             파일명은{" "}
-            <code className="rounded bg-[#f1f5f9] px-1 text-sm">E1_run01.csv</code>{" "}
+            <code className="rounded bg-[#f1f5f9] px-1 text-sm">
+              {activeScenario}_run01.csv
+            </code>{" "}
             형식이어야 합니다. 런 번호로 슬롯을 자동 배정합니다.
+            25컬럼(Fixed+CM) 또는 28컬럼(+TinyML) CSV를 지원합니다.
           </p>
+
+          {rowMismatch && (
+            <div className="mt-4 rounded-lg border border-[#fecaca] bg-[#fff7f7] px-4 py-3">
+              <p className="text-sm font-semibold text-[#dc2626]">행 수 불일치 경고</p>
+              <p className="mt-1 text-sm text-[#7f1d1d]">
+                업로드된 CSV 간 행 수가 다릅니다 (
+                {uploadedRuns
+                  .map(([id, v]) => `${id}: ${v!.rows.length}행`)
+                  .join(", ")}
+                ). 동일 시나리오·동일 run의 파일인지 확인하세요.
+              </p>
+            </div>
+          )}
+
           <div className="mt-5 grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {ALL_RUNS.map((runId) => {
               const slot = runSlotStates[runId] ?? emptyRunSlot();
-              const uploaded = e1Runs[runId];
+              const uploaded = runs[runId];
               return (
                 <div
                   key={runId}
@@ -272,7 +194,10 @@ export default function UploadPage() {
                     {uploaded && (
                       <button
                         type="button"
-                        onClick={() => { removeE1Run(runId); patchRunSlotState(runId, emptyRunSlot()); }}
+                        onClick={() => {
+                          removeRun(runId);
+                          patchRunSlotState(runId, emptyRunSlot());
+                        }}
                         className="text-xs text-[#94a3b8] hover:text-[#64748b]"
                       >
                         제거
@@ -292,7 +217,7 @@ export default function UploadPage() {
                       <input
                         type="file"
                         accept=".csv,text/csv"
-                        onChange={(e) => handleE1RunFileChange(e, runId)}
+                        onChange={(e) => handleRunFileChange(e, runId)}
                         className="sr-only"
                       />
                     </label>
@@ -306,125 +231,36 @@ export default function UploadPage() {
               );
             })}
           </div>
-          {Object.values(e1Runs).some((r) => r !== undefined) && (
+
+          {hasAnyRun && (
             <div className="mt-5 flex justify-end">
               <Link
                 href="/dashboard"
                 className="rounded-md bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
               >
-                E1 대시보드에서 확인하기 →
+                대시보드에서 확인하기 →
               </Link>
             </div>
           )}
         </section>
       )}
 
-      {/* 알고리즘 슬롯 */}
-      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-[#111827]">
-          {activeScenario} 알고리즘 슬롯
-        </h3>
-
-        {rowMismatch && (
-          <div className="mt-4 rounded-lg border border-[#fecaca] bg-[#fff7f7] px-4 py-3">
-            <p className="text-sm font-semibold text-[#dc2626]">행 수 불일치 경고</p>
-            <p className="mt-1 text-sm text-[#7f1d1d]">
-              업로드된 CSV 간 행 수가 다릅니다 (
-              {uploadedSlots
-                .map(([id, v]) => `${id}: ${v!.rows.length}행`)
-                .join(", ")}
-              ). 동일 시나리오·동일 run의 파일인지 확인하세요.
-            </p>
-          </div>
-        )}
-
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {slots.map((id) => {
-            const slot = getSlotState(id);
-            const uploaded = algorithms[id];
-            const c = SLOT_COLORS[id];
-
-            return (
-              <div
-                key={id}
-                style={{ borderColor: uploaded ? c.border : "#d9e0ea" }}
-                className="rounded-lg border bg-white p-5"
-              >
-                <div className="flex items-center justify-between">
-                  <SlotBadge id={id} />
-                  {uploaded && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        removeAlgorithmData(id);
-                        patchSlotState(id, emptySlot());
-                      }}
-                      className="text-xs text-[#94a3b8] hover:text-[#64748b]"
-                    >
-                      제거
-                    </button>
-                  )}
-                </div>
-
-                <p className="mt-2 text-xs text-[#64748b]">
-                  예: {activeScenario}_run1_{id}.csv
-                </p>
-
-                {slot.loading ? (
-                  <p className="mt-4 text-sm text-[#64748b]">파싱 중...</p>
-                ) : uploaded ? (
-                  <div className="mt-4 space-y-1">
-                    <p className="text-sm font-semibold text-[#111827]">{uploaded.fileName}</p>
-                    <p className="text-sm text-[#16a34a]">{uploaded.rows.length}행 로드됨</p>
-                  </div>
-                ) : (
-                  <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[#94a3b8] bg-[#f8fafc] px-4 py-6 text-center transition hover:border-[#2563eb] hover:bg-[#eff6ff]">
-                    <span className="text-sm font-semibold text-[#1d4ed8]">CSV 선택</span>
-                    <span className="mt-1 text-xs text-[#94a3b8]">.csv</span>
-                    <input
-                      type="file"
-                      accept=".csv,text/csv"
-                      onChange={(e) => handleFileChange(e, id)}
-                      className="sr-only"
-                    />
-                  </label>
-                )}
-
-                {slot.error && (
-                  <p className="mt-3 rounded-md bg-[#fff7f7] px-3 py-2 text-xs text-[#dc2626]">
-                    {slot.error}
-                  </p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* 업로드 현황 요약 */}
-      {uploadedSlots.length > 0 && (
+      {hasAnyRun && (
         <section className="rounded-lg border border-[#bbf7d0] bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#16a34a]">
             업로드 현황
           </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {uploadedSlots.map(([id, data]) => (
-              <div key={id} className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-4">
-                <SlotBadge id={id as AlgorithmId} />
-                <p className="mt-2 text-xs text-[#64748b]">{data!.fileName}</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {uploadedRuns.map(([runId, data]) => (
+              <div key={runId} className="rounded-lg border border-[#d9e0ea] bg-[#f8fafc] p-4">
+                <p className="text-sm font-semibold text-[#111827]">{RUN_LABELS[runId as RunId]}</p>
+                <p className="mt-1 text-xs text-[#64748b] truncate">{data!.fileName}</p>
                 <p className="mt-1 text-lg font-semibold text-[#111827]">
                   {data!.rows.length}행
                 </p>
               </div>
             ))}
-          </div>
-          <div className="mt-5 flex justify-end">
-            <Link
-              href="/dashboard"
-              className="rounded-md bg-[#2563eb] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
-            >
-              대시보드에서 확인하기 →
-            </Link>
           </div>
         </section>
       )}

@@ -61,7 +61,14 @@ export default function EstimateLineChart({ algorithms, title, blockedIntervals 
     entries.forEach(([algoId, data]) => {
       data.rows.forEach((row) => {
         const point = map.get(row.timestamp_ms);
-        if (point) point[algoId] = row.kf_estimate_mm;
+        if (point) {
+          switch (algoId) {
+            case "raw":    point[algoId] = row.tof_distance_mm; break;
+            case "fixed":  point[algoId] = row.fixed_estimate_mm; break;
+            case "cm":     point[algoId] = row.cm_estimate_mm; break;
+            case "tinyml": if (row.tinyml_estimate_mm != null) point[algoId] = row.tinyml_estimate_mm; break;
+          }
+        }
       });
     });
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { E1Row, RunId } from "@/lib/e1-csv-parser";
+import type { ScenarioLabel } from "@/lib/dataset";
 
 export type E1AlgorithmId = "raw" | "fixed" | "cm" | "tinyml";
 
@@ -29,17 +30,20 @@ interface E1Store {
   autoExcludeStop: boolean;
   trimTail: number;
   hasTinyML: boolean;
+  /** 현재 활성 시나리오 (E1~E5 통합 스토어) */
+  activeScenario: ScenarioLabel;
   setRun: (id: RunId, rows: E1Row[], fileName: string) => void;
   removeRun: (id: RunId) => void;
   setActiveRun: (r: RunId | "all") => void;
   toggleAlgorithm: (id: E1AlgorithmId) => void;
   setAutoExcludeStop: (v: boolean) => void;
   setTrimTail: (n: number) => void;
+  setActiveScenario: (s: ScenarioLabel) => void;
 }
 
 function detectTinyML(runs: Partial<Record<RunId, E1RunData>>): boolean {
   return Object.values(runs).some(
-    (r) => r && r.rows.length > 0 && r.rows[0].kf_estimate_tinyml !== undefined,
+    (r) => r && r.rows.length > 0 && r.rows[0].tinyml_estimate_mm !== undefined,
   );
 }
 
@@ -50,6 +54,7 @@ export const useE1Store = create<E1Store>((set) => ({
   autoExcludeStop: true,
   trimTail: 0,
   hasTinyML: false,
+  activeScenario: "E1",
 
   setRun: (id, rows, fileName) =>
     set((state) => {
@@ -76,4 +81,7 @@ export const useE1Store = create<E1Store>((set) => ({
   setAutoExcludeStop: (v) => set({ autoExcludeStop: v }),
 
   setTrimTail: (n) => set({ trimTail: Math.max(0, Math.floor(n)) }),
+
+  // 시나리오 변경 시 런 데이터 초기화
+  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, hasTinyML: false }),
 }));

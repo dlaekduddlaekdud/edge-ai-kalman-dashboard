@@ -1,14 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
-import { type AlgorithmId, type AlgorithmData, ALGORITHM_LABELS } from "@/lib/dataset";
-import { calculateMAE, calculateRMSE } from "@/lib/metrics";
-import { type KFRow } from "@/lib/csv-parser";
-import EstimateLineChart from "@/components/charts/EstimateLineChart";
-
-interface Props {
-  algorithms: Partial<Record<AlgorithmId, AlgorithmData>>;
-}
+import Link from "next/link";
+import {
+  Line,
+  LineChart,
+  Legend,
+  ReferenceArea,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, type E1AlgorithmId } from "@/lib/e1-store";
+import { ALL_RUNS, type RunId } from "@/lib/e1-csv-parser";
+import { applyTrim, reconstructGT } from "@/lib/e1-metrics";
+import { calculateRMSE, calculateMAE, calculateNISPassRate } from "@/lib/metrics";
+import type { E1Row } from "@/lib/e1-csv-parser";
 
 interface BlockedInterval {
   x1: number;
@@ -16,12 +24,26 @@ interface BlockedInterval {
 }
 
 /**
- * ToF 차단 구간 탐지.
- * range_status 컬럼이 있으면 range_status !== 0 기준을 우선 사용하고,
- * null인 경우 경험적 30% 오차 임계값으로 폴백한다.
- * gt_distance_mm < 1 인 행은 near-zero 오인 방지를 위해 비차단으로 처리한다.
+ * algoId별 estimate 컬럼 반환.
  */
-function detectBlockedIntervals(rows: KFRow[]): { intervals: BlockedInterval[]; method: "range_status" | "threshold" } {
+function getEstimate(row: E1Row, algoId: E1AlgorithmId): number | undefined {
+  switch (algoId) {
+    case "raw":    return row.tof_distance_mm;
+    case "fixed":  return row.fixed_estimate_mm;
+    case "cm":     return row.cm_estimate_mm;
+    case "tinyml": return row.tinyml_estimate_mm;
+  }
+}
+
+/**
+ * ToF 차단 구간 탐지.
+ * range_status 컬럼이 있으면 range_status !== 0 기준 우선.
+ * null인 경우 경험적 30% 오차 임계값으로 폴백.
+ * gt_distance_mm < 1 인 행은 near-zero 오인 방지를 위해 비차단으로 처리.
+ */
+function detectBlockedIntervals(
+  rows: E1Row[],
+): { intervals: BlockedInterval[]; method: "range_status" | "threshold" } {
   const hasRangeStatus = rows.some((r) => r.tof_range_status !== null);
   const intervals: BlockedInterval[] = [];
   let inBlocked = false;
@@ -53,38 +75,160 @@ function detectBlockedIntervals(rows: KFRow[]): { intervals: BlockedInterval[]; 
   return { intervals, method: hasRangeStatus ? "range_status" : "threshold" };
 }
 
-export default function E3View({ algorithms }: Props) {
-  const { metricRows, blockedIntervals, detectionMethod } = useMemo(() => {
-    const entries = (Object.entries(algorithms) as [AlgorithmId, AlgorithmData][]).filter(
-      ([, v]) => v !== undefined
+function safeNISPassRate(nu: number[], S: number[]): number {
+  const paired = nu.map((v, i) => ({ v, s: S[i] })).filter((p) => p.s > 0);
+  if (paired.length === 0) return 0;
+  try {
+    return calculateNISPassRate(
+      paired.map((p) => p.v),
+      paired.map((p) => p.s),
     );
+  } catch {
+    return 0;
+  }
+}
 
-    // raw가 있으면 raw 기준, 없으면 첫 번째 알고리즘 기준으로 차단 구간 탐지
-    const source = algorithms.raw ?? entries[0]?.[1];
-    const { intervals, method } = source
-      ? detectBlockedIntervals(source.rows)
-      : { intervals: [], method: "threshold" as const };
+/** TinyML NIS는 항상 "—". innovation_cov 컬럼이 없음. */
+function renderNIS(algoId: E1AlgorithmId, nisValue: number | undefined): string {
+  if (algoId === "tinyml") return "—";
+  return nisValue != null ? `${(nisValue * 100).toFixed(1)}%` : "—";
+}
 
-    const rows = entries.map(([algoId, data]) => {
-      const estimates = data.rows.map((r) => r.kf_estimate_mm);
-      const gt = data.rows.map((r) => r.gt_distance_mm);
-      const errors = estimates.map((e, i) => Math.abs(e - gt[i]));
+interface ChartPoint {
+  timestamp_ms: number;
+  gt: number;
+  raw?: number;
+  fixed?: number;
+  cm?: number;
+  tinyml?: number;
+}
 
-      let rmse: number | null = null;
-      let mae: number | null = null;
-      const maxError = errors.length > 0 ? Math.max(...errors) : null;
+export default function E3View() {
+  const { runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail } =
+    useE1Store();
 
-      try { rmse = calculateRMSE(estimates, gt); } catch { /* empty */ }
-      try { mae = calculateMAE(estimates, gt); } catch { /* empty */ }
+  const { metricRows, blockedIntervals, detectionMethod, chartData, xTicks, activeAlgos } =
+    useMemo(() => {
+      const runId: RunId | undefined =
+        activeRun === "all"
+          ? ALL_RUNS.find((r) => runs[r] !== undefined)
+          : (activeRun as RunId);
+      const runData = runId ? runs[runId] : undefined;
 
-      return { algoId, rmse, mae, maxError };
-    });
+      if (!runData || runData.rows.length === 0) {
+        return {
+          metricRows: [],
+          blockedIntervals: [],
+          detectionMethod: "threshold" as const,
+          chartData: [],
+          xTicks: undefined,
+          activeAlgos: [] as E1AlgorithmId[],
+        };
+      }
 
-    return { metricRows: rows, blockedIntervals: intervals, detectionMethod: method };
-  }, [algorithms]);
+      const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
+      if (trimmed.length === 0) {
+        return {
+          metricRows: [],
+          blockedIntervals: [],
+          detectionMethod: "threshold" as const,
+          chartData: [],
+          xTicks: undefined,
+          activeAlgos: [] as E1AlgorithmId[],
+        };
+      }
+
+      const gt = reconstructGT(trimmed);
+      const { intervals, method } = detectBlockedIntervals(trimmed);
+
+      // 알고리즘별 메트릭
+      const algos: E1AlgorithmId[] = ["raw", "fixed", "cm"];
+      if (hasTinyML) algos.push("tinyml");
+
+      const visibleAlgos = algos.filter((id) => selectedAlgorithms.includes(id));
+
+      const rows = visibleAlgos.map((algoId) => {
+        const estimates = trimmed.map((r) => getEstimate(r, algoId) ?? 0);
+        let rmse: number | null = null;
+        let mae: number | null = null;
+        let nisPassRate: number | undefined = undefined;
+
+        try { rmse = calculateRMSE(estimates, gt); } catch { /* skip */ }
+        try { mae = calculateMAE(estimates, gt); } catch { /* skip */ }
+
+        // NIS: fixed, cm만 계산
+        if (algoId === "fixed") {
+          nisPassRate = safeNISPassRate(
+            trimmed.map((r) => r.fixed_residual),
+            trimmed.map((r) => r.fixed_innovation_cov),
+          );
+        } else if (algoId === "cm") {
+          nisPassRate = safeNISPassRate(
+            trimmed.map((r) => r.cm_residual),
+            trimmed.map((r) => r.cm_innovation_cov),
+          );
+        }
+
+        const maxError =
+          estimates.length > 0 ? Math.max(...estimates.map((e, i) => Math.abs(e - gt[i]))) : null;
+
+        return { algoId, rmse, mae, maxError, nisPassRate };
+      });
+
+      // 차트 데이터
+      const points: ChartPoint[] = trimmed.map((r, i) => {
+        const point: ChartPoint = { timestamp_ms: r.timestamp_ms, gt: gt[i] };
+        for (const algoId of visibleAlgos) {
+          const val = getEstimate(r, algoId);
+          if (val !== undefined) point[algoId] = val;
+        }
+        return point;
+      });
+
+      let ticks: number[] | undefined;
+      if (points.length > 10) {
+        const step = Math.floor(points.length / 8);
+        ticks = [];
+        for (let i = 0; i < points.length; i += step) ticks.push(points[i].timestamp_ms);
+        const last = points[points.length - 1].timestamp_ms;
+        if (ticks[ticks.length - 1] !== last) ticks.push(last);
+      }
+
+      return {
+        metricRows: rows,
+        blockedIntervals: intervals,
+        detectionMethod: method,
+        chartData: points,
+        xTicks: ticks,
+        activeAlgos: visibleAlgos,
+      };
+    }, [runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail]);
+
+  // 데이터 없으면 업로드 안내
+  const hasAnyRun = Object.values(runs).some((r) => r !== undefined);
+  if (!hasAnyRun) {
+    return (
+      <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
+        <p className="text-base font-semibold text-[#92400e]">업로드된 CSV가 없습니다.</p>
+        <p className="mt-2 text-sm text-[#78350f]">
+          E3 런별 CSV를 업로드한 후 이 화면을 확인하세요.
+          파일명 형식:{" "}
+          <code className="rounded bg-[#fef3c7] px-1">E3_run01.csv</code> ~{" "}
+          <code className="rounded bg-[#fef3c7] px-1">E3_run05.csv</code>
+        </p>
+        <Link
+          href="/upload"
+          className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+        >
+          CSV 업로드하러 가기
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
+      {/* 메트릭 테이블 */}
       <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
         <table className="min-w-full text-sm">
           <thead className="bg-[#f8fafc]">
@@ -93,13 +237,20 @@ export default function E3View({ algorithms }: Props) {
               <th className="px-4 py-3 text-right font-semibold text-[#475569]">RMSE</th>
               <th className="px-4 py-3 text-right font-semibold text-[#475569]">MAE</th>
               <th className="px-4 py-3 text-right font-semibold text-[#475569]">Max Error</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#475569]">NIS 95%</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#e2e8f0]">
-            {metricRows.map(({ algoId, rmse, mae, maxError }) => (
+            {metricRows.map(({ algoId, rmse, mae, maxError, nisPassRate }) => (
               <tr key={algoId}>
                 <td className="px-4 py-3 font-medium text-[#111827]">
-                  {ALGORITHM_LABELS[algoId]}
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: E1_ALGORITHM_COLORS[algoId] }}
+                    />
+                    {E1_ALGORITHM_LABELS[algoId]}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-right text-[#111827]">
                   {rmse != null ? `${rmse.toFixed(2)} mm` : "—"}
@@ -110,11 +261,16 @@ export default function E3View({ algorithms }: Props) {
                 <td className="px-4 py-3 text-right text-[#111827]">
                   {maxError != null ? `${maxError.toFixed(2)} mm` : "—"}
                 </td>
+                <td className="px-4 py-3 text-right text-[#111827]">
+                  {renderNIS(algoId, nisPassRate)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* 차단 구간 안내 */}
       {blockedIntervals.length > 0 ? (
         <p className="text-xs text-[#64748b]">
           차단 구간 {blockedIntervals.length}개 탐지
@@ -131,11 +287,71 @@ export default function E3View({ algorithms }: Props) {
           {detectionMethod === "threshold" && " (gt 대비 30% 이상 오차 기준)"}
         </p>
       )}
-      <EstimateLineChart
-        algorithms={algorithms}
-        title="E3 — KF Estimate vs Ground Truth"
-        blockedIntervals={blockedIntervals}
-      />
+
+      {/* 위치 시계열 차트 */}
+      {chartData.length > 0 && (
+        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold text-[#64748b]">
+            차트 — E3 위치 추정 (GT · Raw · Fixed · CM
+            {hasTinyML ? " · TinyML" : ""})
+          </p>
+          <div className="mt-3">
+            <ResponsiveContainer width="100%" height={320}>
+              <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                <XAxis
+                  dataKey="timestamp_ms"
+                  ticks={xTicks}
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v: number) => String(v)}
+                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 11 }}
+                  height={40}
+                />
+                <YAxis
+                  tick={{ fontSize: 11 }}
+                  label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 11 }}
+                />
+                <Tooltip
+                  formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
+                  labelFormatter={(l) => `t = ${l} ms`}
+                />
+                <Legend verticalAlign="top" height={28} />
+                {blockedIntervals.map((interval, i) => (
+                  <ReferenceArea
+                    key={i}
+                    x1={interval.x1}
+                    x2={interval.x2}
+                    fill="#fee2e2"
+                    fillOpacity={0.6}
+                    strokeOpacity={0}
+                  />
+                ))}
+                <Line
+                  type="monotone"
+                  dataKey="gt"
+                  name="GT (복원)"
+                  stroke="#94a3b8"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 2"
+                  dot={false}
+                  connectNulls={false}
+                />
+                {activeAlgos.map((algoId) => (
+                  <Line
+                    key={algoId}
+                    type="monotone"
+                    dataKey={algoId}
+                    name={E1_ALGORITHM_LABELS[algoId]}
+                    stroke={E1_ALGORITHM_COLORS[algoId]}
+                    strokeWidth={1.5}
+                    dot={false}
+                    connectNulls={false}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

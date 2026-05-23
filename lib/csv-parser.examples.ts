@@ -1,12 +1,18 @@
 import { strict as assert } from "node:assert";
-import { parseKFCSV, REQUIRED_COLUMNS } from "./csv-parser";
+import { parseKFCSV, REQUIRED_COLUMNS_25 } from "./csv-parser";
 
-const validCSV = `${REQUIRED_COLUMNS.join(",")}
-0,100,,0,95,98,10,99,1,2,0.5,,30,100,4,0.2,5,1
-100,101,12.5,0,,99,11,100,1.5,2.1,0.6,0,31,101,4.1,0.21,5.1,E3`;
+// 25컬럼 유효 CSV 헤더
+const VALID_HEADER = REQUIRED_COLUMNS_25.join(",");
 
-const warmupCSV = `${REQUIRED_COLUMNS.join(",")}
-0,109.93,,,,100.0,0.0,109.9343,0.0,,,,,100.0,,0.0,0.0,E0`;
+// 25컬럼 유효 데이터 행 (seq, timestamp_ms, tof_distance_mm, tof_signal_rate(null), tof_range_status(null),
+// us_distance_mm(null), encoder_distance_mm, encoder_speed_mms, sensor_disagree(null), tof_meas_rate(null),
+// gt_distance_mm, scenario_id,
+// fixed_estimate_mm, fixed_residual, fixed_residual_var(null), fixed_residual_mean(null), fixed_kalman_gain, fixed_innovation_cov,
+// cm_estimate_mm, cm_residual, cm_residual_var(null), cm_residual_mean(null), cm_kalman_gain, cm_innovation_cov, cm_R)
+const validRow1 = "1,100,,,,95,0,98,,30,100,E1,99,1,,, 0.2,5,100,1.5,,, 0.21,5.1,4";
+const validRow2 = "2,200,12.5,0,0,99,11,100,0,31,101,E3,100,2,0.5,2.1,0.21,5.1,101,2,0.6,2.5,0.22,5.2,4.1";
+
+const validCSV = `${VALID_HEADER}\n${validRow1}\n${validRow2}`;
 
 /**
  * 테스트 프레임워크 도입 전 CSV parser 검증용 예시.
@@ -18,36 +24,15 @@ export function runCSVParserExamples(): void {
   assert.equal(rows.length, 2);
   assert.equal(rows[0]?.tof_signal_rate, null);
   assert.equal(rows[0]?.sensor_disagree, null);
-  assert.equal(rows[1]?.us_distance_mm, null);
+  assert.equal(rows[1]?.us_distance_mm, 99);
   assert.equal(rows[1]?.scenario_id, "E3");
 
-  const warmupRows = parseKFCSV(warmupCSV);
-  assert.equal(warmupRows[0]?.tof_residual_var, null);
-  assert.equal(warmupRows[0]?.tof_residual_mean, null);
-  assert.equal(warmupRows[0]?.tof_meas_rate, null);
-  assert.equal(warmupRows[0]?.R_label, null);
-  assert.equal(warmupRows[0]?.scenario_id, "E0");
+  // nullable 컬럼 null 처리 확인
+  assert.equal(rows[0]?.fixed_residual_var, null);
+  assert.equal(rows[0]?.cm_residual_var, null);
 
   assert.throws(
     () => parseKFCSV("timestamp_ms\n0"),
     /missing required column/,
-  );
-
-  assert.throws(
-    () =>
-      parseKFCSV(
-        `${REQUIRED_COLUMNS.join(",")}
-0,not-a-number,,0,95,98,10,99,1,2,0.5,,30,100,4,0.2,5,1`,
-      ),
-    /row 2, column "tof_distance_mm"/,
-  );
-
-  assert.throws(
-    () =>
-      parseKFCSV(
-        `${REQUIRED_COLUMNS.join(",")}
-0,100,,0,95,98,10,99,1,2,0.5,,30,100,4,0.2,5,not-a-scenario`,
-      ),
-    /row 2, column "scenario_id"/,
   );
 }

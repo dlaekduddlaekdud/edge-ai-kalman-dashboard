@@ -74,12 +74,13 @@ export function calculateE1Metrics(
 
   const cmRValues = trimmed.map((r) => r.cm_R);
 
-  const tinymlRows = trimmed.filter((r) => r.kf_estimate_tinyml !== undefined);
+  const tinymlRows = trimmed.filter((r) => r.tinyml_estimate_mm !== undefined);
   const tinyml =
     tinymlRows.length === trimmed.length
       ? {
-          rmse: calculateRMSE(trimmed.map((r) => r.kf_estimate_tinyml!), gt),
-          mae: calculateMAE(trimmed.map((r) => r.kf_estimate_tinyml!), gt),
+          rmse: calculateRMSE(trimmed.map((r) => r.tinyml_estimate_mm!), gt),
+          mae: calculateMAE(trimmed.map((r) => r.tinyml_estimate_mm!), gt),
+          // NIS: TinyML은 innovation_cov 없음. nisPassRate 없음 — 호출부에서 "—" 표시
         }
       : undefined;
 

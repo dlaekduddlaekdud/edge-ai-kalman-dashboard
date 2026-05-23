@@ -2,7 +2,7 @@
 
 졸업연구의 평가 지표와 실험 시나리오를 웹 대시보드 코드로 옮겨, CSV 기반 분석 과정을 자동화한 프로젝트.
 
-> MVP 구현 완료 (2026-05-18). CSV 업로드 → 시나리오 선택 → RMSE/MAE/NIS 카드 → 라인 차트 흐름이 동작합니다. Vercel 배포 준비 중입니다.
+> P0 완료 (2026-05-23). 논문 최종 스키마(25/28컬럼)로 전면 동기화. CSV 업로드 → 시나리오 선택 → RMSE/MAE/NIS 카드 → 라인 차트 흐름이 동작합니다. Vercel 배포 준비 중입니다.
 
 ## Getting Started
 
@@ -34,11 +34,12 @@ npm run dev
 
 2026년 6월 5일까지의 1차 MVP 범위는 다음 기능을 우선으로 합니다.
 
-- `/upload`: CSV 18컬럼 파싱 및 검증
-- `/dashboard`: 시나리오 셀렉터, 알고리즘 토글, 차트 자동 분기
-- `/ablation`: 6-feature, 5-feature, 3-feature 비교
-- `lib/metrics.ts`: RMSE, MAE, NIS pass rate, R 추정 RMSE, 수렴 시간 계산
-- `lib/csv-parser.ts`: PapaParse 래퍼 및 18컬럼 검증
+- `/upload`: CSV 25/28컬럼 파싱 및 검증 (런별 슬롯 방식)
+- `/dashboard`: 시나리오 선택, E1/E3 분기 뷰
+- `/ablation`: 6-feature / 3-feature 비교, 논문 표 4-10 확정값 카드
+- `lib/metrics.ts`: RMSE, MAE, NIS pass rate, RMSEss, Tconv, R Drift CV 계산
+- `lib/csv-parser.ts`: PapaParse 래퍼, 25컬럼(Fixed KF + CM-AKF) / 28컬럼(+TinyML) 자동 감지
+- `lib/paper-results.ts`: 논문 확정 수치 단일 진실 소스 (E0~E5, realtime, TABLE_4_10, TABLE_5_3)
 - E1 정상 baseline 시각화
 - E3 차단 구간 강조 시각화
 - Ablation 시각화
