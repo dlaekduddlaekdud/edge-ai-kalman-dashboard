@@ -2,12 +2,13 @@
 
 import { useMemo } from "react";
 import { useE1Store, E1_ALGORITHM_COLORS, type E1AlgorithmId } from "@/lib/e1-store";
-import { ALL_RUNS, type RunId } from "@/lib/e1-csv-parser";
+import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import {
   calculateE1Metrics,
   averageE1Metrics,
   type E1RunMetrics,
 } from "@/lib/e1-metrics";
+import { exportMetricsCSV } from "@/lib/export";
 
 function fmt(v: number, digits = 2): string {
   return v.toFixed(digits);
@@ -70,20 +71,37 @@ export default function E1MetricCards() {
   const { runs, activeRun, selectedAlgorithms, autoExcludeStop, trimTail, hasTinyML } =
     useE1Store();
 
-  const metrics: E1RunMetrics | null = useMemo(() => {
+  // 현재 표시 중인 메트릭을 계산
+  const allRunMetrics = useMemo<Array<{ runLabel: string; metrics: E1RunMetrics }>>(() => {
     if (activeRun === "all") {
-      const allMetrics = ALL_RUNS.flatMap((r) => {
+      return ALL_RUNS.flatMap((r) => {
         const d = runs[r];
         if (!d) return [];
         const m = calculateE1Metrics(d.rows, autoExcludeStop, trimTail);
-        return m ? [m] : [];
+        return m ? [{ runLabel: RUN_LABELS[r], metrics: m }] : [];
       });
-      return averageE1Metrics(allMetrics);
     }
     const d = runs[activeRun as RunId];
-    if (!d) return null;
-    return calculateE1Metrics(d.rows, autoExcludeStop, trimTail);
+    if (!d) return [];
+    const m = calculateE1Metrics(d.rows, autoExcludeStop, trimTail);
+    return m ? [{ runLabel: RUN_LABELS[activeRun as RunId], metrics: m }] : [];
   }, [runs, activeRun, autoExcludeStop, trimTail]);
+
+  const metrics: E1RunMetrics | null = useMemo(() => {
+    if (activeRun === "all") {
+      return averageE1Metrics(allRunMetrics.map((r) => r.metrics));
+    }
+    return allRunMetrics[0]?.metrics ?? null;
+  }, [activeRun, allRunMetrics]);
+
+  function handleExport() {
+    if (allRunMetrics.length === 0) return;
+    // activeRun = "all"이면 전체 런 개별 export, 아니면 현재 런만
+    exportMetricsCSV(
+      allRunMetrics,
+      `kalman_metrics_${activeRun}.csv`,
+    );
+  }
 
   if (!metrics) {
     return (
@@ -103,6 +121,18 @@ export default function E1MetricCards() {
   );
 
   return (
+    <div className="space-y-3">
+      {/* 내보내기 버튼 */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={handleExport}
+          className="flex items-center gap-1.5 rounded-md border border-[#d1d5db] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] shadow-sm hover:bg-[#f9fafb] hover:border-[#9ca3af]"
+        >
+          <span>⬇</span>
+          <span>결과 CSV 내보내기</span>
+        </button>
+      </div>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {/* RMSE */}
       <Card title="RMSE" subtitle="mm">
@@ -244,6 +274,7 @@ export default function E1MetricCards() {
           value={fmt(metrics.cmRMax)}
         />
       </Card>
+    </div>
     </div>
   );
 }

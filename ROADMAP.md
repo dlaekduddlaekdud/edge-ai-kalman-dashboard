@@ -139,13 +139,24 @@ gt[k]      = base − encoder_distance_mm[k]
 
 ---
 
+## Phase 3B: 포트폴리오 업그레이드 (2026-05-23 완료)
+
+목표: "실시간 데이터 파이프라인 + 시각화 풀스택" 포지셔닝으로 전환.
+
+- [x] `public/data/` — E1/E3/E2/E5 런별 CSV 25개 + ablation_holdout_results.csv 번들
+- [x] `app/upload/page.tsx` — "데모 데이터 로드" 버튼 (Promise.all fetch + 처리 시간 측정)
+- [x] `app/page.tsx` — Homepage KPI 4개 (RMSE 70.1%, 14.2× 마진, 254,304 프레임, 2.7×) + 아키텍처 미니 플로우
+- [x] `app/ablation/page.tsx` — TABLE_5_3를 ablation_holdout_results.csv 동적 로드로 교체 (fallback: 논문 확정값)
+- [x] `lib/export.ts` — exportMetricsCSV() 유틸 (Blob + URL.createObjectURL)
+- [x] `components/e1/E1MetricCards.tsx` — "결과 CSV 내보내기" 버튼
+- [x] `README.md` — Mermaid 아키텍처 · Performance Metrics 표 · 기술 선택 근거 · 트러블슈팅 로그 3건
+
 ## Phase 4: Portfolio Polish
 
 목표: 배포와 포트폴리오 설명 완성.
 
 - [ ] Vercel 배포
-- [ ] README Deployment 표 갱신 (라이브 URL, Lighthouse 점수)
-- [ ] Spec to Implementation 표 실제 경로 검증
+- [ ] README Deployment 섹션 라이브 URL 갱신
 - [ ] 발표용 스크린샷 또는 시연 흐름 정리
 
 ---
