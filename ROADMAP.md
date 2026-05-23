@@ -174,12 +174,54 @@ gt[k]      = base − encoder_distance_mm[k]
 
 ---
 
-## 보존 원칙
+## 원칙
 
-- `lib/csv-parser.ts` — E3/Ablation용 유지, 변경 금지
-- `lib/store.ts` — E3/Ablation용 유지, 변경 금지
-- `lib/ablation-store.ts` — 변경 금지
-- `app/ablation/page.tsx` — 변경 금지
-- `components/views/E3View.tsx` — 변경 금지
 - 연구 결과를 새로 주장하거나 예측하는 기능은 만들지 않음
-- README/제안서와 논문이 충돌하면 논문 본문 기준 우선
+- README/제안서와 논문이 충돌하면 **논문 본문 기준 우선** (최상위 원칙)
+- per-frame 원본 없는 그래프는 꾸며내지 않고 하드코딩 카드/게이지로 대체
+
+> ⚠️ **이전 "변경 금지" 보존 원칙은 2026-05-23부로 무효화**  
+> 이유: 논문 최종본(2026-05-23)이 CSV 스키마(18→25/28), 지표 정의(R RMSE 폐기),
+> Ablation 슬롯(3→2)을 변경. 논문 우선 원칙에 따라 해당 파일들을 수정함.  
+> 상세 변경 명세: [UPGRADE_PLAN.md](./UPGRADE_PLAN.md)
+
+---
+
+## Phase P0: 논문 최종 스키마 동기화 (2026-05-24-25 예정)
+
+> 논문 최종본(2026-05-23) 기준 충돌 해소. 타입체크+빌드 통과 후 커밋.
+
+- [ ] `lib/e1-csv-parser.ts` — TinyML 컬럼명 교체 (r_tinyml→tinyml_R, kf_estimate_tinyml→tinyml_estimate_mm)
+- [ ] `lib/e1-metrics.ts` — TinyML 컬럼명 참조 교체
+- [ ] `lib/e1-store.ts` — detectTinyML 컬럼명 교체
+- [ ] `lib/csv-parser.ts` — 18컬럼 → 25/28 dual-schema 전면 교체
+- [ ] `lib/metrics.ts` — calculateRRMSE 삭제, calculateTconv 슬라이딩 윈도우 재구현, 5개 신규 함수 추가
+- [ ] `lib/ablation-store.ts` — 슬롯 3→2 ("6f"|"5f"|"3f" → "6f"|"3f")
+- [ ] `app/ablation/page.tsx` — 5f 슬롯 제거, grid-3→2, MAE_R/MAPE_R 지표, 표 4-10 카드
+- [ ] `components/views/E3View.tsx` — 신 KFRow 기반, getEstimates 알고리즘 분기
+- [ ] `components/e1/E1MetricCards.tsx` — TinyML NIS 항상 "—"
+- [ ] `lib/paper-results.ts` — 신규 생성 (논문 확정 수치 상수화)
+- [ ] `ROADMAP.md`, `README.md` — 스키마 변경 반영
+
+---
+
+## Phase P1: 지표 정확도 + TinyML 4-way (2026-05-26 예정)
+
+- [ ] `components/e1/E1MetricCards.tsx` — RMSEss, Tconv 카드 추가
+- [ ] `components/e1/AlgorithmToggle.tsx` — hasTinyML 기반 TinyML 완전 활성화
+- [ ] `components/e1/charts/PositionChart.tsx` — tinyml_estimate_mm 라인 추가
+- [ ] `components/views/E3View.tsx` — TinyML 추가, cm_R vs tinyml_R 회복 시계열
+- [ ] `app/dashboard/page.tsx` — 표 5-2 종합 카드 추가
+
+---
+
+## Phase P2: 시나리오 확장 + 발표 페이지 (2026-05-27-29 예정)
+
+- [ ] `components/views/E0View.tsx` — 신규 (합성 데이터 결과 카드)
+- [ ] `components/views/E2View.tsx` — 신규 (표면별 막대 차트 + 표)
+- [ ] `components/views/E4View.tsx` — 신규 (추론 시간 게이지 + drift CV)
+- [ ] `components/views/E5View.tsx` — 신규 (미지 표면 RMSE + anomaly)
+- [ ] `app/dashboard/page.tsx` — E0/E2/E4/E5 분기 추가
+- [ ] `app/realtime/page.tsx` — placeholder → 실제 구현
+- [ ] `app/method/page.tsx` — placeholder → 실제 구현
+- [ ] `app/ablation/page.tsx` — 표 5-3 hold-out RMSE 섹션 추가
