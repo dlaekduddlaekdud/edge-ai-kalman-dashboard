@@ -27,17 +27,19 @@ export default function PositionChart() {
   const { runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail } =
     useE1Store();
 
-  const { data, xTicks } = useMemo(() => {
+  const { data, xTicks, showGT } = useMemo(() => {
     const runId = activeRun === "all"
       ? ALL_RUNS.find((r) => runs[r] !== undefined)
       : (activeRun as RunId);
     const runData = runId ? runs[runId] : undefined;
-    if (!runData || runData.rows.length === 0) return { data: [], xTicks: undefined };
+    if (!runData || runData.rows.length === 0) return { data: [], xTicks: undefined, showGT: false };
 
     const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
-    if (trimmed.length === 0) return { data: [], xTicks: undefined };
+    if (trimmed.length === 0) return { data: [], xTicks: undefined, showGT: false };
 
     const gt = getGroundTruth(trimmed);
+    // 데모 CSV는 gt=0 → GT 라인 숨김
+    const showGT = gt.some((v) => v !== 0);
     const points: ChartPoint[] = trimmed.map((r, i) => ({
       timestamp_ms: r.timestamp_ms,
       gt: gt[i],
@@ -59,7 +61,7 @@ export default function PositionChart() {
       if (ticks[ticks.length - 1] !== last) ticks.push(last);
     }
 
-    return { data: points, xTicks: ticks };
+    return { data: points, xTicks: ticks, showGT };
   }, [runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail]);
 
   if (data.length === 0) {
@@ -90,30 +92,32 @@ export default function PositionChart() {
           <XAxis
             dataKey="timestamp_ms"
             ticks={xTicks}
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 13 }}
             tickFormatter={(v: number) => String(v)}
-            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 11 }}
+            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
             height={40}
           />
           <YAxis
-            tick={{ fontSize: 11 }}
-            label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 11 }}
+            tick={{ fontSize: 13 }}
+            label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
           />
           <Tooltip
             formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
             labelFormatter={(l) => `t = ${l} ms`}
           />
           <Legend verticalAlign="top" height={28} />
-          <Line
-            type="monotone"
-            dataKey="gt"
-            name="GT (CSV)"
-            stroke="#94a3b8"
-            strokeWidth={1.5}
-            strokeDasharray="4 2"
-            dot={false}
-            connectNulls={false}
-          />
+          {showGT && (
+            <Line
+              type="monotone"
+              dataKey="gt"
+              name="GT"
+              stroke="#94a3b8"
+              strokeWidth={1.5}
+              strokeDasharray="4 2"
+              dot={false}
+              connectNulls={false}
+            />
+          )}
           {activeAlgos.map((id) => (
             <Line
               key={id}

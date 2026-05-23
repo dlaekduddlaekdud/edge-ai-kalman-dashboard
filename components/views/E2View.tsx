@@ -93,7 +93,7 @@ export default function E2View() {
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "#64748b" }}
+                tick={{ fontSize: 13, fill: "#64748b" }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => `${v}`}
@@ -102,7 +102,7 @@ export default function E2View() {
                   angle: -90,
                   position: "insideLeft",
                   offset: 12,
-                  style: { fontSize: 11, fill: "#94a3b8" },
+                  style: { fontSize: 13, fill: "#94a3b8" },
                 }}
               />
               <Tooltip

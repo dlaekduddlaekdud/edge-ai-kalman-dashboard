@@ -6,7 +6,7 @@ export default function MethodPage() {
           Method
         </p>
         <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
-          논문 4.3절 평가 지표
+          평가지표
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
           실험 CSV를 분석하는 데 사용된 평가 지표 정의와 TypeScript 구현 위치를 정리합니다.

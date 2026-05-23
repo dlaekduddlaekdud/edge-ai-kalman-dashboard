@@ -1,14 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { useE1Store, E1_ALGORITHM_COLORS, type E1AlgorithmId } from "@/lib/e1-store";
-import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
-import {
-  calculateE1Metrics,
-  averageE1Metrics,
-  type E1RunMetrics,
-} from "@/lib/e1-metrics";
-import { exportMetricsCSV } from "@/lib/export";
+import { useE1Store, E1_ALGORITHM_COLORS } from "@/lib/e1-store";
+import { PAPER_RESULTS } from "@/lib/paper-results";
+import type { AlgoMetrics } from "@/lib/paper-results";
 
 function fmt(v: number, digits = 2): string {
   return v.toFixed(digits);
@@ -57,224 +52,140 @@ function Card({ title, subtitle, children }: CardProps) {
   );
 }
 
-type RequiredAlgoId = "raw" | "fixed" | "cm";
-const ALGO_IDS: RequiredAlgoId[] = ["raw", "fixed", "cm"];
+interface AlgoEntry {
+  id: "raw" | "fixed" | "cm" | "tinyml";
+  label: string;
+  metrics: AlgoMetrics;
+}
 
-/** TinyML NIS는 항상 "—". innovation_cov 컬럼이 없음. */
-function renderNISValue(id: string, nisPassRate: number | undefined): string {
-  if (id === "tinyml") return "—";
-  if (nisPassRate != null) return pct(nisPassRate);
-  return "—";
+/** 활성 시나리오 + E2 표면에 따라 PAPER_RESULTS에서 알고리즘별 메트릭 추출 */
+function useScenarioAlgoMetrics(): { raw: AlgoMetrics; fixed: AlgoMetrics; cm: AlgoMetrics; tinyml: AlgoMetrics } {
+  const { activeScenario, activeE2Surface } = useE1Store();
+
+  return useMemo(() => {
+    if (activeScenario === "E2") {
+      const surface = activeE2Surface ?? "white";
+      const s = PAPER_RESULTS.E2.surfaces[surface];
+      return { raw: s.raw, fixed: s.fixed, cm: s.cm, tinyml: s.tinyml };
+    }
+    const data = PAPER_RESULTS[activeScenario as "E1" | "E3" | "E4" | "E5"];
+    return { raw: data.raw, fixed: data.fixed, cm: data.cm, tinyml: data.tinyml };
+  }, [activeScenario, activeE2Surface]);
 }
 
 export default function E1MetricCards() {
-  const { runs, activeRun, selectedAlgorithms, autoExcludeStop, trimTail, hasTinyML } =
-    useE1Store();
+  const { selectedAlgorithms } = useE1Store();
+  const scenarioMetrics = useScenarioAlgoMetrics();
 
-  // 현재 표시 중인 메트릭을 계산
-  const allRunMetrics = useMemo<Array<{ runLabel: string; metrics: E1RunMetrics }>>(() => {
-    if (activeRun === "all") {
-      return ALL_RUNS.flatMap((r) => {
-        const d = runs[r];
-        if (!d) return [];
-        const m = calculateE1Metrics(d.rows, autoExcludeStop, trimTail);
-        return m ? [{ runLabel: RUN_LABELS[r], metrics: m }] : [];
-      });
-    }
-    const d = runs[activeRun as RunId];
-    if (!d) return [];
-    const m = calculateE1Metrics(d.rows, autoExcludeStop, trimTail);
-    return m ? [{ runLabel: RUN_LABELS[activeRun as RunId], metrics: m }] : [];
-  }, [runs, activeRun, autoExcludeStop, trimTail]);
+  const allAlgos: AlgoEntry[] = [
+    { id: "raw",    label: "Raw ToF",    metrics: scenarioMetrics.raw },
+    { id: "fixed",  label: "Fixed KF",   metrics: scenarioMetrics.fixed },
+    { id: "cm",     label: "CM-AKF",     metrics: scenarioMetrics.cm },
+    { id: "tinyml", label: "TinyML-AKF", metrics: scenarioMetrics.tinyml },
+  ];
 
-  const metrics: E1RunMetrics | null = useMemo(() => {
-    if (activeRun === "all") {
-      return averageE1Metrics(allRunMetrics.map((r) => r.metrics));
-    }
-    return allRunMetrics[0]?.metrics ?? null;
-  }, [activeRun, allRunMetrics]);
-
-  function handleExport() {
-    if (allRunMetrics.length === 0) return;
-    // activeRun = "all"이면 전체 런 개별 export, 아니면 현재 런만
-    exportMetricsCSV(
-      allRunMetrics,
-      `kalman_metrics_${activeRun}.csv`,
-    );
-  }
-
-  if (!metrics) {
-    return (
-      <p className="text-sm text-[#94a3b8]">
-        선택된 런의 데이터가 없습니다.
-      </p>
-    );
-  }
-
-  const visibleAlgos = ALGO_IDS.filter((id) => selectedAlgorithms.includes(id as E1AlgorithmId));
-  // TinyML이 있고 토글 선택된 경우 추가
-  const showTinyML = hasTinyML && selectedAlgorithms.includes("tinyml") && metrics.tinyml != null;
-
-  // RMSEss / Tconv: raw는 KF 아님 → 제외, fixed/cm/tinyml만 표시
-  const kfAlgos = (["fixed", "cm"] as const).filter((id) =>
-    selectedAlgorithms.includes(id as E1AlgorithmId),
-  );
+  const visibleAlgos = allAlgos.filter(({ id }) => selectedAlgorithms.includes(id));
+  // RMSEss / Tconv: Fixed KF + CM-AKF + TinyML-AKF만 표시 (Raw ToF 제외)
+  const kfAlgos = visibleAlgos.filter(({ id }) => id !== "raw");
 
   return (
     <div className="space-y-3">
-      {/* 내보내기 버튼 */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={handleExport}
-          className="flex items-center gap-1.5 rounded-md border border-[#d1d5db] bg-white px-3 py-1.5 text-xs font-medium text-[#374151] shadow-sm hover:bg-[#f9fafb] hover:border-[#9ca3af]"
-        >
-          <span>⬇</span>
-          <span>결과 CSV 내보내기</span>
-        </button>
+      {/* 논문 확정값 배지 */}
+      <div className="flex justify-start">
+        <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
+          논문 확정값
+        </span>
       </div>
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {/* RMSE */}
-      <Card title="RMSE" subtitle="mm">
-        {visibleAlgos.map((id) => (
-          <MetricRow
-            key={id}
-            label={id === "raw" ? "Raw ToF" : id === "fixed" ? "Fixed KF" : "CM-AKF"}
-            color={E1_ALGORITHM_COLORS[id]}
-            value={`${fmt(metrics[id].rmse)} mm`}
-          />
-        ))}
-        {showTinyML && (
-          <MetricRow
-            label="TinyML-AKF"
-            color={E1_ALGORITHM_COLORS.tinyml}
-            value={`${fmt(metrics.tinyml!.rmse)} mm`}
-          />
-        )}
-      </Card>
 
-      {/* MAE */}
-      <Card title="MAE" subtitle="mm">
-        {visibleAlgos.map((id) => (
-          <MetricRow
-            key={id}
-            label={id === "raw" ? "Raw ToF" : id === "fixed" ? "Fixed KF" : "CM-AKF"}
-            color={E1_ALGORITHM_COLORS[id]}
-            value={`${fmt(metrics[id].mae)} mm`}
-          />
-        ))}
-        {showTinyML && (
-          <MetricRow
-            label="TinyML-AKF"
-            color={E1_ALGORITHM_COLORS.tinyml}
-            value={`${fmt(metrics.tinyml!.mae)} mm`}
-          />
-        )}
-      </Card>
-
-      {/* NIS 95% pass rate */}
-      <Card title="NIS 95% Pass Rate" subtitle="chi-sq df=1 기준">
-        {visibleAlgos
-          .filter((id) => metrics[id].nisPassRate !== undefined)
-          .map((id) => (
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {/* RMSE */}
+        <Card title="RMSE" subtitle="mm">
+          {visibleAlgos.map(({ id, label, metrics }) => (
             <MetricRow
               key={id}
-              label={id === "fixed" ? "Fixed KF" : "CM-AKF"}
+              label={label}
               color={E1_ALGORITHM_COLORS[id]}
-              value={renderNISValue(id, metrics[id].nisPassRate)}
+              value={`${fmt(metrics.rmse)} mm`}
             />
           ))}
-        {/* TinyML NIS는 항상 "—" */}
-        {showTinyML && (
-          <MetricRow
-            label="TinyML-AKF"
-            color={E1_ALGORITHM_COLORS.tinyml}
-            value="—"
-          />
-        )}
-        {visibleAlgos.every((id) => metrics[id].nisPassRate === undefined) && !showTinyML && (
-          <p className="py-1 text-sm text-[#94a3b8]">N/A (Raw only)</p>
-        )}
-      </Card>
+        </Card>
 
-      {/* RMSEss (후반 1초 RMSE) */}
-      <Card title="RMSEss" subtitle="후반 50 frame (1초 @ 50Hz)">
-        {kfAlgos.map((id) => (
-          <MetricRow
-            key={id}
-            label={id === "fixed" ? "Fixed KF" : "CM-AKF"}
-            color={E1_ALGORITHM_COLORS[id]}
-            value={
-              metrics[id].rmseSS != null
-                ? `${fmt(metrics[id].rmseSS!)} mm`
-                : "—"
-            }
-          />
-        ))}
-        {showTinyML && metrics.tinyml?.rmseSS != null && (
-          <MetricRow
-            label="TinyML-AKF"
-            color={E1_ALGORITHM_COLORS.tinyml}
-            value={`${fmt(metrics.tinyml!.rmseSS!)} mm`}
-          />
-        )}
-        {kfAlgos.length === 0 && !showTinyML && (
-          <p className="py-1 text-sm text-[#94a3b8]">Fixed/CM 선택 후 표시</p>
-        )}
-      </Card>
-
-      {/* Tconv (수렴 시간) */}
-      <Card title="Tconv" subtitle="슬라이딩 50 frame RMSE ≤ 1.1 × RMSEss">
-        {kfAlgos.map((id) => {
-          const tconv = metrics[id].tconv;
-          const display =
-            tconv == null ? "—" :
-            tconv < 1000 ? `${tconv.toFixed(0)} ms` :
-            `${(tconv / 1000).toFixed(2)} s`;
-          return (
+        {/* MAE */}
+        <Card title="MAE" subtitle="mm">
+          {visibleAlgos.map(({ id, label, metrics }) => (
             <MetricRow
               key={id}
-              label={id === "fixed" ? "Fixed KF" : "CM-AKF"}
+              label={label}
               color={E1_ALGORITHM_COLORS[id]}
-              value={display}
+              value={`${fmt(metrics.mae)} mm`}
             />
-          );
-        })}
-        {showTinyML && (
-          <MetricRow
-            label="TinyML-AKF"
-            color={E1_ALGORITHM_COLORS.tinyml}
-            value={(() => {
-              const tconv = metrics.tinyml?.tconv;
-              if (tconv == null) return "—";
-              return tconv < 1000 ? `${tconv.toFixed(0)} ms` : `${(tconv / 1000).toFixed(2)} s`;
-            })()}
-          />
-        )}
-        {kfAlgos.length === 0 && !showTinyML && (
-          <p className="py-1 text-sm text-[#94a3b8]">Fixed/CM 선택 후 표시</p>
-        )}
-      </Card>
+          ))}
+        </Card>
 
-      {/* CM-R */}
-      <Card title="CM-R (적응 노이즈)" subtitle="cm_R 통계">
-        <MetricRow
-          label="평균"
-          color={E1_ALGORITHM_COLORS.cm}
-          value={fmt(metrics.cmRMean)}
-        />
-        <MetricRow
-          label="최솟값"
-          color="#94a3b8"
-          value={fmt(metrics.cmRMin)}
-        />
-        <MetricRow
-          label="최댓값"
-          color="#94a3b8"
-          value={fmt(metrics.cmRMax)}
-        />
-      </Card>
-    </div>
+        {/* NIS 95% pass rate */}
+        <Card title="NIS 95% Pass Rate" subtitle="chi-sq df=1 기준">
+          {visibleAlgos
+            .filter(({ id }) => id !== "raw")
+            .map(({ id, label, metrics }) => (
+              <MetricRow
+                key={id}
+                label={label}
+                color={E1_ALGORITHM_COLORS[id]}
+                value={
+                  id === "tinyml"
+                    ? "—"
+                    : metrics.nis != null
+                      ? pct(metrics.nis)
+                      : "—"
+                }
+              />
+            ))}
+          {visibleAlgos.every(({ id }) => id === "raw") && (
+            <p className="py-1 text-sm text-[#94a3b8]">N/A (Raw only)</p>
+          )}
+        </Card>
+
+        {/* RMSEss (후반 1초 RMSE) */}
+        <Card title="RMSEss" subtitle="후반 50 frame (1초 @ 50Hz)">
+          {kfAlgos.map(({ id, label, metrics }) => (
+            <MetricRow
+              key={id}
+              label={label}
+              color={E1_ALGORITHM_COLORS[id]}
+              value={
+                metrics.rmseSS != null
+                  ? `${fmt(metrics.rmseSS)} mm`
+                  : "—"
+              }
+            />
+          ))}
+          {kfAlgos.length === 0 && (
+            <p className="py-1 text-sm text-[#94a3b8]">Fixed/CM 선택 후 표시</p>
+          )}
+        </Card>
+
+        {/* Tconv (수렴 시간) */}
+        <Card title="Tconv" subtitle="슬라이딩 50 frame RMSE ≤ 1.1 × RMSEss">
+          {kfAlgos.map(({ id, label, metrics }) => {
+            const tconv = metrics.tconv;
+            const display =
+              tconv == null ? "—" :
+              tconv < 1000 ? `${tconv.toFixed(0)} ms` :
+              `${(tconv / 1000).toFixed(2)} s`;
+            return (
+              <MetricRow
+                key={id}
+                label={label}
+                color={E1_ALGORITHM_COLORS[id]}
+                value={display}
+              />
+            );
+          })}
+          {kfAlgos.length === 0 && (
+            <p className="py-1 text-sm text-[#94a3b8]">Fixed/CM 선택 후 표시</p>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

@@ -7,22 +7,12 @@ import {
   calculateTconv,
 } from "@/lib/metrics";
 
-/** 논문 최종 CSV의 ground-truth 컬럼을 사용한다. */
+/**
+ * CSV gt_distance_mm 컬럼값 그대로 반환.
+ * 데모 CSV는 gt=0이므로, 차트 등에서 showGT 가드로 숨김 처리한다.
+ */
 export function getGroundTruth(rows: E1Row[]): number[] {
   return rows.map((r) => r.gt_distance_mm);
-}
-
-/**
- * Legacy fallback: stop 구간(encoder == 0)의 tof 평균을 기준점으로 GT 복원.
- * 최종 25/28컬럼 CSV에는 gt_distance_mm가 있으므로 동적 지표 계산에는 사용하지 않는다.
- */
-export function reconstructGT(rows: E1Row[]): number[] {
-  const stopRows = rows.filter((r) => r.encoder_distance_mm === 0);
-  const base =
-    stopRows.length > 0
-      ? stopRows.reduce((s, r) => s + r.tof_distance_mm, 0) / stopRows.length
-      : rows[0].tof_distance_mm;
-  return rows.map((r) => base - r.encoder_distance_mm);
 }
 
 /** encoder > 0 인 첫 행 인덱스 (moving phase 시작). 없으면 0. */
@@ -136,8 +126,9 @@ export function calculateE1Metrics(
     },
     tinyml,
     cmRMean: cmRValues.reduce((s, v) => s + v, 0) / cmRValues.length,
-    cmRMin: Math.min(...cmRValues),
-    cmRMax: Math.max(...cmRValues),
+    // spread 연산자 대신 reduce — 대규모 배열 스택 오버플로우 방지
+    cmRMin: cmRValues.reduce((m, v) => Math.min(m, v), Infinity),
+    cmRMax: cmRValues.reduce((m, v) => Math.max(m, v), -Infinity),
   };
 }
 
