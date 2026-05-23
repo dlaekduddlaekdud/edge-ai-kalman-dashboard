@@ -87,7 +87,7 @@ export default function RealtimePage() {
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563eb]">Realtime</p>
         <h2 className="mt-3 text-2xl font-semibold text-[#111827]">실시간 성능 — 논문 5.2.1 RQ1</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-[#475569]">
-          STM32F411 MCU 온보드 TinyML 추론 및 200Hz 메인 루프 실시간성 검증.
+          STM32F446RE MCU 온보드 TinyML 추론 및 200Hz 메인 루프 실시간성 검증.
           실측값은 E4 정적 실험(30분, {E4.totalLoopCount.toLocaleString()} 루프) 기준.
         </p>
         <div className="mt-3 rounded-md border border-[#bfdbfe] bg-[#eff6ff] px-4 py-2 text-xs text-[#1e40af]">
@@ -99,7 +99,7 @@ export default function RealtimePage() {
       {/* TinyML 추론 게이지 */}
       <GaugeSection
         title="TinyML 추론 시간"
-        subtitle="STM32F411 온보드 INT8 양자화 모델 (6-feature)"
+        subtitle="STM32F446RE 온보드 INT8 양자화 모델 (6-feature, 목표 <0.5 ms)"
         actual={RT.tinymlActual_us}
         actualUnit="µs"
         budget={RT.tinymlBudget_us}
@@ -156,7 +156,7 @@ export default function RealtimePage() {
         <h3 className="text-base font-semibold text-[#111827]">DWT 사이클 → 시간 변환</h3>
         <div className="mt-3 rounded-md bg-[#f8fafc] p-4 font-mono text-sm text-[#475569]">
           <p>{RT.dwtCycles.toLocaleString()} cycles ÷ ({RT.cpuFreqMHz} MHz × 10⁶) = {RT.dwtToMs} ms</p>
-          <p className="mt-1 text-xs text-[#94a3b8]">STM32F411 CPU 클록 {RT.cpuFreqMHz} MHz 기준</p>
+          <p className="mt-1 text-xs text-[#94a3b8]">STM32F446RE CPU 클록 {RT.cpuFreqMHz} MHz 기준</p>
         </div>
         <p className="mt-2 text-xs text-[#94a3b8]">
           DWT(Data Watchpoint and Trace) 카운터로 실제 MCU 사이클을 측정. 인터럽트 지연 제외.

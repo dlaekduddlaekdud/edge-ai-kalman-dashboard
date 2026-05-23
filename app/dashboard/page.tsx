@@ -27,6 +27,10 @@ export default function DashboardPage() {
   // E0/E2/E4/E5는 CSV 없이도 하드코딩 카드 표시. E1/E3만 데이터 필요.
   const csvRequired = activeScenario === "E1" || activeScenario === "E3";
   const isEmpty = csvRequired && !hasData;
+  const sourceLabel = csvRequired ? "업로드 CSV 계산값" : "논문 확정값";
+  const sourceClassName = csvRequired
+    ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d]"
+    : "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]";
 
   if (isEmpty) {
     return (
@@ -67,6 +71,9 @@ export default function DashboardPage() {
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#1d4ed8]">
             {activeScenario}
+          </span>
+          <span className={`rounded-full border px-3 py-1 text-sm font-semibold ${sourceClassName}`}>
+            {sourceLabel}
           </span>
           <span className="text-sm text-[#64748b]">
             {SCENARIO_DESCRIPTIONS[activeScenario]}

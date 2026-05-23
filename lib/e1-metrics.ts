@@ -7,9 +7,14 @@ import {
   calculateTconv,
 } from "@/lib/metrics";
 
+/** 논문 최종 CSV의 ground-truth 컬럼을 사용한다. */
+export function getGroundTruth(rows: E1Row[]): number[] {
+  return rows.map((r) => r.gt_distance_mm);
+}
+
 /**
- * stop 구간(encoder == 0)의 tof 평균을 기준점으로 GT 복원.
- * gt[k] = base - encoder_distance_mm[k]
+ * Legacy fallback: stop 구간(encoder == 0)의 tof 평균을 기준점으로 GT 복원.
+ * 최종 25/28컬럼 CSV에는 gt_distance_mm가 있으므로 동적 지표 계산에는 사용하지 않는다.
  */
 export function reconstructGT(rows: E1Row[]): number[] {
   const stopRows = rows.filter((r) => r.encoder_distance_mm === 0);
@@ -58,20 +63,20 @@ export interface E1RunMetrics {
   cmRMax: number;
 }
 
-function safeNISPassRate(nu: number[], S: number[]): number {
+function safeNISPassRate(nu: number[], S: number[]): number | undefined {
   const paired = nu.map((v, i) => ({ v, s: S[i] })).filter((p) => p.s > 0);
-  if (paired.length === 0) return 0;
+  if (paired.length === 0) return undefined;
   try {
     return calculateNISPassRate(
       paired.map((p) => p.v),
       paired.map((p) => p.s),
     );
   } catch {
-    return 0;
+    return undefined;
   }
 }
 
-/** 트림 적용 rows + 복원 GT로 알고리즘별 메트릭 계산 */
+/** 트림 적용 rows + CSV gt_distance_mm로 알고리즘별 메트릭 계산 */
 export function calculateE1Metrics(
   rows: E1Row[],
   autoExcludeStop: boolean,
@@ -80,7 +85,7 @@ export function calculateE1Metrics(
   const trimmed = applyTrim(rows, autoExcludeStop, trimTail);
   if (trimmed.length === 0) return null;
 
-  const gt = reconstructGT(trimmed);
+  const gt = getGroundTruth(trimmed);
   const timestamps = trimmed.map((r) => r.timestamp_ms);
 
   const cmRValues = trimmed.map((r) => r.cm_R);
@@ -140,6 +145,10 @@ export function calculateE1Metrics(
 export function averageE1Metrics(all: E1RunMetrics[]): E1RunMetrics | null {
   if (all.length === 0) return null;
   const avg = (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length;
+  const avgOptional = (arr: Array<number | undefined>): number | undefined => {
+    const valid = arr.filter((v): v is number => typeof v === "number");
+    return valid.length > 0 ? avg(valid) : undefined;
+  };
   // tconv: null(수렴 못함) 런은 제외하고 평균. 전부 null이면 null.
   const avgTconv = (arr: Array<number | null | undefined>): number | null => {
     const valid = arr.filter((v): v is number => typeof v === "number");
@@ -156,14 +165,14 @@ export function averageE1Metrics(all: E1RunMetrics[]): E1RunMetrics | null {
     fixed: {
       rmse: avg(all.map((m) => m.fixed.rmse)),
       mae: avg(all.map((m) => m.fixed.mae)),
-      nisPassRate: avg(all.map((m) => m.fixed.nisPassRate ?? 0)),
+      nisPassRate: avgOptional(all.map((m) => m.fixed.nisPassRate)),
       rmseSS: avg(all.map((m) => m.fixed.rmseSS ?? m.fixed.rmse)),
       tconv: avgTconv(all.map((m) => m.fixed.tconv)),
     },
     cm: {
       rmse: avg(all.map((m) => m.cm.rmse)),
       mae: avg(all.map((m) => m.cm.mae)),
-      nisPassRate: avg(all.map((m) => m.cm.nisPassRate ?? 0)),
+      nisPassRate: avgOptional(all.map((m) => m.cm.nisPassRate)),
       rmseSS: avg(all.map((m) => m.cm.rmseSS ?? m.cm.rmse)),
       tconv: avgTconv(all.map((m) => m.cm.tconv)),
     },

@@ -1,7 +1,7 @@
 import { PAPER_RESULTS } from "@/lib/paper-results";
 
 const E4 = PAPER_RESULTS.E4;
-const TINYML_BUDGET_US = PAPER_RESULTS.realtime.tinymlBudget_us; // 5000 µs
+const TINYML_BUDGET_US = PAPER_RESULTS.realtime.tinymlBudget_us; // 500 µs
 const MAIN_LOOP_BUDGET_MS = PAPER_RESULTS.realtime.mainLoopBudget_ms; // 5 ms
 
 function GaugeCard({
@@ -139,7 +139,7 @@ export default function E4View() {
         <GaugeCard
           title="TinyML 추론 시간"
           actual={`${E4.tinymlInferMean_us} µs`}
-          budget={`${TINYML_BUDGET_US.toLocaleString()} µs (5ms)`}
+          budget={`${TINYML_BUDGET_US.toLocaleString()} µs (0.5ms 목표)`}
           usagePct={tinymlUsagePct}
           unit="µs"
           color="#7c3aed"
@@ -177,13 +177,13 @@ export default function E4View() {
           <div className="rounded-md bg-[#7c3aed] px-4 py-3 shadow-sm">
             <p className="text-xs text-[#ede9fe]">여유 마진</p>
             <p className="text-2xl font-bold text-white">
-              {(5000 / E4.tinymlInferMean_us).toFixed(0)}×
+              {(TINYML_BUDGET_US / E4.tinymlInferMean_us).toFixed(1)}×
             </p>
           </div>
         </div>
         <p className="mt-3 text-xs text-[#6d28d9]">
-          200Hz 루프 (5ms/cycle) 에서 TinyML이 사용하는 시간은 {tinymlUsagePct.toFixed(2)}%.
-          충분한 여유로 안정 동작 가능.
+          TinyML 추론 목표 0.5ms 대비 사용률은 {tinymlUsagePct.toFixed(2)}%.
+          200Hz 메인 루프 5ms 예산은 별도 게이지에서 확인합니다.
         </p>
       </div>
 

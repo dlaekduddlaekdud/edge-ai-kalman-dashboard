@@ -1,213 +1,148 @@
 # Edge AI Kalman Dashboard
 
-졸업연구의 평가 지표와 실험 시나리오를 웹 대시보드 코드로 옮겨, CSV 기반 분석 과정을 자동화한 프로젝트.
+졸업논문 **「Edge AI 기반 적응형 Kalman Filter의 임베디드 실시간 적용 연구」**의 실험 결과를 웹에서 재구성한 Next.js 연구 대시보드입니다. STM32F446RE에서 수집한 25/28컬럼 CSV를 업로드해 Fixed KF, Covariance Matching AKF, TinyML-AKF의 정확도와 실시간성 지표를 논문 정의에 맞춰 확인할 수 있습니다.
 
-> P0 완료 (2026-05-23). 논문 최종 스키마(25/28컬럼)로 전면 동기화. CSV 업로드 → 시나리오 선택 → RMSE/MAE/NIS 카드 → 라인 차트 흐름이 동작합니다. Vercel 배포 준비 중입니다.
+> 현재 상태: P0/P1/P2 기능 구현 완료, P3 데이터 신뢰성 개선, P4 UX/표현 정리 완료. 배포는 아직 제외하고 로컬/포트폴리오 문서 기준으로 정리했습니다.
 
-## Getting Started
+## Quick Start
 
 ```bash
-git clone https://github.com/dlaekduddlaekdud/edge-ai-kalman-dashboard.git
-cd edge-ai-kalman-dashboard
 npm install
 npm run dev
-# http://localhost:3000 접속
 ```
 
-1. `/upload`에서 실험 CSV를 업로드합니다.
-2. `/dashboard`에서 시나리오를 선택하고 메트릭 카드와 차트를 확인합니다.
-3. `/ablation`에서 feature set별 RMSE/MAE를 비교합니다.
+브라우저에서 `http://localhost:3000`을 엽니다.
 
-## Project Overview
+검증은 아래 명령으로 한 번에 실행합니다.
 
-**Edge AI Kalman Dashboard**는 졸업연구 "Edge AI 기반 적응형 칼만 필터"의 실험 CSV를 업로드하면, Fixed KF, CM-AKF, TinyML-AKF의 성능을 논문 4.3절 평가 지표 기준으로 비교 분석하도록 설계된 연구 분석 대시보드입니다.
+```bash
+npm run verify
+```
 
-이 프로젝트는 논문 결과를 새로 주장하거나 새로운 실험 성능을 예측하기 위한 앱이 아닙니다. 기존 실험 CSV를 분석하고 시각화하는 포트폴리오용 대시보드로, 졸업연구 분석 과정을 웹 기반으로 정리하는 것이 목적입니다.
+## What This Shows
 
-## Motivation
+- 논문 최종 CSV 스키마인 25컬럼(Fixed/CM)과 28컬럼(+TinyML)을 구분해 파싱합니다.
+- RMSE, MAE, NIS pass rate, RMSEss, Tconv를 TypeScript 함수로 구현했습니다.
+- E1/E3는 업로드 CSV 기반 동적 분석을 제공하고, E0/E2/E4/E5는 논문 확정값 카드/표로 재구성합니다.
+- TinyML NIS는 원문처럼 `tinyml_innovation_cov`가 없어 `—`로 표시합니다.
+- TinyML 추론 시간은 논문 원문 기준 목표 `0.5 ms = 500 µs`와 비교합니다. 평균 `35.32 µs`는 약 `14.2x` 여유입니다.
 
-이 프로젝트의 1차 목적은 개인 취업 포트폴리오입니다. 웹, 풀스택, SI 직무에서 보여줄 수 있는 데이터 파싱, 지표 계산, 대시보드 시각화, 배포 경험을 하나의 연구 기반 프로젝트로 정리합니다.
+## Main Pages
 
-2차 목적은 2026년 6월 10일 졸업 최종 발표에서 보조 시연 자료로 활용하는 것입니다. 단, 본 대시보드는 논문 본문에 포함되는 결과물이 아니며, 졸업논문 평가 기준 밖의 포트폴리오 산출물입니다.
-
-## MVP Scope
-
-2026년 6월 5일까지의 1차 MVP 범위는 다음 기능을 우선으로 합니다.
-
-- `/upload`: CSV 25/28컬럼 파싱 및 검증 (런별 슬롯 방식)
-- `/dashboard`: 시나리오 선택, E1/E3 분기 뷰
-- `/ablation`: 6-feature / 3-feature 비교, 논문 표 4-10 확정값 카드
-- `lib/metrics.ts`: RMSE, MAE, NIS pass rate, RMSEss, Tconv, R Drift CV 계산
-- `lib/csv-parser.ts`: PapaParse 래퍼, 25컬럼(Fixed KF + CM-AKF) / 28컬럼(+TinyML) 자동 감지
-- `lib/paper-results.ts`: 논문 확정 수치 단일 진실 소스 (E0~E5, realtime, TABLE_4_10, TABLE_5_3)
-- E1 정상 baseline 시각화
-- E3 차단 구간 강조 시각화
-- Ablation 시각화
-- README의 Spec → Implementation 표 정리
-
-확장 기능은 시간이 허용될 때 추가합니다.
-
-- E0, E2, E4, E5 차트
-- `/realtime`: MCU 측정 결과 비교
-- `/method`: 논문 4.3절 수식 및 정당화 페이지
-- Supabase 업로드 이력 저장
-- PNG/SVG export
-- Lighthouse 95+ 목표 점검
-- Condition Check
-
-## Demo Flow
-
-계획 중인 기본 사용 흐름은 다음과 같습니다.
-
-1. 사용자가 `/upload`에서 실험 CSV를 업로드합니다.
-2. CSV 헤더와 18컬럼 구조를 검증합니다.
-3. `/dashboard`에서 시나리오를 선택합니다.
-4. Fixed KF, CM-AKF, TinyML-AKF 알고리즘 표시 여부를 토글합니다.
-5. 선택된 시나리오에 맞는 메트릭 카드와 차트를 확인합니다.
-6. `/ablation`에서 feature set별 성능 차이를 비교합니다.
-
-## Tech Stack
-
-| Area | Stack | Reason |
+| Route | Purpose | Data Source |
 |---|---|---|
-| Framework | Next.js 15, App Router | 기존 스택과의 연속성 |
-| Language | TypeScript | 타입 안정성 및 포트폴리오 어필 |
-| UI | Tailwind CSS, shadcn/ui | 빠른 셋업과 일관된 디자인 |
-| Chart | Recharts | React 친화적이며 ReferenceArea 등 표현 가능 |
-| CSV Parsing | PapaParse | 클라이언트 사이드 CSV 파싱 및 헤더 매핑 |
-| State | Zustand 또는 Context | 업로드 데이터 전역 공유 |
-| Deploy | Vercel | GitHub 기반 자동 배포 |
-| Optional DB | Supabase | 업로드 이력 저장 시 사용 |
+| `/` | 프로젝트 개요와 주요 지표 | 논문 확정값 |
+| `/upload` | 시나리오/run별 CSV 업로드와 25/28컬럼 표시 | 사용자 CSV |
+| `/dashboard` | E0~E5 시나리오별 분석 | E1/E3는 업로드 CSV, 나머지는 논문 확정값 |
+| `/ablation` | 6-feature vs 3-feature feature set 비교 | 28컬럼 CSV 또는 논문 표 4-10/5-3 |
+| `/realtime` | TinyML 추론 시간과 200Hz 메인 루프 실시간성 | 논문 E4 확정값 |
+| `/method` | 지표 정의와 논문 분석 방식 정리 | 논문 방법론 |
 
-## Data Format
+## CSV Schema
 
-업로드 대상 CSV는 제안서 기준 18개 컬럼을 사용합니다. 각 row는 TypeScript에서 `KFRow` 형태로 다룰 계획입니다.
+업로드 파일명은 `{scenario}_runNN.csv` 형식을 권장합니다.
 
-| Column | Type | Note |
-|---|---|---|
-| `timestamp_ms` | `number` | 시간 |
-| `tof_distance_mm` | `number` | ToF 거리 |
-| `tof_signal_rate` | `number \| null` | E0는 null 가능 |
-| `tof_range_status` | `number \| null` | ToF range status |
-| `us_distance_mm` | `number \| null` | 초음파 거리 |
-| `encoder_distance_mm` | `number` | 엔코더 거리 |
-| `encoder_speed_mms` | `number` | 엔코더 속도 |
-| `kf_estimate_mm` | `number` | 칼만 필터 추정값 |
-| `tof_residual` | `number` | ToF residual |
-| `tof_residual_var` | `number \| null` | ToF residual variance, 초기 warm-up row는 null 가능 |
-| `tof_residual_mean` | `number \| null` | ToF residual mean, 초기 warm-up row는 null 가능 |
-| `sensor_disagree` | `number \| null` | 센서 불일치 지표 |
-| `tof_meas_rate` | `number \| null` | ToF measurement rate, 초기 row는 null 가능 |
-| `gt_distance_mm` | `number` | Ground truth 거리 |
-| `R_label` | `number \| null` | R label, 초기 warm-up row는 null 가능 |
-| `kalman_gain` | `number` | Kalman gain |
-| `innovation_cov` | `number` | Innovation covariance |
-| `scenario_id` | `number \| string` | 시나리오 자동 라우팅에 사용, 예: `E0` |
+```text
+E1_run01.csv
+E3_run05.csv
+```
 
-CSV 파싱은 PapaParse를 사용하고, 업로드 시 헤더 매핑과 컬럼 누락 검증을 수행할 예정입니다. 실제 시뮬레이션 CSV의 초기 warm-up row에서 비어 있는 계산 지표는 `null`로 처리합니다.
+### 25-column CSV
+
+Fixed KF와 CM-AKF 분석에 필요한 최종 기본 스키마입니다.
+
+```text
+seq,timestamp_ms,tof_distance_mm,tof_signal_rate,tof_range_status,
+us_distance_mm,encoder_distance_mm,encoder_speed_mms,sensor_disagree,
+tof_meas_rate,gt_distance_mm,scenario_id,
+fixed_estimate_mm,fixed_residual,fixed_residual_var,fixed_residual_mean,
+fixed_kalman_gain,fixed_innovation_cov,
+cm_estimate_mm,cm_residual,cm_residual_var,cm_residual_mean,
+cm_kalman_gain,cm_innovation_cov,cm_R
+```
+
+### 28-column CSV
+
+25컬럼에 TinyML-AKF 결과 3개 컬럼이 추가됩니다.
+
+```text
+tinyml_estimate_mm,tinyml_R,tinyml_infer_us
+```
+
+샘플 파일은 `public/sample/E1_run01.csv`(25컬럼)와 `public/sample/E3_run01.csv`(28컬럼)에 있습니다.
 
 ## Metrics
 
-논문 4.3.1의 평가 지표를 TypeScript 함수로 옮기는 것을 목표로 합니다.
-
-| Metric | Planned Function | Definition |
+| Metric | Implementation | Definition |
 |---|---|---|
-| RMSE | `calculateRMSE(estimates, gt)` | `sqrt(1/N * sum((x_hat - x_gt)^2))` |
-| MAE | `calculateMAE(estimates, gt)` | `1/N * sum(abs(x_hat - x_gt))` |
-| NIS pass rate | `calculateNISPassRate(nu, S)` | chi-square, df=1, 95% 양측 구간 `[0.00098, 5.024]` 내 비율 |
-| R estimation RMSE | `calculateRRMSE(rEst, rLabel)` | `sqrt(1/N * sum((R_hat - R_label)^2))` |
-| Convergence time | `calculateTconv(rmseTS, ssRmse)` | RMSE가 `1.1 * RMSE_ss` 이하가 되는 최초 시점 |
+| RMSE | `lib/metrics.ts#calculateRMSE` | `sqrt(mean((estimate - gt)^2))` |
+| MAE | `lib/metrics.ts#calculateMAE` | `mean(abs(estimate - gt))` |
+| NIS pass rate | `lib/metrics.ts#calculateNISPassRate` | chi-square df=1, 95% interval `[0.00098, 5.024]` |
+| RMSEss | `lib/metrics.ts#calculateRMSEss` | 후반 50 frame 정상상태 RMSE |
+| Tconv | `lib/metrics.ts#calculateTconv` | 50 frame sliding RMSE가 `1.1 * RMSEss` 이하로 최초 진입한 시각 |
+| E0 Tconv | `lib/metrics.ts#calculateTconvE0` | E0 전용 절대 임계값 `epsilon = 5 mm` |
 
-## Spec → Implementation
+동적 지표의 ground truth는 논문 원문과 동일하게 CSV의 `gt_distance_mm`를 사용합니다.
 
-아직 구현 전이므로 아래 표는 계획 기준입니다. 구현이 진행되면 실제 파일 경로, 함수명, 완료 상태를 검증해 갱신합니다.
+## Scenario Coverage
 
-| Paper / Proposal Spec | Planned Implementation | Status |
+| Scenario | Dashboard Behavior | Notes |
 |---|---|---|
-| 논문 4.3.1 RMSE | `lib/metrics.ts#calculateRMSE` | Done |
-| 논문 4.3.1 MAE | `lib/metrics.ts#calculateMAE` | Done |
-| 논문 4.3.1 NIS pass rate | `lib/metrics.ts#calculateNISPassRate` | Done |
-| 논문 4.3.1 R 추정 RMSE | `lib/metrics.ts#calculateRRMSE` | Done |
-| 논문 4.3.1 수렴 시간 | `lib/metrics.ts#calculateTconv` | Done |
-| CSV 18컬럼 파싱 및 검증 | `lib/csv-parser.ts` | Done |
-| 전역 상태 관리 (CSV → Dashboard) | `lib/store.ts` (Zustand) | Done |
-| E1 정상 baseline 비교 | `components/views/E1View.tsx` | Done |
-| E3 차단 구간 강조 | `components/views/E3View.tsx` | Done |
-| Ablation feature set 비교 | `app/ablation/page.tsx` | In Progress |
+| E0 | 논문 확정 카드 | Python 합성 시뮬레이션, CSV 업로드 없음 |
+| E1 | 업로드 CSV 기반 동적 차트/카드 | run 선택, algorithm toggle, trim 설정 지원 |
+| E2 | 논문 확정 표/막대 차트 | 표면별 RMSE, cm_R, signal rate |
+| E3 | 업로드 CSV 기반 차단 구간/R̂ 시계열 | 28컬럼이면 TinyML R̂ 차트 활성화 |
+| E4 | 논문 확정 실시간성/장기 안정성 카드 | TinyML 0.5ms 목표와 5ms main loop 분리 |
+| E5 | 논문 확정 일반화 카드 | 미지 표면에서 CM/TinyML 비교 |
 
-## Scenario Views
-
-| Scenario | Main View | Supporting View | Priority |
-|---|---|---|---|
-| E0 | 위치 추정 시계열 | NIS 히스토그램, K_ss 수렴 | Optional |
-| E1 | RMSE/MAE 비교 막대 | NIS pass rate | MVP |
-| E2 | 벽 재질별 RMSE 그룹 막대 | R_hat 시계열 | Optional |
-| E3 | 차단 구간 ReferenceArea가 포함된 위치 추정 시계열 | R_hat 시계열, Max Error 표 | MVP |
-| E4 | R_hat drift 시계열 | 메인 루프 시간 히스토그램 | Optional |
-| E5 | RMSE 비교 및 R_hat 분포 | signal_rate 분포 비교 | Optional |
-| Ablation | 6-feature, 5-feature, 3-feature 비교 | TBD | MVP |
-
-## Project Structure
+## Architecture
 
 ```text
 app/
-├ page.tsx
-├ upload/page.tsx         ← CSV 파싱 및 검증 (완료)
-├ dashboard/page.tsx      ← 시나리오 선택, 메트릭 카드, 차트 (완료)
-├ ablation/page.tsx       ← feature set 비교 (In Progress)
-├ realtime/page.tsx       ← Optional
-└ method/page.tsx         ← Optional
-
-lib/
-├ csv-parser.ts           ← PapaParse 래퍼, 18컬럼 검증 (완료)
-├ metrics.ts              ← RMSE, MAE, NIS, R RMSE, Tconv (완료)
-└ store.ts                ← Zustand 전역 상태 (완료)
+├ upload/page.tsx       # CSV upload, run/scenario validation
+├ dashboard/page.tsx    # Scenario router and source badges
+├ ablation/page.tsx     # 6-feature / 3-feature analysis
+├ realtime/page.tsx     # MCU timing dashboard
+└ method/page.tsx       # Metric definitions and method notes
 
 components/
-├ charts/
-│  └ EstimateLineChart.tsx  ← KF Estimate vs Ground Truth (완료)
-└ views/
-   ├ E1View.tsx             ← E1 정상 baseline (완료)
-   └ E3View.tsx             ← E3 차단 구간 강조 (완료)
+├ e1/                   # E1/E3 shared controls and charts
+└ views/                # E0~E5 scenario views
+
+lib/
+├ csv-parser.ts         # Final 25/28-column parser
+├ e1-csv-parser.ts      # Run-oriented parser for dashboard upload
+├ e1-metrics.ts         # E1/E3 dynamic metric aggregation
+├ metrics.ts            # Paper metric functions
+├ e1-store.ts           # Zustand store for scenario/run data
+└ paper-results.ts      # Single source for thesis-confirmed static values
 ```
 
-## Development Roadmap
+## Portfolio Points
 
-| Date | Planned Work | Output |
-|---|---|---|
-| 2026-05-30 | 프로젝트 셋업, 라우팅, 레이아웃, Tailwind/shadcn | 빈 페이지 4~6개, 사이드바 |
-| 2026-05-31 | `lib/metrics.ts`, `lib/csv-parser.ts`, 단위 테스트 | 메트릭 함수 5개, CSV 파서 |
-| 2026-06-01 | `/upload`, `/dashboard` 셀렉터, E1View | 첫 시나리오 작동 |
-| 2026-06-02 | E3View, `/ablation` | 시연 3종 완성 목표 |
-| 2026-06-03 | E0/E2/E4/E5 | 시간 허용 범위 확장 |
-| 2026-06-04 | `/realtime`, `/method`, README | 콘텐츠 정리 |
-| 2026-06-05 | Vercel 배포, Lighthouse, 디자인 마무리 | 라이브 URL 확보 목표 |
-| 2026-06-06 ~ 2026-06-09 | 발표 자료에 시연 영상/스크린샷 통합 | 2026-06-10 발표 준비 |
+- 연구 논문의 실험 설계를 웹 대시보드 정보 구조로 옮겼습니다.
+- 논문 수식과 CSV 스키마를 TypeScript 타입/함수로 구체화했습니다.
+- 정적 논문 확정값과 업로드 CSV 기반 동적 계산값을 UI에서 분리했습니다.
+- TinyML 실시간성 검증에서 0.5ms 추론 목표와 5ms 제어 루프 예산을 구분했습니다.
+- 잘못된 CSV, 시나리오 mismatch, TinyML 컬럼 부재를 사용자에게 명확히 보여주도록 방어했습니다.
+
+## Verification
+
+```bash
+npm run typecheck
+npm run build
+npm run verify
+```
+
+현재 CI는 아직 없습니다. 포트폴리오 배포 전에는 GitHub Actions로 `npm run verify`를 연결하는 것을 권장합니다.
 
 ## Deployment
 
-| Item | Status |
-|---|---|
-| GitHub Repository | [edge-ai-kalman-dashboard](https://github.com/dlaekduddlaekdud/edge-ai-kalman-dashboard) |
-| Vercel Live URL | Coming soon |
-| Lighthouse Performance | TBD |
-| Deployment Status | TBD |
-
-## Portfolio Notes
-
-이 프로젝트는 다음 역량을 보여주는 포트폴리오 산출물로 정리할 계획입니다.
-
-- 연구 실험 CSV를 웹 애플리케이션 입력 데이터로 변환
-- 논문 평가 지표를 TypeScript 함수로 구현
-- 시나리오별 분석 요구사항을 대시보드 UI로 구조화
-- Recharts 기반 데이터 시각화 구성
-- README의 Spec → Implementation 표를 통한 구현 근거 정리
-- Vercel 기반 배포 준비 및 GitHub 연동
+배포는 이번 정리 범위에서 제외했습니다. 추후 배포 시에는 Vercel의 Next.js 자동 감지를 사용하고, build command는 `npm run build`를 사용하면 됩니다.
 
 ## Limitations
 
-- 이 대시보드는 새로운 논문 결과를 주장하기 위한 도구가 아닙니다.
-- 이 대시보드는 기존 실험 CSV를 분석하고 시각화하는 포트폴리오용 프로젝트입니다.
-- 논문 본문에는 포함되지 않으며, 졸업논문 평가 기준 밖의 보조 산출물입니다.
-- Condition Check 기능이 추가되더라도 새로운 조건의 성능을 예측하거나 연구 실험 결과로 주장하기 위한 기능이 아닙니다.
-- 현재 README는 구현 전 계획 문서이며, 실제 구현 완료 후 파일 경로, 배포 URL, 성능 점수는 갱신되어야 합니다.
+- 이 대시보드는 새 논문 결과를 생성하거나 성능을 예측하지 않습니다.
+- E0/E2/E4/E5는 per-frame 원본 CSV 없이 논문 확정값을 시각화합니다.
+- TinyML NIS는 원문 CSV에 필요한 TinyML innovation covariance가 없어 계산하지 않습니다.
+- Supabase 업로드 이력 저장은 구현하지 않았습니다. 현재 분석 데이터는 브라우저 상태에만 유지됩니다.

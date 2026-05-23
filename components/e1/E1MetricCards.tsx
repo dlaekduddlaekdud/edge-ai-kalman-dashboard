@@ -67,7 +67,7 @@ function renderNISValue(id: string, nisPassRate: number | undefined): string {
 }
 
 export default function E1MetricCards() {
-  const { runs, activeRun, selectedAlgorithms, autoExcludeStop, trimTail } =
+  const { runs, activeRun, selectedAlgorithms, autoExcludeStop, trimTail, hasTinyML } =
     useE1Store();
 
   const metrics: E1RunMetrics | null = useMemo(() => {
@@ -93,7 +93,6 @@ export default function E1MetricCards() {
     );
   }
 
-  const { hasTinyML } = useE1Store();
   const visibleAlgos = ALGO_IDS.filter((id) => selectedAlgorithms.includes(id as E1AlgorithmId));
   // TinyML이 있고 토글 선택된 경우 추가
   const showTinyML = hasTinyML && selectedAlgorithms.includes("tinyml") && metrics.tinyml != null;

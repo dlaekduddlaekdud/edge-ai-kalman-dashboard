@@ -39,6 +39,14 @@ export default function E1View() {
       {/* 컨트롤 패널 */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
         <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              업로드 CSV 계산값
+            </p>
+            <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-xs font-semibold text-[#15803d]">
+              동적 분석
+            </span>
+          </div>
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
               런 선택

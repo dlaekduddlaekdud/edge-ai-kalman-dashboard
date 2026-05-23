@@ -43,6 +43,15 @@ interface SlotMetrics {
   rowCount: number;
 }
 
+function hasFullTinyMLColumns(rows: KFRow[]): boolean {
+  return rows.length > 0 && rows.every(
+    (row) =>
+      row.tinyml_estimate_mm !== undefined &&
+      row.tinyml_R !== undefined &&
+      row.tinyml_infer_us !== undefined,
+  );
+}
+
 function computeMetrics(rows: KFRow[]): SlotMetrics {
   const sliced = rows.slice(WARMUP_ROWS);
   if (sliced.length === 0) return { maeR: null, mapeR: null, rowCount: rows.length };
@@ -82,6 +91,11 @@ function UploadSlot({ id }: { id: AblationSetId }) {
 
       try {
         const rows = parseKFCSV(text);
+        if (!hasFullTinyMLColumns(rows)) {
+          throw new Error(
+            "Ablation 슬롯은 tinyml_estimate_mm, tinyml_R, tinyml_infer_us가 포함된 28컬럼 CSV만 허용합니다.",
+          );
+        }
         setSlot(id, rows, file.name);
       } catch (err) {
         console.warn(`[ablation] CSV 파싱 실패 (${id}):`, err);
@@ -451,6 +465,7 @@ export default function AblationPage() {
           논문 기준: TinyML-AKF 입력 feature를 6개(메인) / 3개(잔차 통계만)로
           줄였을 때의 R 라벨 추적도(MAE_R/MAPE_R) 변화를 비교합니다.
           각 feature set으로 훈련된 모델의 추론 결과 CSV(28컬럼)를 슬롯에 업로드하세요.
+          25컬럼 Fixed/CM CSV는 ablation 라벨 추적도를 계산할 수 없어 거부됩니다.
         </p>
 
         {/* 논문 기준 배너 */}

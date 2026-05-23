@@ -144,9 +144,9 @@ export const PAPER_RESULTS = {
   // ── 실시간 성능 ────────────────────────────────────────────────────────
   realtime: {
     description: "논문 5.2.1 RQ1 — 200Hz 루프 실시간성 검증",
-    tinymlBudget_us: 5000,
+    tinymlBudget_us: 500,
     tinymlActual_us: 35.32,
-    tinymlMarginX: 141.7,         // 14× 마진 (5000/35.32)
+    tinymlMarginX: 14.2,          // 목표 500 µs / 35.32 µs ≈ 14× 마진
     mainLoopBudget_ms: 5,
     mainLoopActual_ms: 1.24,
     mainLoopUsage: 24.8,          // %
