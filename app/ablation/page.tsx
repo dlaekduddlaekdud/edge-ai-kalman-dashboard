@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
+import Papa from "papaparse";
 import {
   BarChart,
   Bar,
@@ -352,14 +353,66 @@ function Table4_10Card() {
   );
 }
 
-// 표 5-3 하드코딩 카드 (3-feature hold-out 위치 RMSE — 항상 표시)
-function Table5_3Card() {
+// ── 표 5-3 동적 CSV 로드 타입 ────────────────────────────────────────────
+interface AblationHoldoutRow {
+  scenario: string;
+  n: number;
+  fixed: number;
+  cm: number;
+  tinyml3f: number;
+  cmVs3fDiff: number;
+  diverged: boolean;
+}
+
+interface AblationHoldoutState {
+  loading: boolean;
+  rows: AblationHoldoutRow[] | null;
+  weightedAvg: { n: number; fixed: number; cm: number; tinyml3f: number; cmVs3fDiff: number } | null;
+  source: "csv" | "fallback";
+  error: string | null;
+}
+
+function formatScenarioName(raw: string): string {
+  // "E2_white_run03" → "E2 white run03"
+  return raw.replace(/_/g, " ");
+}
+
+// 표 5-3 카드 — CSV 로드 또는 fallback 하드코딩
+function Table5_3Card({ state }: { state: AblationHoldoutState }) {
   const { TABLE_5_3 } = PAPER_RESULTS;
+
+  // fallback 또는 로딩 중일 때 hardcoded 사용
+  const rows: AblationHoldoutRow[] = state.rows ?? TABLE_5_3.rows.map((r) => ({
+    scenario: r.scenario,
+    n: r.n,
+    fixed: r.fixed,
+    cm: r.cm,
+    tinyml3f: r.tinyml3f,
+    cmVs3fDiff: r.cmVs3fDiff,
+    diverged: "diverged" in r ? !!r.diverged : false,
+  }));
+
+  const avg = state.weightedAvg ?? TABLE_5_3.weightedAvg;
+
   return (
     <div className="rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
-      <div className="border-b border-[#f1f5f9] px-6 py-4">
-        <h3 className="text-base font-semibold text-[#111827]">{TABLE_5_3.title}</h3>
-        <p className="mt-0.5 text-xs text-[#94a3b8]">{TABLE_5_3.description}</p>
+      <div className="flex items-start justify-between border-b border-[#f1f5f9] px-6 py-4">
+        <div>
+          <h3 className="text-base font-semibold text-[#111827]">{TABLE_5_3.title}</h3>
+          <p className="mt-0.5 text-xs text-[#94a3b8]">{TABLE_5_3.description}</p>
+        </div>
+        {/* 데이터 소스 배지 */}
+        <span
+          className={`mt-0.5 shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
+            state.loading
+              ? "border-[#e2e8f0] bg-[#f8fafc] text-[#94a3b8]"
+              : state.source === "csv"
+              ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d]"
+              : "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]"
+          }`}
+        >
+          {state.loading ? "로딩 중..." : state.source === "csv" ? "CSV 실측값" : "논문 확정값"}
+        </span>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-[#e2e8f0] text-sm">
@@ -374,11 +427,11 @@ function Table5_3Card() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f1f5f9] bg-white">
-            {TABLE_5_3.rows.map((row, idx) => (
+            {rows.map((row, idx) => (
               <tr key={row.scenario} className={idx % 2 === 1 ? "bg-[#fafafa]" : ""}>
                 <td className="px-4 py-3">
                   <p className="font-medium text-[#111827]">{row.scenario}</p>
-                  {"diverged" in row && row.diverged && (
+                  {row.diverged && (
                     <p className="text-xs text-[#dc2626]">⚠ 3f 모델 폭발</p>
                   )}
                 </td>
@@ -388,12 +441,12 @@ function Table5_3Card() {
                 <td
                   className="px-4 py-3 text-right font-mono"
                   style={{
-                    color: "diverged" in row && row.diverged ? "#dc2626" : "#7c3aed",
-                    fontWeight: "diverged" in row && row.diverged ? 700 : 400,
+                    color: row.diverged ? "#dc2626" : "#7c3aed",
+                    fontWeight: row.diverged ? 700 : 400,
                   }}
                 >
                   {row.tinyml3f.toFixed(2)}
-                  {"diverged" in row && row.diverged && " ★"}
+                  {row.diverged && " ★"}
                 </td>
                 <td
                   className="px-4 py-3 text-right font-mono"
@@ -405,19 +458,16 @@ function Table5_3Card() {
             ))}
             {/* 가중 평균 행 */}
             <tr className="border-t-2 border-[#d9e0ea] bg-[#f8fafc] font-semibold">
-              <td className="px-4 py-3 text-[#111827]">가중 평균 (N={TABLE_5_3.weightedAvg.n})</td>
-              <td className="px-4 py-3 text-right text-[#64748b]">{TABLE_5_3.weightedAvg.n}</td>
-              <td className="px-4 py-3 text-right font-mono text-[#10b981]">
-                {TABLE_5_3.weightedAvg.fixed.toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-[#2563eb]">
-                {TABLE_5_3.weightedAvg.cm.toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-[#dc2626]">
-                {TABLE_5_3.weightedAvg.tinyml3f.toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-right font-mono text-[#dc2626]">
-                +{TABLE_5_3.weightedAvg.cmVs3fDiff.toFixed(2)}
+              <td className="px-4 py-3 text-[#111827]">가중 평균 (N={avg.n})</td>
+              <td className="px-4 py-3 text-right text-[#64748b]">{avg.n}</td>
+              <td className="px-4 py-3 text-right font-mono text-[#10b981]">{avg.fixed.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right font-mono text-[#2563eb]">{avg.cm.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right font-mono text-[#dc2626]">{avg.tinyml3f.toFixed(2)}</td>
+              <td
+                className="px-4 py-3 text-right font-mono"
+                style={{ color: avg.cmVs3fDiff > 0 ? "#dc2626" : "#16a34a" }}
+              >
+                {avg.cmVs3fDiff > 0 ? "+" : ""}{avg.cmVs3fDiff.toFixed(2)}
               </td>
             </tr>
           </tbody>
@@ -426,9 +476,14 @@ function Table5_3Card() {
       <div className="space-y-1 px-6 py-3 text-xs text-[#64748b]">
         <p>단위: mm (위치 RMSE). CM vs 3f: 양수 = 3f가 CM보다 높음 (성능 열화).</p>
         <p>
-          ⚠ E2 acryl run03: 3-feature 모델이 {TABLE_5_3.rows[2].tinyml3f.toFixed(0)}mm RMSE로 폭발 — signal_rate 제거의 위험성 입증.
+          ⚠ E2 acryl run03: 3-feature 모델이 {rows[2]?.tinyml3f?.toFixed(0) ?? "97"}mm RMSE로 폭발 — signal_rate 제거의 위험성 입증.
         </p>
         <p>{TABLE_5_3.note}</p>
+        {state.source === "csv" && (
+          <p className="text-[#16a34a]">
+            ✓ /data/ablation_holdout_results.csv 에서 직접 계산된 실측값입니다.
+          </p>
+        )}
       </div>
     </div>
   );
@@ -437,6 +492,59 @@ function Table5_3Card() {
 // 메인 페이지
 export default function AblationPage() {
   const { slots, clearAll } = useAblationStore();
+
+  // ── ablation_holdout_results.csv 동적 로드 ──────────────────────────────
+  const [holdoutState, setHoldoutState] = useState<AblationHoldoutState>({
+    loading: true, rows: null, weightedAvg: null, source: "fallback", error: null,
+  });
+
+  useEffect(() => {
+    fetch("/data/ablation_holdout_results.csv")
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
+      .then((text) => {
+        const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
+        const parsed: AblationHoldoutRow[] = result.data.map((r) => {
+          const cm = parseFloat(r.rmse_cm);
+          const tinyml3f = parseFloat(r.rmse_3feat);
+          return {
+            scenario: formatScenarioName(r.scenario),
+            n: parseInt(r.n, 10),
+            fixed: parseFloat(r.rmse_fixed),
+            cm,
+            tinyml3f,
+            cmVs3fDiff: tinyml3f - cm,
+            // 3f가 CM 대비 2배 이상이거나 50mm 초과면 diverged
+            diverged: tinyml3f > 50 || tinyml3f > cm * 2,
+          };
+        });
+
+        // 가중 평균 계산
+        const totalN = parsed.reduce((s, r) => s + r.n, 0);
+        const wavg = (getter: (r: AblationHoldoutRow) => number) =>
+          parsed.reduce((s, r) => s + getter(r) * r.n, 0) / totalN;
+
+        const weightedAvg = {
+          n: totalN,
+          fixed: wavg((r) => r.fixed),
+          cm: wavg((r) => r.cm),
+          tinyml3f: wavg((r) => r.tinyml3f),
+          cmVs3fDiff: wavg((r) => r.cmVs3fDiff),
+        };
+
+        setHoldoutState({ loading: false, rows: parsed, weightedAvg, source: "csv", error: null });
+      })
+      .catch((err) => {
+        // fetch 실패 시 hardcoded fallback
+        setHoldoutState({
+          loading: false, rows: null, weightedAvg: null,
+          source: "fallback",
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
+  }, []);
 
   // 슬롯별 메트릭 계산
   const metrics = useMemo(() => {
@@ -552,7 +660,7 @@ export default function AblationPage() {
         <h3 className="mb-3 text-sm font-semibold text-[#374151]">
           논문 확정 결과 — 표 5-3
         </h3>
-        <Table5_3Card />
+        <Table5_3Card state={holdoutState} />
       </section>
     </div>
   );
