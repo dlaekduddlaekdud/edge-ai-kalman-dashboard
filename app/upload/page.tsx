@@ -106,12 +106,6 @@ export default function DataPage() {
     setLoadState(emptyLoadState());
   }
 
-  // E4는 CSV 없음 → 즉시 대시보드로 이동
-  function handleE4Select() {
-    setActiveScenario("E4");
-    router.push("/dashboard");
-  }
-
   // ── 데이터 자동 로드 ──────────────────────────────────────────────────────
   async function handleAutoLoad(files: { runId: RunId; path: string }[]) {
     setLoadState({ loading: true, done: false, error: null, totalRows: null, durationMs: null });
@@ -232,7 +226,7 @@ export default function DataPage() {
             <button
               key={label}
               type="button"
-              onClick={() => label === "E4" ? handleE4Select() : handleScenarioChange(label)}
+              onClick={() => handleScenarioChange(label)}
               className={`rounded-lg border px-4 py-3 text-left transition ${
                 activeScenario === label
                   ? "border-[#2563eb] bg-[#eff6ff]"

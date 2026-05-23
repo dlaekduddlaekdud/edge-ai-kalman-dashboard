@@ -1,8 +1,22 @@
+"use client";
+
+import Link from "next/link";
+import { useE1Store } from "@/lib/e1-store";
 import { PAPER_RESULTS } from "@/lib/paper-results";
+import RunSelector from "@/components/e1/RunSelector";
+import AlgorithmToggle from "@/components/e1/AlgorithmToggle";
+import TrimControl from "@/components/e1/TrimControl";
+import E1MetricCards from "@/components/e1/E1MetricCards";
+import PositionChart from "@/components/e1/charts/PositionChart";
+import CMRChart from "@/components/e1/charts/CMRChart";
+import ResidualChart from "@/components/e1/charts/ResidualChart";
 
 const E5 = PAPER_RESULTS.E5;
 
 export default function E5View() {
+  const { runs } = useE1Store();
+  const hasAnyRun = Object.values(runs).some((r) => r !== undefined);
+
   const cmImprovement = (((E5.raw.rmse - E5.cm.rmse) / E5.raw.rmse) * 100).toFixed(1);
   const tinymlVsCm = (E5.tinyml.rmse - E5.cm.rmse).toFixed(2);
 
@@ -21,10 +35,82 @@ export default function E5View() {
           <span className="rounded-full border border-[#fde68a] bg-[#fffbeb] px-3 py-1 text-[#92400e]">
             E2 훈련 데이터에 없는 표면
           </span>
+          {hasAnyRun ? (
+            <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-[#15803d]">
+              ✓ CSV 분석 활성화
+            </span>
+          ) : (
+            <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-[#1d4ed8]">
+              논문 확정값 표시
+            </span>
+          )}
         </div>
       </div>
 
-      {/* RMSE 비교 카드 */}
+      {/* ── CSV 동적 분석 (데이터 있을 때) ── */}
+      {hasAnyRun ? (
+        <>
+          {/* 컨트롤 패널 */}
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+                  업로드 CSV 분석
+                </p>
+                <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-xs font-semibold text-[#15803d]">
+                  동적 분석
+                </span>
+              </div>
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">런 선택</p>
+                <RunSelector />
+              </div>
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">알고리즘</p>
+                <AlgorithmToggle />
+              </div>
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">트림 설정</p>
+                <TrimControl />
+              </div>
+            </div>
+          </div>
+
+          {/* 메트릭 카드 (E5 논문값) */}
+          <E1MetricCards />
+
+          {/* 위치 추정 차트 */}
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <PositionChart />
+          </div>
+
+          {/* 잔차 + CM-R 차트 */}
+          <div className="grid gap-5 lg:grid-cols-2">
+            <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+              <ResidualChart />
+            </div>
+            <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+              <CMRChart />
+            </div>
+          </div>
+        </>
+      ) : (
+        /* CSV 미로드 시 — 데이터 탭 안내 */
+        <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
+          <p className="text-base font-semibold text-[#92400e]">E5 CSV가 로드되지 않았습니다.</p>
+          <p className="mt-2 text-sm text-[#78350f]">
+            Data 탭에서 E5를 선택하고 데이터를 불러오면 위치 추정 차트와 잔차 분석을 볼 수 있습니다.
+          </p>
+          <Link
+            href="/upload"
+            className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+          >
+            Data 탭에서 E5 불러오기 →
+          </Link>
+        </div>
+      )}
+
+      {/* ── 논문 확정값 RMSE 카드 (항상 표시) ── */}
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold text-[#64748b]">Raw ToF</p>
@@ -34,7 +120,9 @@ export default function E5View() {
         <div className="rounded-lg border border-[#d1fae5] bg-[#f0fdf4] p-5 shadow-sm">
           <p className="text-xs font-semibold text-[#10b981]">Fixed KF</p>
           <p className="mt-2 text-2xl font-bold text-[#047857]">{E5.fixed.rmse} mm</p>
-          <p className="mt-0.5 text-xs text-[#34d399]">MAE {E5.fixed.mae} mm · NIS {E5.fixed.nis != null ? `${(E5.fixed.nis * 100).toFixed(1)}%` : "—"}</p>
+          <p className="mt-0.5 text-xs text-[#34d399]">
+            MAE {E5.fixed.mae} mm · NIS {E5.fixed.nis != null ? `${(E5.fixed.nis * 100).toFixed(1)}%` : "—"}
+          </p>
         </div>
         <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] p-5 shadow-sm">
           <p className="text-xs font-semibold text-[#2563eb]">CM-AKF</p>
@@ -48,23 +136,20 @@ export default function E5View() {
         </div>
       </div>
 
-      {/* 알고리즘 순위 + 해석 */}
+      {/* 알고리즘 순위 */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-[#111827]">성능 순위 (RMSE 기준)</h3>
         <div className="mt-3 space-y-2">
           {[
-            { rank: 1, label: "CM-AKF", rmse: E5.cm.rmse, color: "#2563eb", note: "미지 표면 최적 적응" },
+            { rank: 1, label: "CM-AKF",     rmse: E5.cm.rmse,     color: "#2563eb", note: "미지 표면 최적 적응" },
             { rank: 2, label: "TinyML-AKF", rmse: E5.tinyml.rmse, color: "#7c3aed", note: `CM보다 +${tinymlVsCm}mm (일반화 한계)` },
-            { rank: 3, label: "Fixed KF", rmse: E5.fixed.rmse, color: "#10b981", note: "고정 R — 표면 변화 미적응" },
-            { rank: 4, label: "Raw ToF", rmse: E5.raw.rmse, color: "#64748b", note: "필터 없음" },
+            { rank: 3, label: "Fixed KF",   rmse: E5.fixed.rmse,  color: "#10b981", note: "고정 R — 표면 변화 미적응" },
+            { rank: 4, label: "Raw ToF",    rmse: E5.raw.rmse,    color: "#64748b", note: "필터 없음" },
           ].map(({ rank, label, rmse, color, note }) => (
             <div key={label} className="flex items-center gap-3">
               <span className="w-5 text-center text-xs font-bold text-[#94a3b8]">{rank}</span>
               <div className="flex flex-1 items-center gap-2">
-                <span
-                  className="inline-block h-2 w-2 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
+                <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
                 <span className="text-sm font-medium" style={{ color }}>{label}</span>
               </div>
               <span className="font-mono text-sm font-semibold text-[#111827]">{rmse} mm</span>
@@ -74,7 +159,7 @@ export default function E5View() {
         </div>
       </div>
 
-      {/* Anomaly 강조 박스 */}
+      {/* Anomaly 강조 */}
       <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-5 shadow-sm">
         <p className="text-xs font-semibold text-[#dc2626]">⚠ Run 5 — 비정상 R̂ 피크</p>
         <div className="mt-3 flex flex-wrap items-center gap-4">
@@ -109,11 +194,10 @@ export default function E5View() {
         </div>
         <p className="mt-3 text-xs text-[#64748b]">
           회색 표면은 흰 표면과 유사하나 signal_rate가 약간 낮음.
-          TinyML 6-feature 모델에서 signal_rate 특성이 약간 다른 경우에도 적응 가능한지 검증됨 — 일부 적응 한계 확인.
+          TinyML 6-feature 모델의 일부 적응 한계 확인.
         </p>
       </div>
 
-      {/* 한계 주석 */}
       <div className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-xs text-[#64748b]">
         <p className="font-semibold text-[#475569]">한계 및 해석 주의사항</p>
         <p className="mt-1">{E5.note}</p>
