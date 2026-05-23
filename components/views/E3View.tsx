@@ -13,11 +13,14 @@ import {
   YAxis,
 } from "recharts";
 import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, type E1AlgorithmId } from "@/lib/e1-store";
-import { ALL_RUNS, type RunId } from "@/lib/e1-csv-parser";
-import { applyTrim, reconstructGT } from "@/lib/e1-metrics";
+import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
+import { applyTrim, getGroundTruth } from "@/lib/e1-metrics";
 import { calculateRMSE, calculateMAE, calculateNISPassRate } from "@/lib/metrics";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 import type { E1Row } from "@/lib/e1-csv-parser";
+import RunSelector from "@/components/e1/RunSelector";
+import AlgorithmToggle from "@/components/e1/AlgorithmToggle";
+import TrimControl from "@/components/e1/TrimControl";
 
 interface BlockedInterval {
   x1: number;
@@ -76,16 +79,16 @@ function detectBlockedIntervals(
   return { intervals, method: hasRangeStatus ? "range_status" : "threshold" };
 }
 
-function safeNISPassRate(nu: number[], S: number[]): number {
+function safeNISPassRate(nu: number[], S: number[]): number | undefined {
   const paired = nu.map((v, i) => ({ v, s: S[i] })).filter((p) => p.s > 0);
-  if (paired.length === 0) return 0;
+  if (paired.length === 0) return undefined;
   try {
     return calculateNISPassRate(
       paired.map((p) => p.v),
       paired.map((p) => p.s),
     );
   } catch {
-    return 0;
+    return undefined;
   }
 }
 
@@ -126,10 +129,11 @@ export default function E3View() {
     }
 
     const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
+    const hasTinymlR = hasTinyML && trimmed.every((r) => r.tinyml_R !== undefined);
     const points: RChartPoint[] = trimmed.map((r) => ({
       timestamp_ms: r.timestamp_ms,
       cm_R: Math.min(r.cm_R, 10000), // 폭발 방지 클램프
-      tinyml_R: hasTinyML && r.tinyml_R !== undefined
+      tinyml_R: hasTinymlR && r.tinyml_R !== undefined
         ? Math.min(r.tinyml_R, 10000)
         : undefined,
     }));
@@ -182,23 +186,29 @@ export default function E3View() {
         };
       }
 
-      const gt = reconstructGT(trimmed);
+      const gt = getGroundTruth(trimmed);
       const { intervals, method } = detectBlockedIntervals(trimmed);
 
       // 알고리즘별 메트릭
       const algos: E1AlgorithmId[] = ["raw", "fixed", "cm"];
-      if (hasTinyML) algos.push("tinyml");
+      const hasTinymlEstimate = hasTinyML && trimmed.every((r) => r.tinyml_estimate_mm !== undefined);
+      if (hasTinymlEstimate) algos.push("tinyml");
 
       const visibleAlgos = algos.filter((id) => selectedAlgorithms.includes(id));
 
       const rows = visibleAlgos.map((algoId) => {
-        const estimates = trimmed.map((r) => getEstimate(r, algoId) ?? 0);
+        const estimates = trimmed.map((r) => getEstimate(r, algoId));
+        const numericEstimates = estimates.every((v): v is number => typeof v === "number")
+          ? estimates
+          : null;
         let rmse: number | null = null;
         let mae: number | null = null;
         let nisPassRate: number | undefined = undefined;
 
-        try { rmse = calculateRMSE(estimates, gt); } catch { /* skip */ }
-        try { mae = calculateMAE(estimates, gt); } catch { /* skip */ }
+        if (numericEstimates) {
+          try { rmse = calculateRMSE(numericEstimates, gt); } catch { /* skip */ }
+          try { mae = calculateMAE(numericEstimates, gt); } catch { /* skip */ }
+        }
 
         // NIS: fixed, cm만 계산
         if (algoId === "fixed") {
@@ -214,7 +224,9 @@ export default function E3View() {
         }
 
         const maxError =
-          estimates.length > 0 ? Math.max(...estimates.map((e, i) => Math.abs(e - gt[i]))) : null;
+          numericEstimates && numericEstimates.length > 0
+            ? Math.max(...numericEstimates.map((e, i) => Math.abs(e - gt[i])))
+            : null;
 
         return { algoId, rmse, mae, maxError, nisPassRate };
       });
@@ -250,6 +262,10 @@ export default function E3View() {
 
   // 데이터 없으면 업로드 안내
   const hasAnyRun = Object.values(runs).some((r) => r !== undefined);
+  const hasTinyMLRChart = rChartData.some((p) => p.tinyml_R !== undefined);
+  const displayedRunId = activeRun === "all"
+    ? ALL_RUNS.find((r) => runs[r] !== undefined)
+    : (activeRun as RunId);
   if (!hasAnyRun) {
     return (
       <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
@@ -272,6 +288,37 @@ export default function E3View() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              업로드 CSV 계산값
+            </p>
+            <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-xs font-semibold text-[#15803d]">
+              동적 분석
+            </span>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              런 선택
+            </p>
+            <RunSelector />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              알고리즘
+            </p>
+            <AlgorithmToggle />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+              트림 설정
+            </p>
+            <TrimControl />
+          </div>
+        </div>
+      </div>
+
       {/* 메트릭 테이블 */}
       <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
         <table className="min-w-full text-sm">
@@ -337,7 +384,12 @@ export default function E3View() {
         <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold text-[#64748b]">
             차트 — E3 위치 추정 (GT · Raw · Fixed · CM
-            {hasTinyML ? " · TinyML" : ""})
+            {activeAlgos.includes("tinyml") ? " · TinyML" : ""})
+            {activeRun === "all" && (
+              <span className="ml-1.5 font-normal text-[#94a3b8]">
+                (All: 메트릭은 평균, 차트는 {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
+              </span>
+            )}
           </p>
           <div className="mt-3">
             <ResponsiveContainer width="100%" height={320}>
@@ -372,7 +424,7 @@ export default function E3View() {
                 <Line
                   type="monotone"
                   dataKey="gt"
-                  name="GT (복원)"
+                  name="GT (CSV)"
                   stroke="#94a3b8"
                   strokeWidth={1.5}
                   strokeDasharray="4 2"
@@ -398,10 +450,15 @@ export default function E3View() {
       )}
 
       {/* R̂ 회복 시계열 (그림 5-1 대응) */}
-      {rChartData.length > 0 && hasTinyML ? (
+      {rChartData.length > 0 && hasTinyMLRChart ? (
         <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold text-[#64748b]">
             차트 — R̂ 회복 시계열 (CM-AKF vs TinyML-AKF)
+            {activeRun === "all" && (
+              <span className="ml-1.5 font-normal text-[#94a3b8]">
+                (All: {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
+              </span>
+            )}
           </p>
           <p className="mt-1 text-xs text-[#94a3b8]">
             차단 이탈 후 적응 노이즈 공분산 R̂ 회복 속도 비교. 클램프 10,000 mm².

@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { useE1Store, E1_ALGORITHM_COLORS } from "@/lib/e1-store";
-import { ALL_RUNS, type RunId } from "@/lib/e1-csv-parser";
+import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim } from "@/lib/e1-metrics";
 
 interface ChartPoint {
@@ -59,9 +59,20 @@ export default function ResidualChart() {
     return <p className="py-4 text-center text-sm text-[#94a3b8]">데이터 없음</p>;
   }
 
+  const displayedRunId = activeRun === "all"
+    ? ALL_RUNS.find((r) => runs[r] !== undefined)
+    : (activeRun as RunId);
+
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-[#64748b]">차트 2 — 잔차 (Residual)</p>
+      <p className="text-xs font-semibold text-[#64748b]">
+        차트 2 — 잔차 (Residual)
+        {activeRun === "all" && (
+          <span className="ml-1.5 font-normal text-[#94a3b8]">
+            (All: {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
+          </span>
+        )}
+      </p>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
           <XAxis

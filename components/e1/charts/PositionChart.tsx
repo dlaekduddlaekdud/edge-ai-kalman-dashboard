@@ -11,8 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS } from "@/lib/e1-store";
-import { ALL_RUNS, type RunId } from "@/lib/e1-csv-parser";
-import { applyTrim, reconstructGT } from "@/lib/e1-metrics";
+import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
+import { applyTrim, getGroundTruth } from "@/lib/e1-metrics";
 
 interface ChartPoint {
   timestamp_ms: number;
@@ -37,7 +37,7 @@ export default function PositionChart() {
     const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
     if (trimmed.length === 0) return { data: [], xTicks: undefined };
 
-    const gt = reconstructGT(trimmed);
+    const gt = getGroundTruth(trimmed);
     const points: ChartPoint[] = trimmed.map((r, i) => ({
       timestamp_ms: r.timestamp_ms,
       gt: gt[i],
@@ -71,6 +71,9 @@ export default function PositionChart() {
   const activeAlgos = (["raw", "fixed", "cm", "tinyml"] as const).filter(
     (id) => selectedAlgorithms.includes(id) && (id !== "tinyml" || hasTinyML),
   );
+  const displayedRunId = activeRun === "all"
+    ? ALL_RUNS.find((r) => runs[r] !== undefined)
+    : (activeRun as RunId);
 
   return (
     <div className="space-y-2">
@@ -78,7 +81,7 @@ export default function PositionChart() {
         차트 1 — 위치 추정 (GT · Raw · Fixed · CM)
         {activeRun === "all" && (
           <span className="ml-1.5 font-normal text-[#94a3b8]">
-            (All 선택 시 첫 번째 런 표시)
+            (All: 메트릭은 평균, 차트는 {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
           </span>
         )}
       </p>
@@ -104,7 +107,7 @@ export default function PositionChart() {
           <Line
             type="monotone"
             dataKey="gt"
-            name="GT (복원)"
+            name="GT (CSV)"
             stroke="#94a3b8"
             strokeWidth={1.5}
             strokeDasharray="4 2"

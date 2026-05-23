@@ -4,7 +4,7 @@ import { ChangeEvent, useState } from "react";
 import Link from "next/link";
 import { parseE1CSV, parseRunFromFileName, ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { useE1Store } from "@/lib/e1-store";
-import { ALL_SCENARIOS, type ScenarioLabel } from "@/lib/dataset";
+import { ALL_SCENARIOS, parseScenarioFromFileName, type ScenarioLabel } from "@/lib/dataset";
 
 // ── 런 슬롯 상태 ─────────────────────────────────────────────────────────
 interface RunSlotState {
@@ -16,6 +16,31 @@ interface RunSlotState {
 
 function emptyRunSlot(): RunSlotState {
   return { fileName: null, rowCount: null, error: null, loading: false };
+}
+
+function normalizeScenarioId(value: number | string): ScenarioLabel | null {
+  if (typeof value === "number") {
+    if (Number.isInteger(value) && value >= 0 && value <= 5) return `E${value}` as ScenarioLabel;
+    return null;
+  }
+
+  const label = value.trim().toUpperCase();
+  return /^E[0-5]$/.test(label) ? (label as ScenarioLabel) : null;
+}
+
+function findScenarioMismatch(
+  rows: Array<{ scenario_id: number | string }>,
+  expected: ScenarioLabel,
+): { rowNumber: number; actual: string } | null {
+  const idx = rows.findIndex((row) => normalizeScenarioId(row.scenario_id) !== expected);
+  if (idx === -1) return null;
+  return { rowNumber: idx + 2, actual: String(rows[idx].scenario_id) };
+}
+
+function getSchemaLabel(rows: Array<{ tinyml_estimate_mm?: number }>): string {
+  return rows.length > 0 && rows.every((row) => row.tinyml_estimate_mm !== undefined)
+    ? "28컬럼 · TinyML 포함"
+    : "25컬럼 · Fixed/CM";
 }
 
 // ── 시나리오별 설명 ────────────────────────────────────────────────────────
@@ -61,10 +86,34 @@ export default function UploadPage() {
       return;
     }
 
+    const detectedScenario = parseScenarioFromFileName(file.name);
+    if (!detectedScenario) {
+      patchRunSlotState(expectedId, {
+        error: `파일명에서 시나리오를 파싱할 수 없습니다. (예: ${activeScenario}_run01.csv)`,
+        loading: false, fileName: null, rowCount: null,
+      });
+      event.target.value = "";
+      return;
+    }
+    if (detectedScenario !== activeScenario) {
+      patchRunSlotState(expectedId, {
+        error: `현재 선택은 ${activeScenario}입니다. ${detectedScenario} CSV는 ${detectedScenario} 선택 후 업로드하세요.`,
+        loading: false, fileName: null, rowCount: null,
+      });
+      event.target.value = "";
+      return;
+    }
+
     patchRunSlotState(expectedId, { loading: true, error: null });
     try {
       const csvText = await file.text();
       const rows = parseE1CSV(csvText);
+      const mismatch = findScenarioMismatch(rows, activeScenario);
+      if (mismatch) {
+        throw new Error(
+          `CSV scenario_id가 현재 선택(${activeScenario})과 다릅니다. row ${mismatch.rowNumber}: ${mismatch.actual}`,
+        );
+      }
       setRun(expectedId, rows, file.name);
       patchRunSlotState(expectedId, {
         loading: false,
@@ -162,7 +211,7 @@ export default function UploadPage() {
               {activeScenario}_run01.csv
             </code>{" "}
             형식이어야 합니다. 런 번호로 슬롯을 자동 배정합니다.
-            25컬럼(Fixed+CM) 또는 28컬럼(+TinyML) CSV를 지원합니다.
+            25컬럼은 Fixed/CM 분석, 28컬럼은 TinyML 추정/R̂ 차트까지 활성화됩니다.
           </p>
 
           {rowMismatch && (
@@ -210,6 +259,9 @@ export default function UploadPage() {
                     <div className="mt-3 space-y-0.5">
                       <p className="truncate text-xs text-[#475569]">{uploaded.fileName}</p>
                       <p className="text-sm font-semibold text-[#16a34a]">{uploaded.rows.length}행</p>
+                      <p className="text-[11px] font-medium text-[#64748b]">
+                        {getSchemaLabel(uploaded.rows)}
+                      </p>
                     </div>
                   ) : (
                     <label className="mt-3 flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-[#94a3b8] bg-[#f8fafc] px-2 py-4 text-center hover:border-[#2563eb] hover:bg-[#eff6ff]">
@@ -258,6 +310,9 @@ export default function UploadPage() {
                 <p className="mt-1 text-xs text-[#64748b] truncate">{data!.fileName}</p>
                 <p className="mt-1 text-lg font-semibold text-[#111827]">
                   {data!.rows.length}행
+                </p>
+                <p className="mt-1 text-xs text-[#64748b]">
+                  {getSchemaLabel(data!.rows)}
                 </p>
               </div>
             ))}

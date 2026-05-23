@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { E1Row, RunId } from "@/lib/e1-csv-parser";
+import { ALL_RUNS, type E1Row, type RunId } from "@/lib/e1-csv-parser";
 import type { ScenarioLabel } from "@/lib/dataset";
 
 export type E1AlgorithmId = "raw" | "fixed" | "cm" | "tinyml";
@@ -41,10 +41,32 @@ interface E1Store {
   setActiveScenario: (s: ScenarioLabel) => void;
 }
 
-function detectTinyML(runs: Partial<Record<RunId, E1RunData>>): boolean {
-  return Object.values(runs).some(
-    (r) => r && r.rows.length > 0 && r.rows[0].tinyml_estimate_mm !== undefined,
-  );
+function runHasTinyML(run?: E1RunData): boolean {
+  return !!run && run.rows.length > 0 && run.rows.every((r) => r.tinyml_estimate_mm !== undefined);
+}
+
+function selectedRunHasTinyML(
+  runs: Partial<Record<RunId, E1RunData>>,
+  activeRun: RunId | "all",
+): boolean {
+  if (activeRun !== "all") return runHasTinyML(runs[activeRun]);
+
+  const uploadedRuns = ALL_RUNS.map((id) => runs[id]).filter((run): run is E1RunData => !!run);
+  return uploadedRuns.length > 0 && uploadedRuns.every(runHasTinyML);
+}
+
+function nextActiveRunAfterRemove(
+  runs: Partial<Record<RunId, E1RunData>>,
+  removedId: RunId,
+  activeRun: RunId | "all",
+): RunId | "all" {
+  if (activeRun === "all") {
+    const uploadedCount = ALL_RUNS.filter((id) => runs[id]).length;
+    return uploadedCount > 1 ? "all" : (ALL_RUNS.find((id) => runs[id]) ?? "run1");
+  }
+
+  if (activeRun !== removedId) return activeRun;
+  return ALL_RUNS.find((id) => runs[id]) ?? "run1";
 }
 
 export const useE1Store = create<E1Store>((set) => ({
@@ -59,17 +81,30 @@ export const useE1Store = create<E1Store>((set) => ({
   setRun: (id, rows, fileName) =>
     set((state) => {
       const next = { ...state.runs, [id]: { rows, fileName } };
-      return { runs: next, hasTinyML: detectTinyML(next) };
+      return {
+        runs: next,
+        activeRun: id,
+        hasTinyML: selectedRunHasTinyML(next, id),
+      };
     }),
 
   removeRun: (id) =>
     set((state) => {
       const next = { ...state.runs };
       delete next[id];
-      return { runs: next, hasTinyML: detectTinyML(next) };
+      const activeRun = nextActiveRunAfterRemove(next, id, state.activeRun);
+      return {
+        runs: next,
+        activeRun,
+        hasTinyML: selectedRunHasTinyML(next, activeRun),
+      };
     }),
 
-  setActiveRun: (r) => set({ activeRun: r }),
+  setActiveRun: (r) =>
+    set((state) => ({
+      activeRun: r,
+      hasTinyML: selectedRunHasTinyML(state.runs, r),
+    })),
 
   toggleAlgorithm: (id) =>
     set((state) => ({
@@ -83,5 +118,5 @@ export const useE1Store = create<E1Store>((set) => ({
   setTrimTail: (n) => set({ trimTail: Math.max(0, Math.floor(n)) }),
 
   // 시나리오 변경 시 런 데이터 초기화
-  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, hasTinyML: false }),
+  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, activeRun: "run1", hasTinyML: false }),
 }));

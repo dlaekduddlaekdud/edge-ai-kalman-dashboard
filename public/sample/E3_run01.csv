@@ -1,0 +1,6 @@
+seq,timestamp_ms,tof_distance_mm,tof_signal_rate,tof_range_status,us_distance_mm,encoder_distance_mm,encoder_speed_mms,sensor_disagree,tof_meas_rate,gt_distance_mm,scenario_id,fixed_estimate_mm,fixed_residual,fixed_residual_var,fixed_residual_mean,fixed_kalman_gain,fixed_innovation_cov,cm_estimate_mm,cm_residual,cm_residual_var,cm_residual_mean,cm_kalman_gain,cm_innovation_cov,cm_R,tinyml_estimate_mm,tinyml_R,tinyml_infer_us
+1,0,501.0,20.0,0,500.2,0,0,0.8,50,500,E3,499.6,1.4,2.1,0.4,0.050,400.0,499.7,1.3,2.0,0.4,0.052,390.0,35.0,499.8,36.0,35.32
+2,20,620.0,4.2,4,491.0,10,500,129.0,50,490,E3,503.2,116.8,40.0,18.0,0.048,450.0,492.1,127.9,55.0,24.0,0.031,820.0,420.0,491.8,380.0,35.33
+3,40,606.0,4.5,4,481.0,20,500,125.0,50,480,E3,498.4,107.6,42.0,21.0,0.047,452.0,481.6,124.4,60.0,28.0,0.029,900.0,650.0,481.2,410.0,35.31
+4,60,470.8,18.9,0,470.3,30,500,0.5,50,470,E3,485.0,-14.2,30.0,12.0,0.049,410.0,472.0,-1.2,35.0,10.0,0.044,520.0,160.0,471.1,90.0,35.32
+5,80,460.4,19.3,0,460.2,40,500,0.2,50,460,E3,469.1,-8.7,18.0,7.0,0.051,398.0,460.7,-0.3,22.0,5.0,0.050,410.0,60.0,460.4,42.0,35.32
