@@ -24,40 +24,12 @@ export default function DashboardPage() {
   const { runs, activeScenario } = useE1Store();
   const hasData = Object.values(runs).some((r) => r !== undefined);
 
-  // E0/E2/E4/E5는 CSV 없이도 하드코딩 카드 표시. E1/E3만 데이터 필요.
-  const csvRequired = activeScenario === "E1" || activeScenario === "E3";
-  const isEmpty = csvRequired && !hasData;
-  const sourceLabel = csvRequired ? "업로드 CSV 계산값" : "논문 확정값";
-  const sourceClassName = csvRequired
+  // CSV 로드 여부로 소스 레이블 결정 (빈 화면 없이 항상 표시)
+  const hasCsvScenario = (activeScenario === "E1" || activeScenario === "E3" || activeScenario === "E5");
+  const sourceLabel = hasCsvScenario && hasData ? "CSV 분석값" : "논문 확정값";
+  const sourceClassName = hasCsvScenario && hasData
     ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d]"
     : "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]";
-
-  if (isEmpty) {
-    return (
-      <div className="space-y-6">
-        <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
-            Dashboard
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
-            시나리오별 분석 대시보드
-          </h2>
-        </section>
-        <section className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
-          <p className="text-base font-semibold text-[#92400e]">업로드된 CSV가 없습니다.</p>
-          <p className="mt-2 text-sm text-[#78350f]">
-            먼저 실험 CSV를 업로드해야 대시보드를 확인할 수 있습니다.
-          </p>
-          <Link
-            href="/upload"
-            className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
-          >
-            CSV 업로드하러 가기
-          </Link>
-        </section>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

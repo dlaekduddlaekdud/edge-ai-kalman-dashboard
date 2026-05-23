@@ -114,7 +114,7 @@ export default function HomePage() {
         </p>
 
         {/* 아키텍처 미니 플로우 */}
-        <div className="mt-5 flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           {[
             { label: "STM32F446RE", sub: "200 Hz loop" },
             { label: "CSV Export", sub: "25 / 28 col" },
@@ -123,19 +123,19 @@ export default function HomePage() {
             { label: "Metrics Engine", sub: "RMSE·NIS·Tconv" },
             { label: "Recharts", sub: "시계열·비교 차트" },
           ].map((node, i, arr) => (
-            <span key={node.label} className="flex items-center gap-1.5">
-              <span className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-2.5 py-1.5 text-center">
-                <span className="block font-semibold text-[#374151]">{node.label}</span>
-                <span className="block text-[10px] text-[#94a3b8]">{node.sub}</span>
+            <span key={node.label} className="flex items-center gap-2">
+              <span className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-center">
+                <span className="block text-sm font-semibold text-[#374151]">{node.label}</span>
+                <span className="block text-xs text-[#94a3b8]">{node.sub}</span>
               </span>
               {i < arr.length - 1 && (
-                <span className="text-[#94a3b8]">→</span>
+                <span className="text-sm text-[#94a3b8]">→</span>
               )}
             </span>
           ))}
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
+        <div className="mt-5 flex flex-wrap gap-2 text-sm font-semibold">
           <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-[#1d4ed8]">
             Next.js 15 App Router
           </span>
