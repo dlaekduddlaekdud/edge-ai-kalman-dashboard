@@ -108,7 +108,7 @@ export default function HomePage() {
           STM32 센서 데이터 파이프라인 · 실시간 시각화 풀스택 시스템
         </h2>
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
-          STM32F446RE에서 수집한 VL53L1X ToF 센서 데이터를 CSV로 내보내
+          STM32F446RE에서 수집한 VL53L0X ToF 센서 데이터를 CSV로 내보내
           Fixed KF · CM-AKF · TinyML-AKF의 정확도와 실시간성 지표를 논문 정의에 맞춰 분석합니다.
           CSV 파싱부터 지표 계산·시각화까지 TypeScript로 구현한 단일 데이터 파이프라인입니다.
         </p>

@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Edge AI Kalman Dashboard",
   description:
-    "MVP plan for a CSV-based research analysis dashboard for Edge AI adaptive Kalman filter experiments.",
+    "STM32 Edge AI adaptive Kalman filter experiments rebuilt as a CSV-based research dashboard.",
 };
 
 const navItems = [

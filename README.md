@@ -1,44 +1,20 @@
 # Edge AI Kalman Dashboard
 
-졸업논문 **「Edge AI 기반 적응형 Kalman Filter의 임베디드 실시간 적용 연구」** 실험 결과를 재구성한 **Next.js 풀스택 데이터 파이프라인 대시보드**입니다.
+졸업논문 **「Edge AI 기반 적응형 칼만 필터의 임베디드 실시간 적용 연구」** 결과를 웹에서 검토할 수 있도록 재구성한 **Next.js 기반 연구 데이터 대시보드**입니다.
 
-STM32F446RE → CSV Export → TypeScript 파싱 엔진 → Zustand 상태 관리 → Recharts 시각화로 이어지는 단일 데이터 파이프라인을 구현했습니다. Fixed KF · CM-AKF · TinyML-AKF의 정확도와 실시간성 지표를 논문 정의에 맞춰 분석합니다.
+이 프로젝트는 새 실험 결과를 생성하는 모델이 아니라, STM32F446RE에서 수집한 실험 CSV와 논문 확정값을 한곳에 모아 **CSV 파싱, 지표 계산, 상태 관리, 시각화, 포트폴리오 설명**까지 연결한 산출물입니다.
 
-> **Quick Start**: `/upload` 페이지의 **"데모 데이터 로드"** 버튼을 누르면 CSV 없이도 즉시 대시보드를 탐색할 수 있습니다.
+## Portfolio Positioning
 
-## Architecture
+이 웹 페이지가 보여줘야 하는 핵심 역량은 다음 세 가지입니다.
 
-```mermaid
-graph LR
-  A["STM32F446RE<br/>VL53L1X ToF 센서<br/>200 Hz control loop"]
-  B["CSV Export<br/>25 / 28 column<br/>scenario_run NN.csv"]
-  C["Upload & Parse<br/>PapaParse<br/>type-safe validation"]
-  D["Zustand Store<br/>run-slot state<br/>scenario context"]
-  E["Metrics Engine<br/>RMSE · MAE · NIS<br/>RMSEss · Tconv"]
-  F["Recharts<br/>시계열 · 비교 차트<br/>게이지 · 막대 그래프"]
+| 역량 | 웹에서 드러나는 방식 |
+|---|---|
+| Embedded AI 이해 | STM32F446RE, VL53L0X ToF, HC-SR04, encoder, TinyML INT8 추론 조건을 명확히 설명 |
+| Data pipeline 구현 | CSV export → PapaParse validation → Zustand run slots → metric engine → Recharts dashboard 흐름 |
+| 연구 결과 해석 | Raw ToF, Fixed KF, CM-AKF, TinyML-AKF 비교를 논문 지표와 같은 기준으로 표시 |
 
-  A -->|실험 종료 후| B
-  B -->|사용자 업로드 또는 데모 자동 로드| C
-  C --> D
-  D --> E
-  E --> F
-```
-
-**추가 파이프라인**:
-- `ablation_holdout_results.csv` → `fetch('/data/')` → PapaParse → 표 5-3 동적 교체
-- 분석 결과 → `exportMetricsCSV()` → Blob download (CSV 내보내기)
-
-## Performance Metrics
-
-> 자소서 활용 수치. 모두 논문 확정값 또는 실측 데이터 기반.
-
-| 지표 | 수치 | 비교 기준 |
-|---|---|---|
-| **E3 RMSE 개선** | **70.1%** | Raw 47.46 mm → CM-AKF 14.17 mm (ToF 차단 구간) |
-| **TinyML 추론 시간** | **35.32 µs** | 200 Hz 루프 500 µs 예산 대비 **14.2× 여유** (오버런 0건) |
-| **E3 회복 배속** | **2.7×** | CM 160 ms → TinyML 60 ms (R̂ 회복 시간) |
-| **총 실험 프레임** | **254,304** | E1~E5 전체 · E4 단독 251,422 프레임 |
-| **처리 지연** | **< 20 ms** | 브라우저 CSV 파싱 기준 (1,167행 / 5개 런 병렬) |
+포트폴리오 문장으로는 **"MCU 실험 데이터를 TypeScript 기반 분석 파이프라인으로 재구성한 Edge AI 연구 대시보드"**라고 소개하면 가장 깔끔합니다.
 
 ## Quick Start
 
@@ -47,26 +23,71 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000` 접속 → **Upload 페이지 → "E1 데모 로드"** 클릭.
+브라우저에서 `http://localhost:3000` 접속 후 `분석하기` 페이지에서 시나리오를 선택하면 내장 CSV를 로드해 바로 확인할 수 있습니다.
 
 ```bash
-npm run verify   # typecheck + build 한 번에
+npm run verify
 ```
 
-## Main Pages
+`verify`는 `npm run typecheck`와 `npm run build`를 순서대로 실행합니다.
 
-| Route | Purpose | Data Source |
+## Research Anchors
+
+| 연구 질문 | 대시보드에서 보여줄 포인트 |
+|---|---|
+| RQ1. TinyML 추론이 200 Hz 제어 루프 안에서 가능한가? | E4 기반 평균 추론 시간 35.32 us, 500 us 예산 대비 14.2배 여유, overrun 0건 |
+| RQ2. CM-AKF와 TinyML-AKF는 복합 노이즈에서 어떤 차이를 보이는가? | E2/E3/E5 시나리오별 RMSE, MAE, NIS, RMSEss, Tconv 비교 |
+| RQ3. 다변량 feature가 R 추정 거동에 기여하는가? | E3 차단 해제 후 TinyML R 회복 60 ms, CM-AKF 160 ms, 약 2.7배 빠른 회복 |
+
+수치의 1차 기준은 논문 본문과 [lib/paper-results.ts](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/lib/paper-results.ts)입니다. README, UI, 에이전트 지침이 서로 충돌하면 논문 및 `paper-results.ts`를 우선합니다.
+
+## Architecture
+
+```mermaid
+graph LR
+  A["STM32F446RE<br/>VL53L0X ToF<br/>Encoder + Ultrasonic"]
+  B["CSV Export<br/>25 or 28 columns<br/>scenario_run files"]
+  C["Parser<br/>PapaParse<br/>schema validation"]
+  D["State<br/>Zustand<br/>run slots + scenario"]
+  E["Metrics<br/>RMSE, MAE, NIS<br/>RMSEss, Tconv"]
+  F["Visualization<br/>Recharts<br/>tables + charts"]
+
+  A --> B
+  B --> C
+  C --> D
+  D --> E
+  E --> F
+```
+
+## Key Results
+
+| 지표 | 값 | 포트폴리오에서의 의미 |
+|---|---:|---|
+| E3 RMSE 개선 | 70.1% | ToF 차단 구간에서 CM-AKF가 Raw 대비 오차를 크게 줄인 사례 |
+| TinyML 평균 추론 시간 | 35.32 us | 200 Hz 루프 내 Edge AI 추론 가능성 입증 |
+| TinyML 추론 마진 | 14.2x | 500 us 목표 예산 대비 여유 |
+| E3 R 회복 속도 | 2.7x | TinyML-AKF가 CM-AKF보다 빠르게 R 추정값을 정상 영역으로 회복 |
+| E4 TinyML 추론 횟수 | 242,992 | 30분 × 3 run 장기 안정성 검증 규모 |
+| E4 overrun | 0건 | 실시간 루프 시간 제약 위반 없음 |
+
+## Main Routes
+
+| Route | 역할 | 현재 상태 |
 |---|---|---|
-| `/` | 프로젝트 개요 · KPI 카드 4개 · 아키텍처 플로우 | 논문 확정값 |
-| `/upload` | 시나리오/run별 CSV 업로드 · **데모 자동 로드** · 처리 시간 표시 | 사용자 CSV 또는 `/data/` |
-| `/dashboard` | E0~E5 시나리오별 분석 · 표 5-2 종합 | E1/E3는 업로드 CSV, 나머지는 논문 확정값 |
-| `/ablation` | 6-feature / 3-feature 비교 · 표 4-10 · 표 5-3 **동적 CSV 로드** | 28컬럼 CSV 또는 `/data/ablation_holdout_results.csv` |
-| `/realtime` | TinyML 35.32 µs · 200 Hz 루프 · 14.2× 마진 게이지 | 논문 E4 확정값 |
-| `/method` | 지표 정의 · 슬라이딩 윈도우 W=20 · NIS 범위 | 논문 방법론 |
+| `/upload` | 분석하기. 시나리오 선택, 내장 CSV 로드, 직접 CSV 업로드, 인라인 대시보드 | 핵심 진입점 |
+| `/results` | RQ1~RQ3 결과 요약, 논문 표 기반 종합 비교 | 포트폴리오 설명용 |
+| `/method` | 지표 정의, 논문 기준, 코드 매핑 | 검증 근거 |
+| `/dashboard` | 시나리오별 view 렌더링 | 분석 화면 보조 |
+| `/ablation` | 6-feature vs 3-feature TinyML ablation | 연구 결과 보조 |
+| `/realtime` | 실시간성 설명 | `/results` 또는 보조 화면으로 활용 |
+
+포트폴리오 사용자는 `/upload`, `/results`, `/method`만 따라가도 전체 흐름을 이해할 수 있어야 합니다.
 
 ## CSV Schema
 
-### 25-column (Fixed KF + CM-AKF)
+최종 실험 CSV는 25컬럼 또는 28컬럼입니다. 28컬럼은 TinyML 결과 3개가 추가된 형식입니다.
+
+### 25-column Base Schema
 
 ```text
 seq, timestamp_ms, tof_distance_mm, tof_signal_rate, tof_range_status,
@@ -78,100 +99,114 @@ cm_estimate_mm, cm_residual, cm_residual_var, cm_residual_mean,
 cm_kalman_gain, cm_innovation_cov, cm_R
 ```
 
-### 28-column (+ TinyML-AKF)
+### TinyML Extension
 
 ```text
 tinyml_estimate_mm, tinyml_R, tinyml_infer_us
 ```
 
-28컬럼 감지 시 TinyML 차트·메트릭 자동 활성화. 25컬럼이면 TinyML 토글 disabled.
+`lib/e1-csv-parser.ts`는 25/28컬럼을 자동 감지합니다. TinyML 컬럼 3개가 모두 있을 때만 TinyML 라인과 메트릭을 활성화합니다.
 
-샘플 파일: `public/sample/E1_run01.csv` (25컬럼), `public/sample/E3_run01.csv` (28컬럼).
-데모 데이터: `public/data/` — E1/E3/E2/E5 런별 CSV + `ablation_holdout_results.csv`.
+## Metrics
 
-## Metrics Implementation
-
-| Metric | File | Definition |
+| Metric | 구현 위치 | 기준 |
 |---|---|---|
-| RMSE | `lib/metrics.ts#calculateRMSE` | `sqrt(mean((estimate - gt)²))` |
-| MAE | `lib/metrics.ts#calculateMAE` | `mean(abs(estimate - gt))` |
-| NIS pass rate | `lib/metrics.ts#calculateNISPassRate` | chi-square df=1, 95% interval `[0.00098, 5.024]` |
-| RMSEss | `lib/metrics.ts#calculateRMSEss` | 후반 50 frame (1초 @ 50Hz) 정상상태 RMSE |
-| Tconv | `lib/metrics.ts#calculateTconv` | 50 frame sliding RMSE ≤ `1.1 × RMSEss` 최초 진입 시각 (ms) |
-| MAE_R / MAPE_R | `app/ablation/page.tsx#computeMetrics` | `mean(|tinyml_R - cm_R|)` / MAPE |
+| RMSE | [lib/metrics.ts](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/lib/metrics.ts) | `sqrt(mean((estimate - gt)^2))` |
+| MAE | [lib/metrics.ts](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/lib/metrics.ts) | `mean(abs(estimate - gt))` |
+| NIS pass rate | [lib/metrics.ts](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/lib/metrics.ts) | chi-square df=1, 95% interval `[0.00098, 5.024]` |
+| RMSEss | [lib/metrics.ts](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/lib/metrics.ts) | 후반 50 frame steady-state RMSE |
+| Tconv | [lib/metrics.ts](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/lib/metrics.ts) | 50 frame sliding RMSE가 `1.1 × RMSEss` 이하가 되는 최초 시각 |
+| Ablation MAE_R/MAPE_R | [app/ablation/page.tsx](/Users/imdayeong/Desktop/졸업논문/edge-ai-kalman-dashboard/app/ablation/page.tsx) | TinyML R 추정값과 CM pseudo-label 비교 |
 
-Ground truth: CSV 컬럼 `gt_distance_mm` 직접 사용 (encoder 기반 역산 fallback 제거).
+TinyML-AKF에는 `innovation_cov` 컬럼이 없으므로 NIS는 계산하지 않고 `-`로 표시합니다.
+
+## Data Assets
+
+| 위치 | 내용 |
+|---|---|
+| `public/data/E1_run01.csv` ~ `E1_run05.csv` | E1 baseline 5 run |
+| `public/data/E2_white_*`, `E2_black_*`, `E2_acryl_*` | E2 표면별 실험 CSV |
+| `public/data/E3_run01.csv` ~ `E3_run05.csv` | E3 ToF 차단 실험 |
+| `public/data/E4_run01.csv` ~ `E4_run03.csv` | E4 정적 장기 안정성 CSV |
+| `public/data/E5_run01.csv` ~ `E5_run05.csv` | E5 미지 표면 일반화 |
+| `public/data/ablation_holdout_results.csv` | 표 5-3 hold-out ablation |
+| `docs/*.docx` | 논문 최종본 참조 문서 |
+
+## Project Structure
+
+```text
+app/
+  upload/page.tsx       # 분석하기, CSV 로드, 직접 업로드
+  results/page.tsx      # RQ별 연구 결과 요약
+  method/page.tsx       # 지표 정의와 코드 매핑
+  dashboard/page.tsx    # 시나리오별 view 렌더링
+  ablation/page.tsx     # TinyML feature ablation
+
+components/
+  views/                # E0~E5 시나리오 view
+  e1/                   # run selector, algorithm toggle, charts
+  ui/                   # 공통 panel, metric card, table
+
+lib/
+  e1-csv-parser.ts      # 25/28컬럼 CSV parser
+  e1-metrics.ts         # run별 metric aggregation
+  e1-store.ts           # Zustand scenario/run state
+  metrics.ts            # 논문 지표 순수 함수
+  paper-results.ts      # 논문 확정값 단일 진실 소스
+```
+
+## Demo Flow
+
+1. `/upload`에서 `E3 - ToF 차단 구간` 선택
+2. 내장 CSV 로드 후 Raw, Fixed, CM-AKF, TinyML-AKF 위치 추정 시계열 확인
+3. `R` 회복 시계열에서 CM-AKF와 TinyML-AKF의 회복 속도 차이 확인
+4. `/results`에서 RQ1~RQ3 요약 확인
+5. `/method`에서 RMSE, NIS, RMSEss, Tconv 정의와 코드 위치 확인
+
+이 흐름은 면접이나 발표에서 “논문을 웹 포트폴리오로 옮길 때 무엇을 직접 구현했는가”를 설명하기 좋습니다.
 
 ## Technical Decisions
 
-| 결정 | 선택 | 대안 | 근거 |
-|---|---|---|---|
-| **프레임워크** | Next.js 15 App Router | CRA, Vite | 서버 컴포넌트 + 정적 배포 통합. Vercel zero-config 배포. |
-| **CSV 파싱** | PapaParse | 직접 split | header 자동 파싱, Web Worker 지원, 타입 추론. 브라우저에서 1MB CSV < 20ms 처리. |
-| **상태 관리** | Zustand | Redux, Context | run-slot (5개) + scenario + algorithm toggle 구조에 Zustand가 가장 적은 boilerplate. |
-| **차트** | Recharts | D3, Chart.js | React 컴포넌트 기반 선언적 API. 시계열·막대·게이지 모두 지원. |
-| **타입 안전성** | TypeScript strict | `any` 허용 | CSV 파싱 경계에서 타입 검증 집중. 25/28컬럼 dual-schema를 union type으로 표현. |
-| **데이터 소스** | 정적 파일 (`public/data/`) | Supabase, API | 졸업논문 데이터는 변경 없음. 정적 배포로 서버 불필요, Vercel 자동 CDN. |
-
-## Troubleshooting Log
-
-### 1. gt_distance_mm가 전부 0.0인 문제 (해결)
-
-**현상**: E1_run01.csv 업로드 시 모든 지표가 0 또는 비정상값.  
-**원인**: 초기 CSV에는 `gt_distance_mm = 0.0` — firmware가 GT를 기록하지 않음.  
-**해결**: encoder 기반 GT 역산 공식 구현 → 이후 논문 최종 CSV에 `gt_distance_mm` 컬럼이 추가됨으로 해소. `getGroundTruth()` 함수가 CSV 값을 직접 사용.
-
-### 2. TinyML 토글이 28컬럼 CSV에서도 disabled 상태 (해결)
-
-**현상**: E1_run01.csv(28컬럼) 업로드 후 TinyML 토글이 활성화되지 않음.  
-**원인**: 컬럼명이 `r_tinyml` / `kf_estimate_tinyml` → 논문 최종 스키마에서 `tinyml_R` / `tinyml_estimate_mm`으로 변경됨.  
-**해결**: `lib/e1-csv-parser.ts#hasTinyMLColumns()` 감지 로직 컬럼명 교체 + `lib/e1-store.ts#detectTinyML()` 동기화.
-
-### 3. Ablation TABLE_5_3 E2 acryl 폭발값 처리 (해결)
-
-**현상**: E2_acryl_run03에서 3-feature 모델 RMSE가 97mm로 폭발 — 하드코딩 값과 동적 CSV 로드값이 일치하는지 검증 필요.  
-**원인**: signal_rate 피처 제거 시 아크릴 반사 패턴을 모델이 과대 추정.  
-**해결**: `ablation_holdout_results.csv` 동적 로드 시 `rmse_3feat > 50 || rmse_3feat > cm * 2` 조건으로 `diverged` 플래그 자동 판별. UI에 ⚠ 3f 모델 폭발 배지 표시.
-
-## Spec to Implementation
-
-| 논문 요소 | 구현 위치 |
-|---|---|
-| E1 정상 baseline 5 run 분석 | `components/views/E1View.tsx` + `lib/e1-metrics.ts` |
-| E3 ToF 차단 구간 R̂ 회복 시계열 | `components/views/E3View.tsx` + `components/e1/charts/CMRChart.tsx` |
-| Ablation 표 4-10 (6f vs 3f) | `app/ablation/page.tsx#Table4_10Card` |
-| Ablation 표 5-3 hold-out RMSE | `app/ablation/page.tsx#Table5_3Card` (CSV 동적 로드) |
-| 표 5-2 시나리오×알고리즘 종합 | `app/dashboard/page.tsx` 하단 |
-| TinyML 추론 시간·마진 | `app/realtime/page.tsx` |
-| 지표 정의 (NIS 범위, W=20 등) | `app/method/page.tsx` |
-
-## Scenario Coverage
-
-| Scenario | Dashboard Behavior | Data |
+| 결정 | 선택 | 이유 |
 |---|---|---|
-| E0 | 논문 확정 카드 (Python 합성) | 하드코딩 |
-| E1 | 업로드/데모 CSV → 동적 차트·메트릭 · **결과 CSV 내보내기** | 업로드 또는 `/data/E1_run0N.csv` |
-| E2 | 논문 확정 표면별 막대 차트 | 하드코딩 |
-| E3 | 업로드/데모 CSV → 차단 구간·R̂ 회복 시계열 | 업로드 또는 `/data/E3_run0N.csv` |
-| E4 | 논문 확정 실시간성·장기 안정성 카드 | 하드코딩 (83k rows) |
-| E5 | 논문 확정 일반화 카드 | 하드코딩 |
+| Framework | Next.js 15 App Router | 정적 배포와 React 기반 분석 화면 구성에 적합 |
+| Parser | PapaParse | header 기반 CSV 처리와 브라우저 파싱 안정성 |
+| State | Zustand | scenario/run slot 상태를 작은 코드로 관리 |
+| Chart | Recharts | React 컴포넌트로 시계열, 막대, 게이지를 빠르게 구성 |
+| Data source | `public/data` 정적 CSV | 연구 데이터가 고정되어 서버 없이 재현 가능 |
+| Database | 미도입 | Supabase 이력 저장은 선택 기능. 현재는 포트폴리오 재현성을 우선 |
 
-## Deployment
+## Agent Files
 
-```bash
-# Vercel CLI
-npx vercel --prod
+이 저장소에는 두 종류의 에이전트 지침이 있습니다.
 
-# 또는 GitHub 연동 후 자동 배포
-```
+| 위치 | 용도 |
+|---|---|
+| `.claude/agents/*.md` | Claude 계열 에이전트용 Markdown 지침 |
+| `.codex/agents/*.toml` | Codex 계열 에이전트용 TOML 지침 |
 
-빌드 명령: `npm run build` · 출력 디렉터리: `.next` · Node.js: 20+.  
-`public/data/*.csv` 는 정적 파일로 자동 포함됩니다.
+두 세트 모두 같은 프로젝트 원칙을 공유합니다.
+
+- 논문 본문과 `lib/paper-results.ts`를 수치 기준으로 삼기
+- 25/28컬럼 최종 CSV 스키마 유지
+- 새 연구 결과나 성능 예측을 만들지 않기
+- 포트폴리오 관점에서 분석 흐름을 선명하게 만들기
+
+## Roadmap
+
+| 단계 | 상태 | 다음 액션 |
+|---|---|---|
+| Core data pipeline | Done | parser/metrics regression 확인 유지 |
+| E0~E5 scenario dashboard | Done | UX 흐름 단순화와 모바일 QA |
+| Results/method 설명 페이지 | Done | 포트폴리오 문장 다듬기 |
+| Deployment | Planned | Vercel 배포 후 README URL 갱신 |
+| Presentation assets | Planned | 대표 스크린샷, 60초 demo flow 정리 |
+| Optional storage | Deferred | Supabase 업로드 이력 저장은 필요 시 별도 구현 |
 
 ## Limitations
 
-- 이 대시보드는 새 연구 결과를 생성하거나 성능을 예측하지 않습니다. 논문 확정값이 항상 우선입니다.
-- E0/E2/E4/E5는 per-frame CSV 없이 논문 확정값을 시각화합니다. E4 CSV(83k행)는 번들 크기로 제외.
-- TinyML NIS는 `innovation_cov` 컬럼이 없어 계산하지 않습니다 (`—` 표시).
-- 실시간 스트리밍(WebSocket/SSE)은 미구현 상태입니다. CSV 재생 시뮬레이션을 향후 추가할 예정입니다.
-- 현재 데이터는 브라우저 상태에만 유지됩니다. Supabase 이력 저장은 미구현입니다.
+- 이 대시보드는 논문 결과를 재현·시각화하는 도구이며, 새 조건의 성능을 예측하지 않습니다.
+- E0~E5 외 실험 조건은 검증된 결과처럼 표현하지 않습니다.
+- TinyML NIS는 `innovation_cov`가 없어 계산하지 않습니다.
+- Supabase 저장, WebSocket/SSE 실시간 스트리밍, 사용자 계정 기능은 현재 범위가 아닙니다.
+- 논문 본문, `paper-results.ts`, README가 충돌하면 논문 본문과 `paper-results.ts`가 우선입니다.
