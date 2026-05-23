@@ -76,7 +76,7 @@ function nextActiveRunAfterRemove(
 export const useE1Store = create<E1Store>((set) => ({
   runs: {},
   activeRun: "run1",
-  selectedAlgorithms: ["raw", "fixed", "cm"],
+  selectedAlgorithms: ["raw", "fixed", "cm", "tinyml"],
   autoExcludeStop: true,
   trimTail: 0,
   hasTinyML: false,
