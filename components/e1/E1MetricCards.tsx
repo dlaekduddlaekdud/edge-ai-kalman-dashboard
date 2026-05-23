@@ -98,8 +98,13 @@ export default function E1MetricCards() {
   // TinyML이 있고 토글 선택된 경우 추가
   const showTinyML = hasTinyML && selectedAlgorithms.includes("tinyml") && metrics.tinyml != null;
 
+  // RMSEss / Tconv: raw는 KF 아님 → 제외, fixed/cm/tinyml만 표시
+  const kfAlgos = (["fixed", "cm"] as const).filter((id) =>
+    selectedAlgorithms.includes(id as E1AlgorithmId),
+  );
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {/* RMSE */}
       <Card title="RMSE" subtitle="mm">
         {visibleAlgos.map((id) => (
@@ -160,6 +165,65 @@ export default function E1MetricCards() {
         )}
         {visibleAlgos.every((id) => metrics[id].nisPassRate === undefined) && !showTinyML && (
           <p className="py-1 text-sm text-[#94a3b8]">N/A (Raw only)</p>
+        )}
+      </Card>
+
+      {/* RMSEss (후반 1초 RMSE) */}
+      <Card title="RMSEss" subtitle="후반 50 frame (1초 @ 50Hz)">
+        {kfAlgos.map((id) => (
+          <MetricRow
+            key={id}
+            label={id === "fixed" ? "Fixed KF" : "CM-AKF"}
+            color={E1_ALGORITHM_COLORS[id]}
+            value={
+              metrics[id].rmseSS != null
+                ? `${fmt(metrics[id].rmseSS!)} mm`
+                : "—"
+            }
+          />
+        ))}
+        {showTinyML && metrics.tinyml?.rmseSS != null && (
+          <MetricRow
+            label="TinyML-AKF"
+            color={E1_ALGORITHM_COLORS.tinyml}
+            value={`${fmt(metrics.tinyml!.rmseSS!)} mm`}
+          />
+        )}
+        {kfAlgos.length === 0 && !showTinyML && (
+          <p className="py-1 text-sm text-[#94a3b8]">Fixed/CM 선택 후 표시</p>
+        )}
+      </Card>
+
+      {/* Tconv (수렴 시간) */}
+      <Card title="Tconv" subtitle="슬라이딩 50 frame RMSE ≤ 1.1 × RMSEss">
+        {kfAlgos.map((id) => {
+          const tconv = metrics[id].tconv;
+          const display =
+            tconv == null ? "—" :
+            tconv < 1000 ? `${tconv.toFixed(0)} ms` :
+            `${(tconv / 1000).toFixed(2)} s`;
+          return (
+            <MetricRow
+              key={id}
+              label={id === "fixed" ? "Fixed KF" : "CM-AKF"}
+              color={E1_ALGORITHM_COLORS[id]}
+              value={display}
+            />
+          );
+        })}
+        {showTinyML && (
+          <MetricRow
+            label="TinyML-AKF"
+            color={E1_ALGORITHM_COLORS.tinyml}
+            value={(() => {
+              const tconv = metrics.tinyml?.tconv;
+              if (tconv == null) return "—";
+              return tconv < 1000 ? `${tconv.toFixed(0)} ms` : `${(tconv / 1000).toFixed(2)} s`;
+            })()}
+          />
+        )}
+        {kfAlgos.length === 0 && !showTinyML && (
+          <p className="py-1 text-sm text-[#94a3b8]">Fixed/CM 선택 후 표시</p>
         )}
       </Card>
 

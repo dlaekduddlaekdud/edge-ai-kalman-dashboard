@@ -16,6 +16,7 @@ import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, type E1AlgorithmI
 import { ALL_RUNS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim, reconstructGT } from "@/lib/e1-metrics";
 import { calculateRMSE, calculateMAE, calculateNISPassRate } from "@/lib/metrics";
+import { PAPER_RESULTS } from "@/lib/paper-results";
 import type { E1Row } from "@/lib/e1-csv-parser";
 
 interface BlockedInterval {
@@ -103,9 +104,52 @@ interface ChartPoint {
   tinyml?: number;
 }
 
+interface RChartPoint {
+  timestamp_ms: number;
+  cm_R: number;
+  tinyml_R?: number;
+}
+
 export default function E3View() {
   const { runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail } =
     useE1Store();
+
+  // R̂ 회복 시계열 데이터 (cm_R vs tinyml_R)
+  const { rChartData, rXTicks, rYMax } = useMemo(() => {
+    const runId: RunId | undefined =
+      activeRun === "all"
+        ? ALL_RUNS.find((r) => runs[r] !== undefined)
+        : (activeRun as RunId);
+    const runData = runId ? runs[runId] : undefined;
+    if (!runData || runData.rows.length === 0) {
+      return { rChartData: [], rXTicks: undefined, rYMax: 500 };
+    }
+
+    const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
+    const points: RChartPoint[] = trimmed.map((r) => ({
+      timestamp_ms: r.timestamp_ms,
+      cm_R: Math.min(r.cm_R, 10000), // 폭발 방지 클램프
+      tinyml_R: hasTinyML && r.tinyml_R !== undefined
+        ? Math.min(r.tinyml_R, 10000)
+        : undefined,
+    }));
+
+    const allR = points.flatMap((p) =>
+      [p.cm_R, p.tinyml_R].filter((v): v is number => v !== undefined),
+    );
+    const maxR = allR.length > 0 ? Math.max(...allR) : 500;
+
+    let ticks: number[] | undefined;
+    if (points.length > 10) {
+      const step = Math.floor(points.length / 8);
+      ticks = [];
+      for (let i = 0; i < points.length; i += step) ticks.push(points[i].timestamp_ms);
+      const last = points[points.length - 1].timestamp_ms;
+      if (ticks[ticks.length - 1] !== last) ticks.push(last);
+    }
+
+    return { rChartData: points, rXTicks: ticks, rYMax: Math.ceil(maxR * 1.1) };
+  }, [runs, activeRun, hasTinyML, autoExcludeStop, trimTail]);
 
   const { metricRows, blockedIntervals, detectionMethod, chartData, xTicks, activeAlgos } =
     useMemo(() => {
@@ -349,6 +393,108 @@ export default function E3View() {
                 ))}
               </LineChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* R̂ 회복 시계열 (그림 5-1 대응) */}
+      {rChartData.length > 0 && hasTinyML ? (
+        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold text-[#64748b]">
+            차트 — R̂ 회복 시계열 (CM-AKF vs TinyML-AKF)
+          </p>
+          <p className="mt-1 text-xs text-[#94a3b8]">
+            차단 이탈 후 적응 노이즈 공분산 R̂ 회복 속도 비교. 클램프 10,000 mm².
+          </p>
+          <div className="mt-3">
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={rChartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
+                <XAxis
+                  dataKey="timestamp_ms"
+                  ticks={rXTicks}
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v: number) => String(v)}
+                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 11 }}
+                  height={40}
+                />
+                <YAxis
+                  domain={[0, rYMax]}
+                  tick={{ fontSize: 11 }}
+                  label={{ value: "R̂ (mm²)", angle: -90, position: "insideLeft", offset: 10, fontSize: 11 }}
+                />
+                <Tooltip
+                  formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm²` : v]}
+                  labelFormatter={(l) => `t = ${l} ms`}
+                />
+                <Legend verticalAlign="top" height={28} />
+                {blockedIntervals.map((interval, i) => (
+                  <ReferenceArea
+                    key={i}
+                    x1={interval.x1}
+                    x2={interval.x2}
+                    fill="#fee2e2"
+                    fillOpacity={0.6}
+                    strokeOpacity={0}
+                  />
+                ))}
+                <Line
+                  type="monotone"
+                  dataKey="cm_R"
+                  name="CM-AKF R̂"
+                  stroke={E1_ALGORITHM_COLORS.cm}
+                  strokeWidth={1.5}
+                  dot={false}
+                  connectNulls={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="tinyml_R"
+                  name="TinyML-AKF R̂"
+                  stroke={E1_ALGORITHM_COLORS.tinyml}
+                  strokeWidth={1.5}
+                  dot={false}
+                  connectNulls={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : (
+        /* 25컬럼 CSV 또는 데이터 없을 때: 논문 확정 수치 fallback 카드 */
+        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold text-[#64748b]">
+            R̂ 회복 시간 — 논문 확정 수치 (그림 5-1 기준)
+          </p>
+          <p className="mt-1 text-xs text-[#94a3b8]">
+            28컬럼 TinyML CSV 업로드 시 동적 차트로 전환됩니다.
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div className="rounded-md bg-[#f0fdf4] p-4">
+              <p className="text-xs font-semibold text-[#15803d]">TinyML-AKF</p>
+              <p className="mt-1 text-2xl font-bold text-[#16a34a]">
+                {PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms
+              </p>
+              <p className="mt-0.5 text-xs text-[#4ade80]">
+                3 frames @ 50Hz
+              </p>
+            </div>
+            <div className="rounded-md bg-[#eff6ff] p-4">
+              <p className="text-xs font-semibold text-[#1d4ed8]">CM-AKF</p>
+              <p className="mt-1 text-2xl font-bold text-[#2563eb]">
+                {PAPER_RESULTS.E3.recoveryTimeCM_ms} ms
+              </p>
+              <p className="mt-0.5 text-xs text-[#93c5fd]">
+                8 frames @ 50Hz
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 rounded-md bg-[#fefce8] px-4 py-2">
+            <p className="text-sm font-semibold text-[#854d0e]">
+              → TinyML {PAPER_RESULTS.E3.recoverySpeedup}× 빠른 회복
+            </p>
+            <p className="mt-0.5 text-xs text-[#92400e]">
+              CM-AKF는 R̂ 재학습(160ms), TinyML은 추론 즉시 반응(60ms)
+            </p>
           </div>
         </div>
       )}
