@@ -78,14 +78,14 @@ export default function ResidualChart() {
           <XAxis
             dataKey="timestamp_ms"
             ticks={xTicks}
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 13 }}
             tickFormatter={(v: number) => String(v)}
-            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 11 }}
+            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
             height={40}
           />
           <YAxis
-            tick={{ fontSize: 11 }}
-            label={{ value: "residual (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 11 }}
+            tick={{ fontSize: 13 }}
+            label={{ value: "residual (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
           />
           <Tooltip
             formatter={(v) => [typeof v === "number" ? `${v.toFixed(3)} mm` : v]}

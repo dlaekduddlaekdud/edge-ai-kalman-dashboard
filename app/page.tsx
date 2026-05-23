@@ -88,11 +88,11 @@ const pages = [
       "RMSE, NIS pass rate, RMSEss, Tconv 등 평가 지표의 구현 공식과 논문 매핑을 정리합니다.",
   },
   {
-    href: "/realtime",
-    title: "Realtime",
-    badge: "200 Hz",
+    href: "/results",
+    title: "Results",
+    badge: "RQ1~3",
     description:
-      "TinyML 35.32 µs 추론 · 200 Hz 루프 실시간성 · 14.2× 여유 마진을 게이지로 시각화합니다.",
+      "RQ1 실시간성 · RQ2 적응 필터 우위 · RQ3 TinyML 대안 가능성을 시나리오별 RMSE 비교 표로 정리합니다.",
   },
 ];
 

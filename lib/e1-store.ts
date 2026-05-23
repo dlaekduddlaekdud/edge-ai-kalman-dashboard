@@ -3,6 +3,7 @@ import { ALL_RUNS, type E1Row, type RunId } from "@/lib/e1-csv-parser";
 import type { ScenarioLabel } from "@/lib/dataset";
 
 export type E1AlgorithmId = "raw" | "fixed" | "cm" | "tinyml";
+export type E2Surface = "white" | "black" | "acryl";
 
 export const E1_ALGORITHM_LABELS: Record<E1AlgorithmId, string> = {
   raw: "Raw ToF",
@@ -32,6 +33,8 @@ interface E1Store {
   hasTinyML: boolean;
   /** 현재 활성 시나리오 (E1~E5 통합 스토어) */
   activeScenario: ScenarioLabel;
+  /** E2 선택 시 표면 구분 */
+  activeE2Surface: E2Surface | null;
   setRun: (id: RunId, rows: E1Row[], fileName: string) => void;
   removeRun: (id: RunId) => void;
   setActiveRun: (r: RunId | "all") => void;
@@ -39,6 +42,7 @@ interface E1Store {
   setAutoExcludeStop: (v: boolean) => void;
   setTrimTail: (n: number) => void;
   setActiveScenario: (s: ScenarioLabel) => void;
+  setActiveE2Surface: (s: E2Surface | null) => void;
 }
 
 function runHasTinyML(run?: E1RunData): boolean {
@@ -77,6 +81,7 @@ export const useE1Store = create<E1Store>((set) => ({
   trimTail: 0,
   hasTinyML: false,
   activeScenario: "E1",
+  activeE2Surface: null,
 
   setRun: (id, rows, fileName) =>
     set((state) => {
@@ -117,6 +122,8 @@ export const useE1Store = create<E1Store>((set) => ({
 
   setTrimTail: (n) => set({ trimTail: Math.max(0, Math.floor(n)) }),
 
-  // 시나리오 변경 시 런 데이터 초기화
-  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, activeRun: "run1", hasTinyML: false }),
+  // 시나리오 변경 시 런 데이터 + E2 표면 선택 초기화
+  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, activeRun: "run1", hasTinyML: false, activeE2Surface: null }),
+
+  setActiveE2Surface: (s) => set({ activeE2Surface: s }),
 }));

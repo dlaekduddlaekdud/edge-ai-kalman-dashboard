@@ -15,7 +15,6 @@ import {
 import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, type E1AlgorithmId } from "@/lib/e1-store";
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim, getGroundTruth } from "@/lib/e1-metrics";
-import { calculateRMSE, calculateMAE, calculateNISPassRate } from "@/lib/metrics";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 import type { E1Row } from "@/lib/e1-csv-parser";
 import RunSelector from "@/components/e1/RunSelector";
@@ -41,26 +40,40 @@ function getEstimate(row: E1Row, algoId: E1AlgorithmId): number | undefined {
 
 /**
  * ToF 차단 구간 탐지.
- * range_status 컬럼이 있으면 range_status !== 0 기준 우선.
- * null인 경우 경험적 30% 오차 임계값으로 폴백.
- * gt_distance_mm < 1 인 행은 near-zero 오인 방지를 위해 비차단으로 처리.
+ *
+ * 우선순위:
+ *   1. range_status !== 0 인 행이 존재하면 그 기준 사용
+ *   2. 없으면 reconstructed GT 기준: (gt[i] - tof[i]) > BLOCKED_THRESHOLD mm
+ *      → 차단재가 센서와 로봇 사이에 있을 때 tof가 실제 위치보다 짧게 읽히는 원리
+ *
+ * gt_distance_mm가 전부 0인 CSV에서도 getGroundTruth(rows)를 통해
+ * 스케일 보정 encoder 역산 GT를 활용하므로 정상 탐지된다.
  */
+const BLOCKED_THRESHOLD_MM = 40;
+
 function detectBlockedIntervals(
   rows: E1Row[],
+  gt: number[],
 ): { intervals: BlockedInterval[]; method: "range_status" | "threshold" } {
-  const hasRangeStatus = rows.some((r) => r.tof_range_status !== null);
+  // range_status가 실제로 비정상인 행이 있으면 해당 컬럼 기준
+  const hasRangeStatus = rows.some(
+    (r) => r.tof_range_status !== null && r.tof_range_status !== 0,
+  );
   const intervals: BlockedInterval[] = [];
   let inBlocked = false;
   let blockStart = 0;
 
-  for (const row of rows) {
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
     let isBlocked: boolean;
+
     if (hasRangeStatus) {
       isBlocked = row.tof_range_status !== null && row.tof_range_status !== 0;
     } else {
-      isBlocked =
-        row.gt_distance_mm >= 1 &&
-        Math.abs(row.tof_distance_mm - row.gt_distance_mm) / row.gt_distance_mm > 0.3;
+      // GT보다 tof가 BLOCKED_THRESHOLD 이상 짧게 읽히면 차단 구간으로 판정.
+      // gt가 충분히 큰 구간(> 100mm)에서만 적용해 종단 노이즈 오탐을 방지.
+      const gtVal = gt[i] ?? 0;
+      isBlocked = gtVal > 100 && (gtVal - row.tof_distance_mm) > BLOCKED_THRESHOLD_MM;
     }
 
     if (isBlocked && !inBlocked) {
@@ -77,25 +90,6 @@ function detectBlockedIntervals(
   }
 
   return { intervals, method: hasRangeStatus ? "range_status" : "threshold" };
-}
-
-function safeNISPassRate(nu: number[], S: number[]): number | undefined {
-  const paired = nu.map((v, i) => ({ v, s: S[i] })).filter((p) => p.s > 0);
-  if (paired.length === 0) return undefined;
-  try {
-    return calculateNISPassRate(
-      paired.map((p) => p.v),
-      paired.map((p) => p.s),
-    );
-  } catch {
-    return undefined;
-  }
-}
-
-/** TinyML NIS는 항상 "—". innovation_cov 컬럼이 없음. */
-function renderNIS(algoId: E1AlgorithmId, nisValue: number | undefined): string {
-  if (algoId === "tinyml") return "—";
-  return nisValue != null ? `${(nisValue * 100).toFixed(1)}%` : "—";
 }
 
 interface ChartPoint {
@@ -141,7 +135,8 @@ export default function E3View() {
     const allR = points.flatMap((p) =>
       [p.cm_R, p.tinyml_R].filter((v): v is number => v !== undefined),
     );
-    const maxR = allR.length > 0 ? Math.max(...allR) : 500;
+    // spread 대신 reduce — 대규모 R 배열(E4 등) 스택 오버플로우 방지
+    const maxR = allR.length > 0 ? allR.reduce((m, v) => Math.max(m, v), -Infinity) : 500;
 
     let ticks: number[] | undefined;
     if (points.length > 10) {
@@ -155,7 +150,7 @@ export default function E3View() {
     return { rChartData: points, rXTicks: ticks, rYMax: Math.ceil(maxR * 1.1) };
   }, [runs, activeRun, hasTinyML, autoExcludeStop, trimTail]);
 
-  const { metricRows, blockedIntervals, detectionMethod, chartData, xTicks, activeAlgos } =
+  const { blockedIntervals, detectionMethod, chartData, xTicks, activeAlgos, showGT } =
     useMemo(() => {
       const runId: RunId | undefined =
         activeRun === "all"
@@ -165,71 +160,37 @@ export default function E3View() {
 
       if (!runData || runData.rows.length === 0) {
         return {
-          metricRows: [],
           blockedIntervals: [],
           detectionMethod: "threshold" as const,
           chartData: [],
           xTicks: undefined,
           activeAlgos: [] as E1AlgorithmId[],
+          showGT: false,
         };
       }
 
       const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
       if (trimmed.length === 0) {
         return {
-          metricRows: [],
           blockedIntervals: [],
           detectionMethod: "threshold" as const,
           chartData: [],
           xTicks: undefined,
           activeAlgos: [] as E1AlgorithmId[],
+          showGT: false,
         };
       }
 
       const gt = getGroundTruth(trimmed);
-      const { intervals, method } = detectBlockedIntervals(trimmed);
+      // 데모 CSV는 gt=0 → GT 라인 숨김
+      const showGT = gt.some((v) => v !== 0);
+      const { intervals, method } = detectBlockedIntervals(trimmed, gt);
 
-      // 알고리즘별 메트릭
       const algos: E1AlgorithmId[] = ["raw", "fixed", "cm"];
       const hasTinymlEstimate = hasTinyML && trimmed.every((r) => r.tinyml_estimate_mm !== undefined);
       if (hasTinymlEstimate) algos.push("tinyml");
 
       const visibleAlgos = algos.filter((id) => selectedAlgorithms.includes(id));
-
-      const rows = visibleAlgos.map((algoId) => {
-        const estimates = trimmed.map((r) => getEstimate(r, algoId));
-        const numericEstimates = estimates.every((v): v is number => typeof v === "number")
-          ? estimates
-          : null;
-        let rmse: number | null = null;
-        let mae: number | null = null;
-        let nisPassRate: number | undefined = undefined;
-
-        if (numericEstimates) {
-          try { rmse = calculateRMSE(numericEstimates, gt); } catch { /* skip */ }
-          try { mae = calculateMAE(numericEstimates, gt); } catch { /* skip */ }
-        }
-
-        // NIS: fixed, cm만 계산
-        if (algoId === "fixed") {
-          nisPassRate = safeNISPassRate(
-            trimmed.map((r) => r.fixed_residual),
-            trimmed.map((r) => r.fixed_innovation_cov),
-          );
-        } else if (algoId === "cm") {
-          nisPassRate = safeNISPassRate(
-            trimmed.map((r) => r.cm_residual),
-            trimmed.map((r) => r.cm_innovation_cov),
-          );
-        }
-
-        const maxError =
-          numericEstimates && numericEstimates.length > 0
-            ? Math.max(...numericEstimates.map((e, i) => Math.abs(e - gt[i])))
-            : null;
-
-        return { algoId, rmse, mae, maxError, nisPassRate };
-      });
 
       // 차트 데이터
       const points: ChartPoint[] = trimmed.map((r, i) => {
@@ -251,12 +212,12 @@ export default function E3View() {
       }
 
       return {
-        metricRows: rows,
         blockedIntervals: intervals,
         detectionMethod: method,
         chartData: points,
         xTicks: ticks,
         activeAlgos: visibleAlgos,
+        showGT,
       };
     }, [runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail]);
 
@@ -271,7 +232,7 @@ export default function E3View() {
       <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
         <p className="text-base font-semibold text-[#92400e]">업로드된 CSV가 없습니다.</p>
         <p className="mt-2 text-sm text-[#78350f]">
-          E3 런별 CSV를 업로드한 후 이 화면을 확인하세요.
+          Data 탭에서 E3 시나리오를 선택하고 데이터를 불러오세요.
           파일명 형식:{" "}
           <code className="rounded bg-[#fef3c7] px-1">E3_run01.csv</code> ~{" "}
           <code className="rounded bg-[#fef3c7] px-1">E3_run05.csv</code>
@@ -280,7 +241,7 @@ export default function E3View() {
           href="/upload"
           className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
         >
-          CSV 업로드하러 가기
+          Data 탭으로 이동
         </Link>
       </div>
     );
@@ -319,44 +280,59 @@ export default function E3View() {
         </div>
       </div>
 
-      {/* 메트릭 테이블 */}
+      {/* 메트릭 테이블 — 논문 확정값 */}
       <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e2e8f0] px-4 py-2.5">
+          <p className="text-xs font-semibold text-[#475569]">알고리즘별 성능 (E3 — ToF 차단 구간)</p>
+          <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#1d4ed8]">
+            논문 확정값
+          </span>
+        </div>
         <table className="min-w-full text-sm">
           <thead className="bg-[#f8fafc]">
             <tr>
               <th className="px-4 py-3 text-left font-semibold text-[#475569]">알고리즘</th>
               <th className="px-4 py-3 text-right font-semibold text-[#475569]">RMSE</th>
               <th className="px-4 py-3 text-right font-semibold text-[#475569]">MAE</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">Max Error</th>
               <th className="px-4 py-3 text-right font-semibold text-[#475569]">NIS 95%</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#475569]">RMSEss</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#e2e8f0]">
-            {metricRows.map(({ algoId, rmse, mae, maxError, nisPassRate }) => (
-              <tr key={algoId}>
-                <td className="px-4 py-3 font-medium text-[#111827]">
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: E1_ALGORITHM_COLORS[algoId] }}
-                    />
-                    {E1_ALGORITHM_LABELS[algoId]}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {rmse != null ? `${rmse.toFixed(2)} mm` : "—"}
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {mae != null ? `${mae.toFixed(2)} mm` : "—"}
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {maxError != null ? `${maxError.toFixed(2)} mm` : "—"}
-                </td>
-                <td className="px-4 py-3 text-right text-[#111827]">
-                  {renderNIS(algoId, nisPassRate)}
-                </td>
-              </tr>
-            ))}
+            {(
+              [
+                { id: "raw",    label: "Raw ToF",    m: PAPER_RESULTS.E3.raw },
+                { id: "fixed",  label: "Fixed KF",   m: PAPER_RESULTS.E3.fixed },
+                { id: "cm",     label: "CM-AKF",     m: PAPER_RESULTS.E3.cm },
+                { id: "tinyml", label: "TinyML-AKF", m: PAPER_RESULTS.E3.tinyml },
+              ] as const
+            )
+              .filter(({ id }) => selectedAlgorithms.includes(id as E1AlgorithmId))
+              .map(({ id, label, m }) => (
+                <tr key={id}>
+                  <td className="px-4 py-3 font-medium text-[#111827]">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: E1_ALGORITHM_COLORS[id as E1AlgorithmId] }}
+                      />
+                      {label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right text-[#111827]">{m.rmse.toFixed(2)} mm</td>
+                  <td className="px-4 py-3 text-right text-[#111827]">{m.mae.toFixed(2)} mm</td>
+                  <td className="px-4 py-3 text-right text-[#111827]">
+                    {id === "tinyml" || id === "raw"
+                      ? "—"
+                      : m.nis != null
+                        ? `${(m.nis * 100).toFixed(1)}%`
+                        : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-right text-[#111827]">
+                    {m.rmseSS != null ? `${m.rmseSS.toFixed(2)} mm` : "—"}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -369,13 +345,14 @@ export default function E3View() {
           <span className="ml-1">
             {detectionMethod === "range_status"
               ? "range_status 비정상 구간"
-              : "경험적 탐지 (gt 대비 30% 이상 오차)"}
+              : `ToF ${BLOCKED_THRESHOLD_MM}mm 이상 급감 구간`}
           </span>
         </p>
       ) : (
         <p className="text-xs text-[#94a3b8]">
           차단 구간을 탐지하지 못했습니다.
-          {detectionMethod === "threshold" && " (gt 대비 30% 이상 오차 기준)"}
+          {detectionMethod === "threshold" &&
+            ` (ToF ${BLOCKED_THRESHOLD_MM}mm 이상 급감 구간 기준)`}
         </p>
       )}
 
@@ -397,14 +374,14 @@ export default function E3View() {
                 <XAxis
                   dataKey="timestamp_ms"
                   ticks={xTicks}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 13 }}
                   tickFormatter={(v: number) => String(v)}
-                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 11 }}
+                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
                   height={40}
                 />
                 <YAxis
-                  tick={{ fontSize: 11 }}
-                  label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 11 }}
+                  tick={{ fontSize: 13 }}
+                  label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
                 />
                 <Tooltip
                   formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
@@ -421,16 +398,18 @@ export default function E3View() {
                     strokeOpacity={0}
                   />
                 ))}
-                <Line
-                  type="monotone"
-                  dataKey="gt"
-                  name="GT (CSV)"
-                  stroke="#94a3b8"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 2"
-                  dot={false}
-                  connectNulls={false}
-                />
+                {showGT && (
+                  <Line
+                    type="monotone"
+                    dataKey="gt"
+                    name="GT"
+                    stroke="#94a3b8"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 2"
+                    dot={false}
+                    connectNulls={false}
+                  />
+                )}
                 {activeAlgos.map((algoId) => (
                   <Line
                     key={algoId}
@@ -469,15 +448,15 @@ export default function E3View() {
                 <XAxis
                   dataKey="timestamp_ms"
                   ticks={rXTicks}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 13 }}
                   tickFormatter={(v: number) => String(v)}
-                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 11 }}
+                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
                   height={40}
                 />
                 <YAxis
                   domain={[0, rYMax]}
-                  tick={{ fontSize: 11 }}
-                  label={{ value: "R̂ (mm²)", angle: -90, position: "insideLeft", offset: 10, fontSize: 11 }}
+                  tick={{ fontSize: 13 }}
+                  label={{ value: "R̂ (mm²)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
                 />
                 <Tooltip
                   formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm²` : v]}

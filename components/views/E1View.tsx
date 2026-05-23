@@ -19,16 +19,16 @@ export default function E1View() {
     return (
       <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
         <p className="text-base font-semibold text-[#92400e]">
-          E1 런 CSV가 업로드되지 않았습니다.
+          E1 데이터가 로드되지 않았습니다.
         </p>
         <p className="mt-2 text-sm text-[#78350f]">
-          업로드 페이지에서 E1_run01.csv ~ E1_run05.csv를 업로드하세요.
+          Data 탭에서 E1 시나리오를 선택하고 데이터를 불러오세요.
         </p>
         <Link
           href="/upload"
           className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
         >
-          CSV 업로드하러 가기
+          Data 탭으로 이동
         </Link>
       </div>
     );

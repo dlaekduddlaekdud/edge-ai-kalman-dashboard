@@ -66,13 +66,18 @@ function computeMetrics(rows: KFRow[]): SlotMetrics {
 
   const N = sliced.length;
   const maeR = predR.reduce((s, v, i) => s + Math.abs(v - labelR[i]), 0) / N;
+  // MAPE 분모는 labelR != 0 인 행 수로 나눠야 과소평가를 방지한다.
+  // cm_R은 Kalman gain 유도값으로 실제 0이 될 수 없지만, 방어적으로 처리한다.
+  const nonZeroLabelCount = labelR.filter((v) => v !== 0).length;
   const mapeR =
-    (predR.reduce((s, v, i) => {
-      if (labelR[i] === 0) return s;
-      return s + Math.abs(v - labelR[i]) / Math.abs(labelR[i]);
-    }, 0) /
-      N) *
-    100;
+    nonZeroLabelCount > 0
+      ? (predR.reduce((s, v, i) => {
+          if (labelR[i] === 0) return s;
+          return s + Math.abs(v - labelR[i]) / Math.abs(labelR[i]);
+        }, 0) /
+          nonZeroLabelCount) *
+        100
+      : null;
 
   return { maeR, mapeR, rowCount: rows.length };
 }
@@ -476,7 +481,7 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
       <div className="space-y-1 px-6 py-3 text-xs text-[#64748b]">
         <p>단위: mm (위치 RMSE). CM vs 3f: 양수 = 3f가 CM보다 높음 (성능 열화).</p>
         <p>
-          ⚠ E2 acryl run03: 3-feature 모델이 {rows[2]?.tinyml3f?.toFixed(0) ?? "97"}mm RMSE로 폭발 — signal_rate 제거의 위험성 입증.
+          ⚠ E2 acryl run03: 3-feature 모델이 {(rows.find((r) => r.scenario.toLowerCase().includes("acryl") && r.scenario.includes("03"))?.tinyml3f?.toFixed(0) ?? "97")}mm RMSE로 폭발 — signal_rate 제거의 위험성 입증.
         </p>
         <p>{TABLE_5_3.note}</p>
         {state.source === "csv" && (
