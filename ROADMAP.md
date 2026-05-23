@@ -187,21 +187,30 @@ gt[k]      = base − encoder_distance_mm[k]
 
 ---
 
-## Phase P0: 논문 최종 스키마 동기화 (2026-05-24-25 예정)
+## Phase P0: 논문 최종 스키마 동기화 (2026-05-23 완료)
 
-> 논문 최종본(2026-05-23) 기준 충돌 해소. 타입체크+빌드 통과 후 커밋.
+> 논문 최종본(2026-05-23) 기준 충돌 해소. typecheck + build 통과.
 
-- [ ] `lib/e1-csv-parser.ts` — TinyML 컬럼명 교체 (r_tinyml→tinyml_R, kf_estimate_tinyml→tinyml_estimate_mm)
-- [ ] `lib/e1-metrics.ts` — TinyML 컬럼명 참조 교체
-- [ ] `lib/e1-store.ts` — detectTinyML 컬럼명 교체
-- [ ] `lib/csv-parser.ts` — 18컬럼 → 25/28 dual-schema 전면 교체
-- [ ] `lib/metrics.ts` — calculateRRMSE 삭제, calculateTconv 슬라이딩 윈도우 재구현, 5개 신규 함수 추가
-- [ ] `lib/ablation-store.ts` — 슬롯 3→2 ("6f"|"5f"|"3f" → "6f"|"3f")
-- [ ] `app/ablation/page.tsx` — 5f 슬롯 제거, grid-3→2, MAE_R/MAPE_R 지표, 표 4-10 카드
-- [ ] `components/views/E3View.tsx` — 신 KFRow 기반, getEstimates 알고리즘 분기
-- [ ] `components/e1/E1MetricCards.tsx` — TinyML NIS 항상 "—"
-- [ ] `lib/paper-results.ts` — 신규 생성 (논문 확정 수치 상수화)
-- [ ] `ROADMAP.md`, `README.md` — 스키마 변경 반영
+- [x] `lib/e1-csv-parser.ts` — TinyML 컬럼명 교체 (r_tinyml→tinyml_R, kf_estimate_tinyml→tinyml_estimate_mm)
+- [x] `lib/e1-metrics.ts` — TinyML 컬럼명 참조 교체
+- [x] `lib/e1-store.ts` — detectTinyML 컬럼명 교체, activeScenario 필드 추가
+- [x] `lib/csv-parser.ts` — 18컬럼 → 25/28 dual-schema 전면 교체
+- [x] `lib/metrics.ts` — calculateRRMSE 삭제, calculateTconv 슬라이딩 윈도우 재구현, 5개 신규 함수 추가
+- [x] `lib/ablation-store.ts` — 슬롯 3→2 ("6f"|"5f"|"3f" → "6f"|"3f")
+- [x] `lib/dataset.ts` — SCENARIO_ALGORITHM_SLOTS 삭제, AlgorithmId/ScenarioLabel 유지
+- [x] `lib/store.ts` — @deprecated 주석 추가 (import 사용처 0)
+- [x] `lib/paper-results.ts` — 신규 생성 (논문 확정 수치 상수화, TABLE_4_10/TABLE_5_3 포함)
+- [x] `app/upload/page.tsx` — useKFStore 제거, 모든 시나리오 런 슬롯 방식으로 통일
+- [x] `app/ablation/page.tsx` — 5f 슬롯 제거, grid-3→2, MAE_R/MAPE_R 지표, 표 4-10 카드
+- [x] `app/dashboard/page.tsx` — useKFStore 제거, useE1Store 기반
+- [x] `app/method/page.tsx` — R 추정 RMSE 행 삭제, 신규 지표 행 추가
+- [x] `components/views/E3View.tsx` — useE1Store 기반, getEstimate 알고리즘 분기, TinyML NIS "—"
+- [x] `components/e1/E1MetricCards.tsx` — TinyML NIS 항상 "—", TinyML RMSE/MAE 조건부 표시
+- [x] `components/charts/EstimateLineChart.tsx` — kf_estimate_mm → 알고리즘별 분기
+- [x] `components/e1/charts/PositionChart.tsx` — kf_estimate_tinyml → tinyml_estimate_mm
+- [x] `lib/csv-parser.examples.ts` — 신 스키마 반영
+- [x] `lib/metrics.examples.ts` — calculateRRMSE/calculateTconv 시그니처 변경 반영
+- [x] `ROADMAP.md`, `README.md` — 스키마 변경 반영
 
 ---
 

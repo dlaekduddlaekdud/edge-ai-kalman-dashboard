@@ -9,26 +9,6 @@ export interface AlgorithmData {
   fileName: string;
 }
 
-/** 시나리오별 알고리즘 슬롯. Zustand 직렬화를 위해 plain object 사용 */
-export type AlgorithmSlot = Partial<Record<AlgorithmId, AlgorithmData>>;
-
-export interface KFDataset {
-  scenario: ScenarioLabel;
-  runId: number;
-  /** array index로 매칭. 행 수가 동일한 CSV끼리만 유효 */
-  algorithms: AlgorithmSlot;
-}
-
-/** E0는 합성 데이터라 TinyML 학습 불가. raw/cm/tinyml 슬롯 없음 */
-export const SCENARIO_ALGORITHM_SLOTS: Record<ScenarioLabel, AlgorithmId[]> = {
-  E0: ["fixed"],
-  E1: ["raw", "fixed", "cm", "tinyml"],
-  E2: ["raw", "fixed", "cm", "tinyml"],
-  E3: ["raw", "fixed", "cm", "tinyml"],
-  E4: ["raw", "fixed", "cm", "tinyml"],
-  E5: ["raw", "fixed", "cm", "tinyml"],
-};
-
 export const ALGORITHM_LABELS: Record<AlgorithmId, string> = {
   raw: "Raw ToF",
   fixed: "Fixed KF",

@@ -3,8 +3,11 @@ import {
   calculateMAE,
   calculateNISPassRate,
   calculateRMSE,
-  calculateRRMSE,
   calculateTconv,
+  calculateRMSEss,
+  calculateRMean,
+  calculateRDriftCV,
+  calculateLabelTracking,
 } from "./metrics";
 
 function assertAlmostEqual(actual: number, expected: number, epsilon = 1e-10): void {
@@ -22,10 +25,25 @@ export function runMetricExamples(): void {
   assertAlmostEqual(calculateRMSE([2, 4, 6], [1, 4, 9]), Math.sqrt(10 / 3));
   assertAlmostEqual(calculateMAE([2, 4, 6], [1, 4, 9]), 4 / 3);
   assertAlmostEqual(calculateNISPassRate([1, 2, 3], [1, 1, 1]), 2 / 3);
-  assertAlmostEqual(calculateRRMSE([10, 12, 15], [10, 10, 18]), Math.sqrt(13 / 3));
 
-  assert.equal(calculateTconv([12, 9, 5.4, 5.2], 5), 2);
-  assert.equal(calculateTconv([12, 9, 6], 5), null);
+  // calculateTconv: 50 frame 미만이면 null
+  assert.equal(calculateTconv([1, 2, 3], [1, 1, 1], [100, 200, 300]), null);
+
+  // calculateRMSEss
+  const ests = Array.from({ length: 60 }, (_, i) => i + 1);
+  const gts  = Array.from({ length: 60 }, (_, i) => i + 1.5);
+  const rmse = calculateRMSEss(ests, gts);
+  assert.ok(rmse > 0, "RMSEss should be positive");
+
+  // calculateRMean
+  assertAlmostEqual(calculateRMean([2, 4, 6]), 4);
+
+  // calculateRDriftCV
+  const cv = calculateRDriftCV([10, 10, 10]);
+  assertAlmostEqual(cv, 0);
+
+  // calculateLabelTracking
+  assertAlmostEqual(calculateLabelTracking([1, 2, 3], [1, 2, 4]), 1 / 3);
 
   assert.throws(() => calculateRMSE([1, 2], [1]), /same length/);
   assert.throws(() => calculateMAE([1, Number.NaN], [1, 2]), /finite number/);

@@ -59,6 +59,13 @@ function Card({ title, subtitle, children }: CardProps) {
 type RequiredAlgoId = "raw" | "fixed" | "cm";
 const ALGO_IDS: RequiredAlgoId[] = ["raw", "fixed", "cm"];
 
+/** TinyML NIS는 항상 "—". innovation_cov 컬럼이 없음. */
+function renderNISValue(id: string, nisPassRate: number | undefined): string {
+  if (id === "tinyml") return "—";
+  if (nisPassRate != null) return pct(nisPassRate);
+  return "—";
+}
+
 export default function E1MetricCards() {
   const { runs, activeRun, selectedAlgorithms, autoExcludeStop, trimTail } =
     useE1Store();
@@ -86,7 +93,10 @@ export default function E1MetricCards() {
     );
   }
 
+  const { hasTinyML } = useE1Store();
   const visibleAlgos = ALGO_IDS.filter((id) => selectedAlgorithms.includes(id as E1AlgorithmId));
+  // TinyML이 있고 토글 선택된 경우 추가
+  const showTinyML = hasTinyML && selectedAlgorithms.includes("tinyml") && metrics.tinyml != null;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -100,6 +110,13 @@ export default function E1MetricCards() {
             value={`${fmt(metrics[id].rmse)} mm`}
           />
         ))}
+        {showTinyML && (
+          <MetricRow
+            label="TinyML-AKF"
+            color={E1_ALGORITHM_COLORS.tinyml}
+            value={`${fmt(metrics.tinyml!.rmse)} mm`}
+          />
+        )}
       </Card>
 
       {/* MAE */}
@@ -112,6 +129,13 @@ export default function E1MetricCards() {
             value={`${fmt(metrics[id].mae)} mm`}
           />
         ))}
+        {showTinyML && (
+          <MetricRow
+            label="TinyML-AKF"
+            color={E1_ALGORITHM_COLORS.tinyml}
+            value={`${fmt(metrics.tinyml!.mae)} mm`}
+          />
+        )}
       </Card>
 
       {/* NIS 95% pass rate */}
@@ -123,10 +147,18 @@ export default function E1MetricCards() {
               key={id}
               label={id === "fixed" ? "Fixed KF" : "CM-AKF"}
               color={E1_ALGORITHM_COLORS[id]}
-              value={pct(metrics[id].nisPassRate!)}
+              value={renderNISValue(id, metrics[id].nisPassRate)}
             />
           ))}
-        {visibleAlgos.every((id) => metrics[id].nisPassRate === undefined) && (
+        {/* TinyML NIS는 항상 "—" */}
+        {showTinyML && (
+          <MetricRow
+            label="TinyML-AKF"
+            color={E1_ALGORITHM_COLORS.tinyml}
+            value="—"
+          />
+        )}
+        {visibleAlgos.every((id) => metrics[id].nisPassRate === undefined) && !showTinyML && (
           <p className="py-1 text-sm text-[#94a3b8]">N/A (Raw only)</p>
         )}
       </Card>

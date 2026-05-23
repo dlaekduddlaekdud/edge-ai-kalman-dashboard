@@ -45,8 +45,8 @@ export default function PositionChart() {
       fixed: selectedAlgorithms.includes("fixed") ? r.fixed_estimate_mm : undefined,
       cm: selectedAlgorithms.includes("cm") ? r.cm_estimate_mm : undefined,
       tinyml:
-        selectedAlgorithms.includes("tinyml") && hasTinyML && r.kf_estimate_tinyml !== undefined
-          ? r.kf_estimate_tinyml
+        selectedAlgorithms.includes("tinyml") && hasTinyML && r.tinyml_estimate_mm !== undefined
+          ? r.tinyml_estimate_mm
           : undefined,
     }));
 

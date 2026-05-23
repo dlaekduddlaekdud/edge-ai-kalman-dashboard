@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { type KFRow } from "@/lib/csv-parser";
 
-export type AblationSetId = "6f" | "5f" | "3f";
+export type AblationSetId = "6f" | "3f";
 
 export interface AblationData {
   rows: KFRow[];

@@ -1,15 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useKFStore } from "@/lib/store";
 import { useE1Store } from "@/lib/e1-store";
-import {
-  ALGORITHM_LABELS,
-  type AlgorithmId,
-  type AlgorithmData,
-  type ScenarioLabel,
-} from "@/lib/dataset";
-import EstimateLineChart from "@/components/charts/EstimateLineChart";
+import { type ScenarioLabel } from "@/lib/dataset";
 import E1View from "@/components/views/E1View";
 import E3View from "@/components/views/E3View";
 
@@ -23,16 +16,11 @@ const SCENARIO_DESCRIPTIONS: Record<ScenarioLabel, string> = {
 };
 
 export default function DashboardPage() {
-  const { algorithms, activeScenario } = useKFStore();
-  const { runs: e1Runs } = useE1Store();
+  const { runs, activeScenario } = useE1Store();
+  const hasData = Object.values(runs).some((r) => r !== undefined);
 
-  const uploadedEntries = (Object.entries(algorithms) as [AlgorithmId, AlgorithmData][]).filter(
-    ([, v]) => v !== undefined
-  );
-  const hasE1Data = Object.values(e1Runs).some((r) => r !== undefined);
-
-  // E1은 e1-store 기준, 나머지는 KFStore 기준으로 비어 있으면 업로드 안내
-  const isEmpty = activeScenario === "E1" ? !hasE1Data : uploadedEntries.length === 0;
+  // E0는 CSV 없이도 표시, 나머지는 데이터가 있어야 함
+  const isEmpty = activeScenario !== "E0" && !hasData;
 
   if (isEmpty) {
     return (
@@ -79,14 +67,6 @@ export default function DashboardPage() {
           </span>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {uploadedEntries.map(([algoId, data]) => (
-            <span
-              key={algoId}
-              className="rounded-md border border-[#d9e0ea] bg-[#f8fafc] px-2 py-1 text-xs text-[#475569]"
-            >
-              {ALGORITHM_LABELS[algoId]} · {data.rows.length}행
-            </span>
-          ))}
           <Link href="/upload" className="text-xs text-[#2563eb] hover:underline">
             CSV 변경
           </Link>
@@ -97,13 +77,30 @@ export default function DashboardPage() {
         {activeScenario === "E1" ? (
           <E1View />
         ) : activeScenario === "E3" ? (
-          <E3View algorithms={algorithms} />
+          <E3View />
+        ) : activeScenario === "E0" ? (
+          <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] p-6 shadow-sm">
+            <p className="text-base font-semibold text-[#1d4ed8]">E0 — Python 합성 시뮬레이션</p>
+            <p className="mt-2 text-sm text-[#1e40af]">
+              E0는 CSV 업로드 없이 논문 확정 수치 카드로 표시됩니다.
+              (P2에서 E0View 구현 예정)
+            </p>
+          </div>
         ) : (
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-            <EstimateLineChart
-              algorithms={algorithms}
-              title={`${activeScenario} — KF Estimate vs Ground Truth`}
-            />
+            <p className="text-sm font-semibold text-[#94a3b8]">
+              {activeScenario} — 데이터 없음 / 업로드 후 확인
+            </p>
+            <p className="mt-2 text-sm text-[#64748b]">
+              {activeScenario} 전용 뷰는 P2에서 구현 예정입니다.
+              런별 CSV를 업로드한 후 이 화면을 새로 고침하세요.
+            </p>
+            <Link
+              href="/upload"
+              className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+            >
+              CSV 업로드하러 가기
+            </Link>
           </div>
         )}
       </section>

@@ -1,3 +1,8 @@
+/**
+ * @deprecated useKFStore는 P0-9에서 폐기됨.
+ * 모든 시나리오(E1~E5)가 useE1Store (lib/e1-store.ts) 패턴으로 통일됨.
+ * import 사용처가 제거된 후 이 파일을 삭제하세요.
+ */
 import { create } from "zustand";
 import { type KFRow } from "@/lib/csv-parser";
 import {

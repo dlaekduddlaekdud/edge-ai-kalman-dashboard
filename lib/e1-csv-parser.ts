@@ -22,7 +22,7 @@ const E1_REQUIRED_COLUMNS = [
   "cm_kalman_gain", "cm_innovation_cov", "cm_R",
 ] as const;
 
-const E1_TINYML_COLUMNS = ["r_tinyml", "kf_estimate_tinyml", "tinyml_infer_us"] as const;
+const E1_TINYML_COLUMNS = ["tinyml_estimate_mm", "tinyml_R", "tinyml_infer_us"] as const;
 
 const E1_NULLABLE_COLUMNS = new Set<string>([
   "tof_signal_rate", "tof_range_status", "us_distance_mm", "sensor_disagree", "tof_meas_rate",
@@ -57,8 +57,8 @@ export interface E1Row {
   cm_innovation_cov: number;
   cm_R: number;
   // TinyML optional (28-column CSV)
-  r_tinyml?: number;
-  kf_estimate_tinyml?: number;
+  tinyml_estimate_mm?: number;
+  tinyml_R?: number;
   tinyml_infer_us?: number;
 }
 
@@ -185,8 +185,8 @@ export function parseE1CSV(csvText: string): E1Row[] {
     };
 
     if (withTinyML) {
-      parsed.r_tinyml = parseRequired(row, "r_tinyml", rowNum);
-      parsed.kf_estimate_tinyml = parseRequired(row, "kf_estimate_tinyml", rowNum);
+      parsed.tinyml_R = parseRequired(row, "tinyml_R", rowNum);
+      parsed.tinyml_estimate_mm = parseRequired(row, "tinyml_estimate_mm", rowNum);
       parsed.tinyml_infer_us = parseRequired(row, "tinyml_infer_us", rowNum);
     }
 
