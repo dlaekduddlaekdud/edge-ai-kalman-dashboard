@@ -5,6 +5,7 @@ import { useE1Store } from "@/lib/e1-store";
 import { type ScenarioLabel } from "@/lib/dataset";
 import E1View from "@/components/views/E1View";
 import E3View from "@/components/views/E3View";
+import { PAPER_RESULTS } from "@/lib/paper-results";
 
 const SCENARIO_DESCRIPTIONS: Record<ScenarioLabel, string> = {
   E0: "합성 데이터 — Fixed KF 단독",
@@ -103,6 +104,98 @@ export default function DashboardPage() {
             </Link>
           </div>
         )}
+      </section>
+
+      {/* 표 5-2: 시나리오 × 알고리즘 종합 성능표 (항상 표시) */}
+      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#64748b]">
+          논문 표 5-2
+        </p>
+        <h3 className="mt-1 text-base font-semibold text-[#111827]">
+          시나리오별 알고리즘 RMSE 종합 (mm)
+        </h3>
+        <p className="mt-1 text-xs text-[#94a3b8]">
+          논문 확정 수치. CSV 업로드 유무와 무관하게 표시됩니다.
+          TinyML NIS는 innovation_cov 미제공으로 항상 —.
+        </p>
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-[#f8fafc]">
+              <tr>
+                <th className="px-4 py-2.5 text-left font-semibold text-[#475569]">시나리오</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#475569]">Raw</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#475569]">Fixed KF</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">CM-AKF</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">TinyML-AKF</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e2e8f0]">
+              {/* E1 */}
+              <tr>
+                <td className="px-4 py-2.5 font-medium text-[#111827]">E1 — 정상 baseline</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E1.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E1.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">{PAPER_RESULTS.E1.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E1.tinyml.rmse}</td>
+              </tr>
+              {/* E2 흰 */}
+              <tr className="bg-[#fafafa]">
+                <td className="px-4 py-2.5 text-[#475569]">E2 — 흰 우드락</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.white.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.white.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
+              </tr>
+              {/* E2 검정 */}
+              <tr>
+                <td className="px-4 py-2.5 text-[#475569]">E2 — 검정 우드락</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.black.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.black.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
+              </tr>
+              {/* E2 아크릴 */}
+              <tr className="bg-[#fafafa]">
+                <td className="px-4 py-2.5 text-[#475569]">
+                  E2 — 투명 아크릴
+                  <span className="ml-1 text-xs text-[#f59e0b]">★TinyML Best</span>
+                </td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.acryl.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#2563eb]">{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
+              </tr>
+              {/* E3 */}
+              <tr>
+                <td className="px-4 py-2.5 font-medium text-[#111827]">E3 — ToF 차단 구간</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E3.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E3.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">{PAPER_RESULTS.E3.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E3.tinyml.rmse}</td>
+              </tr>
+              {/* E4 */}
+              <tr className="bg-[#fafafa]">
+                <td className="px-4 py-2.5 text-[#475569]">E4 — 정적 장기 안정성</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E4.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E4.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">{PAPER_RESULTS.E4.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E4.tinyml.rmse}</td>
+              </tr>
+              {/* E5 */}
+              <tr>
+                <td className="px-4 py-2.5 text-[#475569]">E5 — 미지 표면 일반화</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E5.raw.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E5.fixed.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#2563eb]">{PAPER_RESULTS.E5.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E5.tinyml.rmse}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-xs text-[#94a3b8]">
+          단위: mm (RMSE). CM-AKF = Covariance-Matching AKF. TinyML-AKF = 온-디바이스 R̂ 추론.
+          E3 TinyML 2.7× 빠른 R̂ 회복 (160ms → 60ms).
+        </p>
       </section>
     </div>
   );

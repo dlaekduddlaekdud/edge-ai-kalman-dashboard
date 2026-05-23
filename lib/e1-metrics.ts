@@ -1,5 +1,11 @@
 import type { E1Row } from "@/lib/e1-csv-parser";
-import { calculateRMSE, calculateMAE, calculateNISPassRate } from "@/lib/metrics";
+import {
+  calculateRMSE,
+  calculateMAE,
+  calculateNISPassRate,
+  calculateRMSEss,
+  calculateTconv,
+} from "@/lib/metrics";
 
 /**
  * stop 구간(encoder == 0)의 tof 평균을 기준점으로 GT 복원.
@@ -36,6 +42,10 @@ export interface E1AlgorithmMetrics {
   rmse: number;
   mae: number;
   nisPassRate?: number;
+  /** 후반 50 frame (1초 @ 50Hz) RMSE */
+  rmseSS?: number;
+  /** 수렴 시간 (ms). null = 수렴 조건 미충족 */
+  tconv?: number | null;
 }
 
 export interface E1RunMetrics {
@@ -71,39 +81,53 @@ export function calculateE1Metrics(
   if (trimmed.length === 0) return null;
 
   const gt = reconstructGT(trimmed);
+  const timestamps = trimmed.map((r) => r.timestamp_ms);
 
   const cmRValues = trimmed.map((r) => r.cm_R);
 
+  const rawEst   = trimmed.map((r) => r.tof_distance_mm);
+  const fixedEst = trimmed.map((r) => r.fixed_estimate_mm);
+  const cmEst    = trimmed.map((r) => r.cm_estimate_mm);
+
   const tinymlRows = trimmed.filter((r) => r.tinyml_estimate_mm !== undefined);
-  const tinyml =
-    tinymlRows.length === trimmed.length
-      ? {
-          rmse: calculateRMSE(trimmed.map((r) => r.tinyml_estimate_mm!), gt),
-          mae: calculateMAE(trimmed.map((r) => r.tinyml_estimate_mm!), gt),
-          // NIS: TinyML은 innovation_cov 없음. nisPassRate 없음 — 호출부에서 "—" 표시
-        }
-      : undefined;
+  const hasTinymlData = tinymlRows.length === trimmed.length;
+  const tinymlEst = hasTinymlData ? trimmed.map((r) => r.tinyml_estimate_mm!) : null;
+
+  const tinyml = hasTinymlData && tinymlEst
+    ? {
+        rmse: calculateRMSE(tinymlEst, gt),
+        mae: calculateMAE(tinymlEst, gt),
+        // NIS: TinyML은 innovation_cov 없음. nisPassRate 없음 — 호출부에서 "—" 표시
+        rmseSS: calculateRMSEss(tinymlEst, gt),
+        tconv: calculateTconv(tinymlEst, gt, timestamps),
+      }
+    : undefined;
 
   return {
     raw: {
-      rmse: calculateRMSE(trimmed.map((r) => r.tof_distance_mm), gt),
-      mae: calculateMAE(trimmed.map((r) => r.tof_distance_mm), gt),
+      rmse: calculateRMSE(rawEst, gt),
+      mae: calculateMAE(rawEst, gt),
+      // Raw ToF는 수렴 개념 없음 — rmseSS/tconv 미계산
     },
     fixed: {
-      rmse: calculateRMSE(trimmed.map((r) => r.fixed_estimate_mm), gt),
-      mae: calculateMAE(trimmed.map((r) => r.fixed_estimate_mm), gt),
+      rmse: calculateRMSE(fixedEst, gt),
+      mae: calculateMAE(fixedEst, gt),
       nisPassRate: safeNISPassRate(
         trimmed.map((r) => r.fixed_residual),
         trimmed.map((r) => r.fixed_innovation_cov),
       ),
+      rmseSS: calculateRMSEss(fixedEst, gt),
+      tconv: calculateTconv(fixedEst, gt, timestamps),
     },
     cm: {
-      rmse: calculateRMSE(trimmed.map((r) => r.cm_estimate_mm), gt),
-      mae: calculateMAE(trimmed.map((r) => r.cm_estimate_mm), gt),
+      rmse: calculateRMSE(cmEst, gt),
+      mae: calculateMAE(cmEst, gt),
       nisPassRate: safeNISPassRate(
         trimmed.map((r) => r.cm_residual),
         trimmed.map((r) => r.cm_innovation_cov),
       ),
+      rmseSS: calculateRMSEss(cmEst, gt),
+      tconv: calculateTconv(cmEst, gt, timestamps),
     },
     tinyml,
     cmRMean: cmRValues.reduce((s, v) => s + v, 0) / cmRValues.length,
@@ -116,6 +140,13 @@ export function calculateE1Metrics(
 export function averageE1Metrics(all: E1RunMetrics[]): E1RunMetrics | null {
   if (all.length === 0) return null;
   const avg = (arr: number[]) => arr.reduce((s, v) => s + v, 0) / arr.length;
+  // tconv: null(수렴 못함) 런은 제외하고 평균. 전부 null이면 null.
+  const avgTconv = (arr: Array<number | null | undefined>): number | null => {
+    const valid = arr.filter((v): v is number => typeof v === "number");
+    return valid.length > 0 ? avg(valid) : null;
+  };
+
+  const tinymlAll = all.flatMap((m) => (m.tinyml ? [m.tinyml] : []));
 
   return {
     raw: {
@@ -126,12 +157,24 @@ export function averageE1Metrics(all: E1RunMetrics[]): E1RunMetrics | null {
       rmse: avg(all.map((m) => m.fixed.rmse)),
       mae: avg(all.map((m) => m.fixed.mae)),
       nisPassRate: avg(all.map((m) => m.fixed.nisPassRate ?? 0)),
+      rmseSS: avg(all.map((m) => m.fixed.rmseSS ?? m.fixed.rmse)),
+      tconv: avgTconv(all.map((m) => m.fixed.tconv)),
     },
     cm: {
       rmse: avg(all.map((m) => m.cm.rmse)),
       mae: avg(all.map((m) => m.cm.mae)),
       nisPassRate: avg(all.map((m) => m.cm.nisPassRate ?? 0)),
+      rmseSS: avg(all.map((m) => m.cm.rmseSS ?? m.cm.rmse)),
+      tconv: avgTconv(all.map((m) => m.cm.tconv)),
     },
+    tinyml: tinymlAll.length === all.length
+      ? {
+          rmse: avg(tinymlAll.map((m) => m.rmse)),
+          mae: avg(tinymlAll.map((m) => m.mae)),
+          rmseSS: avg(tinymlAll.map((m) => m.rmseSS ?? m.rmse)),
+          tconv: avgTconv(tinymlAll.map((m) => m.tconv)),
+        }
+      : undefined,
     cmRMean: avg(all.map((m) => m.cmRMean)),
     cmRMin: Math.min(...all.map((m) => m.cmRMin)),
     cmRMax: Math.max(...all.map((m) => m.cmRMax)),

@@ -214,13 +214,13 @@ gt[k]      = base − encoder_distance_mm[k]
 
 ---
 
-## Phase P1: 지표 정확도 + TinyML 4-way (2026-05-26 예정)
+## Phase P1: 지표 정확도 + TinyML 4-way (2026-05-23 완료)
 
-- [ ] `components/e1/E1MetricCards.tsx` — RMSEss, Tconv 카드 추가
-- [ ] `components/e1/AlgorithmToggle.tsx` — hasTinyML 기반 TinyML 완전 활성화
-- [ ] `components/e1/charts/PositionChart.tsx` — tinyml_estimate_mm 라인 추가
-- [ ] `components/views/E3View.tsx` — TinyML 추가, cm_R vs tinyml_R 회복 시계열
-- [ ] `app/dashboard/page.tsx` — 표 5-2 종합 카드 추가
+- [x] `components/e1/E1MetricCards.tsx` — RMSEss, Tconv 카드 추가 (6-card 레이아웃)
+- [x] `components/e1/AlgorithmToggle.tsx` — hasTinyML 기반 TinyML 완전 활성화 (P0에서 완료)
+- [x] `components/e1/charts/PositionChart.tsx` — tinyml_estimate_mm 라인 추가 (P0에서 완료)
+- [x] `components/views/E3View.tsx` — cm_R vs tinyml_R 회복 시계열 + 논문 fallback 카드
+- [x] `app/dashboard/page.tsx` — 표 5-2 종합 카드 추가 (7개 시나리오 × 4 알고리즘)
 
 ---
 
