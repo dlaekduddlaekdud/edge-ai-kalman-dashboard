@@ -13,10 +13,10 @@ export const E1_ALGORITHM_LABELS: Record<E1AlgorithmId, string> = {
 };
 
 export const E1_ALGORITHM_COLORS: Record<E1AlgorithmId, string> = {
-  raw: "#f97316",
-  fixed: "#2563eb",
-  cm: "#16a34a",
-  tinyml: "#7c3aed",
+  raw: "#71717a",
+  fixed: "#0f766e",
+  cm: "#7c3aed",    // 보라/바이올렛 — 에러색과 구별되는 핵심 적응 알고리즘 색상
+  tinyml: "#ea580c", // 번트 오렌지 — 온디바이스 대안, 노란색과 구별
 };
 
 interface E1RunData {

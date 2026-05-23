@@ -13,11 +13,12 @@ import {
 } from "recharts";
 import { type AlgorithmId, type AlgorithmData, ALGORITHM_LABELS } from "@/lib/dataset";
 
+// E1_ALGORITHM_COLORS와 동일한 팔레트 유지 (dataset.ts는 e1-store에 의존하지 않으므로 여기서 상수 정의)
 const ALGO_COLORS: Record<AlgorithmId, string> = {
-  raw: "#f97316",
-  fixed: "#2563eb",
-  cm: "#16a34a",
-  tinyml: "#7c3aed",
+  raw: "#71717a",
+  fixed: "#0f766e",
+  cm: "#7c3aed",
+  tinyml: "#ea580c",
 };
 
 interface ChartPoint {

@@ -63,7 +63,7 @@ function Table4_10Card() {
                 <td className="px-4 py-3 text-right font-mono text-[#111827]">{row.maeR_int8.toFixed(2)}</td>
                 <td
                   className="px-4 py-3 text-right font-mono font-semibold"
-                  style={{ color: row.int8DeltaPct < 0 ? "#16a34a" : "#dc2626" }}
+                  style={{ color: row.int8DeltaPct < 0 ? "#15803d" : "#dc2626" }}
                 >
                   {row.int8DeltaPct > 0 ? "+" : ""}{row.int8DeltaPct.toFixed(1)}%
                 </td>
@@ -118,9 +118,9 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
             <tr className="bg-[#f8fafc]">
               <th className="px-4 py-3 text-left font-semibold text-[#374151]">시나리오</th>
               <th className="px-4 py-3 text-right font-semibold text-[#374151]">N</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#2563eb]">Fixed KF</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#16a34a]">CM-AKF</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">TinyML 3f</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#0f766e]">Fixed KF</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">CM-AKF</th>
+              <th className="px-4 py-3 text-right font-semibold text-[#ea580c]">TinyML 3f</th>
               <th className="px-4 py-3 text-right font-semibold text-[#374151]">CM vs 3f</th>
             </tr>
           </thead>
@@ -134,17 +134,17 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
                   )}
                 </td>
                 <td className="px-4 py-3 text-right text-[#64748b]">{row.n}</td>
-                <td className="px-4 py-3 text-right font-mono text-[#2563eb]">{row.fixed.toFixed(2)}</td>
-                <td className="px-4 py-3 text-right font-mono text-[#16a34a]">{row.cm.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#0f766e]">{row.fixed.toFixed(2)}</td>
+                <td className="px-4 py-3 text-right font-mono text-[#7c3aed]">{row.cm.toFixed(2)}</td>
                 <td
                   className="px-4 py-3 text-right font-mono"
-                  style={{ color: row.diverged ? "#dc2626" : "#7c3aed", fontWeight: row.diverged ? 700 : 400 }}
+                  style={{ color: row.diverged ? "#dc2626" : "#ea580c", fontWeight: row.diverged ? 700 : 400 }}
                 >
                   {row.tinyml3f.toFixed(2)}{row.diverged && " ★"}
                 </td>
                 <td
                   className="px-4 py-3 text-right font-mono font-semibold"
-                  style={{ color: row.cmVs3fDiff > 0 ? "#dc2626" : "#16a34a" }}
+                  style={{ color: row.cmVs3fDiff > 0 ? "#dc2626" : "#7c3aed" }}
                 >
                   {row.cmVs3fDiff > 0 ? "+" : ""}{row.cmVs3fDiff.toFixed(2)}
                 </td>
@@ -154,12 +154,12 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
             <tr className="border-t-2 border-[#d9e0ea] bg-[#f8fafc] font-semibold">
               <td className="px-4 py-3 text-[#111827]">가중 평균 (N={avg.n})</td>
               <td className="px-4 py-3 text-right text-[#64748b]">{avg.n}</td>
-              <td className="px-4 py-3 text-right font-mono text-[#2563eb]">{avg.fixed.toFixed(2)}</td>
-              <td className="px-4 py-3 text-right font-mono text-[#16a34a]">{avg.cm.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right font-mono text-[#0f766e]">{avg.fixed.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right font-mono text-[#7c3aed]">{avg.cm.toFixed(2)}</td>
               <td className="px-4 py-3 text-right font-mono text-[#dc2626]">{avg.tinyml3f.toFixed(2)}</td>
               <td
                 className="px-4 py-3 text-right font-mono"
-                style={{ color: avg.cmVs3fDiff > 0 ? "#dc2626" : "#16a34a" }}
+                style={{ color: avg.cmVs3fDiff > 0 ? "#dc2626" : "#7c3aed" }}
               >
                 {avg.cmVs3fDiff > 0 ? "+" : ""}{avg.cmVs3fDiff.toFixed(2)}
               </td>
@@ -195,21 +195,31 @@ export default function AblationPage() {
       })
       .then((text) => {
         const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
-        const parsed: AblationHoldoutRow[] = result.data.map((r) => {
+        // NaN 방어: parseFloat 결과가 NaN인 row는 제외
+        const parsed: AblationHoldoutRow[] = result.data.reduce<AblationHoldoutRow[]>((acc, r) => {
+          const fixed = parseFloat(r.rmse_fixed);
           const cm = parseFloat(r.rmse_cm);
           const tinyml3f = parseFloat(r.rmse_3feat);
-          return {
+          const n = parseInt(r.n, 10);
+          if (isNaN(fixed) || isNaN(cm) || isNaN(tinyml3f) || isNaN(n)) return acc;
+          acc.push({
             scenario: formatScenarioName(r.scenario),
-            n: parseInt(r.n, 10),
-            fixed: parseFloat(r.rmse_fixed),
+            n,
+            fixed,
             cm,
             tinyml3f,
             cmVs3fDiff: tinyml3f - cm,
             diverged: tinyml3f > 50 || tinyml3f > cm * 2,
-          };
-        });
+          });
+          return acc;
+        }, []);
 
         const totalN = parsed.reduce((s, r) => s + r.n, 0);
+        // totalN이 0이면 가중 평균 계산 불가 → fallback으로 전환
+        if (totalN === 0) {
+          setHoldoutState({ loading: false, rows: null, weightedAvg: null, source: "fallback" });
+          return;
+        }
         const wavg = (getter: (r: AblationHoldoutRow) => number) =>
           parsed.reduce((s, r) => s + getter(r) * r.n, 0) / totalN;
 
@@ -250,8 +260,8 @@ export default function AblationPage() {
 
       {/* 표 4-10 — R 라벨 추적도 */}
       <section className="space-y-3">
-        <div className="border-l-4 border-[#7c3aed] pl-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7c3aed]">표 4-10</p>
+        <div className="border-l-4 border-[#ea580c] pl-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#ea580c]">표 4-10</p>
           <h3 className="mt-1 text-lg font-semibold text-[#111827]">
             R 라벨 추적도 — 6-feature vs 3-feature
           </h3>
@@ -268,8 +278,8 @@ export default function AblationPage() {
 
       {/* 표 5-3 — hold-out 위치 RMSE */}
       <section className="space-y-3">
-        <div className="border-l-4 border-[#16a34a] pl-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#16a34a]">표 5-3</p>
+        <div className="border-l-4 border-[#7c3aed] pl-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7c3aed]">표 5-3</p>
           <h3 className="mt-1 text-lg font-semibold text-[#111827]">
             3-feature Hold-out 위치 RMSE
           </h3>
