@@ -93,8 +93,8 @@ export default function ResultsPage() {
 
       {/* ── RQ1 ──────────────────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <div className="border-l-4 border-[#7c3aed] pl-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#7c3aed]">RQ1</p>
+        <div className="border-l-4 border-[#ea580c] pl-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#ea580c]">RQ1</p>
           <h3 className="mt-1 text-lg font-semibold text-[#111827]">
             TinyML-AKF는 MCU에서 실시간 실행 가능한가?
           </h3>
@@ -118,7 +118,7 @@ export default function ResultsPage() {
             budget={RT.tinymlBudget_us}
             budgetUnit="µs"
             usagePct={tinymlUsagePct}
-            color="#7c3aed"
+            color="#ea580c"
             note={`최대 ${E4.tinymlInferMax_us} µs · std ${E4.tinymlInferStd_us} µs · ${E4.tinymlInferCount.toLocaleString()}회 측정`}
           />
           <GaugeSection
@@ -135,17 +135,17 @@ export default function ResultsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-[#ede9fe] bg-[#faf5ff] p-5 shadow-sm">
-            <p className="text-xs font-semibold text-[#7c3aed]">TinyML 여유 마진</p>
-            <p className="mt-2 text-3xl font-bold text-[#6d28d9]">{RT.tinymlMarginX}×</p>
-            <p className="mt-1 text-xs text-[#a78bfa]">
+          <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-5 shadow-sm">
+            <p className="text-xs font-semibold text-[#ea580c]">TinyML 여유 마진</p>
+            <p className="mt-2 text-3xl font-bold text-[#92400e]">{RT.tinymlMarginX}×</p>
+            <p className="mt-1 text-xs text-[#d97706]">
               {RT.tinymlBudget_us.toLocaleString()} µs ÷ {RT.tinymlActual_us} µs
             </p>
           </div>
-          <div className="rounded-lg border border-[#d1fae5] bg-[#f0fdf4] p-5 shadow-sm">
-            <p className="text-xs font-semibold text-[#10b981]">오버런 횟수</p>
-            <p className="mt-2 text-3xl font-bold text-[#047857]">{RT.overrunCount}</p>
-            <p className="mt-1 text-xs text-[#6ee7b7]">
+          <div className="rounded-lg border border-[#d4d4d8] bg-[#f4f4f5] p-5 shadow-sm">
+            <p className="text-xs font-semibold text-[#0f766e]">오버런 횟수</p>
+            <p className="mt-2 text-3xl font-bold text-[#9f1239]">{RT.overrunCount}</p>
+            <p className="mt-1 text-xs text-[#5eead4]">
               / {RT.totalCycles.toLocaleString()} 루프 (0%)
             </p>
           </div>
@@ -181,10 +181,10 @@ export default function ResultsPage() {
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">시나리오</th>
                 <th className="px-4 py-3 text-right font-semibold text-[#475569]">Fixed KF</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#16a34a]">CM-AKF</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#16a34a]">개선율 (CM)</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">TinyML-AKF</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">개선율 (TinyML)</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">CM-AKF</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">개선율 (CM)</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#ea580c]">TinyML-AKF</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#ea580c]">개선율 (TinyML)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
@@ -203,12 +203,12 @@ export default function ResultsPage() {
                   <tr key={label}>
                     <td className="px-4 py-3 font-medium text-[#111827]">{label}</td>
                     <td className="px-4 py-3 text-right text-[#475569]">{fixed.toFixed(2)} mm</td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#16a34a]">{cm.toFixed(2)} mm</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${cmPositive ? "text-[#16a34a]" : "text-[#dc2626]"}`}>
+                    <td className="px-4 py-3 text-right font-semibold text-[#7c3aed]">{cm.toFixed(2)} mm</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${cmPositive ? "text-[#7c3aed]" : "text-[#dc2626]"}`}>
                       {cmPositive ? "↓" : "↑"} {Math.abs(parseFloat(cmImprov)).toFixed(1)}%
                     </td>
-                    <td className="px-4 py-3 text-right text-[#7c3aed]">{tinyml.toFixed(2)} mm</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${tmlPositive ? "text-[#7c3aed]" : "text-[#dc2626]"}`}>
+                    <td className="px-4 py-3 text-right text-[#ea580c]">{tinyml.toFixed(2)} mm</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${tmlPositive ? "text-[#ea580c]" : "text-[#dc2626]"}`}>
                       {tmlPositive ? "↓" : "↑"} {Math.abs(parseFloat(tmlImprov)).toFixed(1)}%
                     </td>
                   </tr>
@@ -239,8 +239,8 @@ export default function ResultsPage() {
             <thead className="bg-[#f8fafc]">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">시나리오</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#16a34a]">CM-AKF</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">TinyML-AKF</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">CM-AKF</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#ea580c]">TinyML-AKF</th>
                 <th className="px-4 py-3 text-right font-semibold text-[#475569]">차이</th>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">특이사항</th>
               </tr>
@@ -261,9 +261,9 @@ export default function ResultsPage() {
                 return (
                   <tr key={label} className={label.includes("★") ? "bg-[#fefce8]" : ""}>
                     <td className="px-4 py-3 font-medium text-[#111827]">{label}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#16a34a]">{cm.toFixed(2)} mm</td>
-                    <td className="px-4 py-3 text-right font-semibold text-[#7c3aed]">{tinyml.toFixed(2)} mm</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${isBetter ? "text-[#16a34a]" : "text-[#dc2626]"}`}>
+                    <td className="px-4 py-3 text-right font-semibold text-[#7c3aed]">{cm.toFixed(2)} mm</td>
+                    <td className="px-4 py-3 text-right font-semibold text-[#ea580c]">{tinyml.toFixed(2)} mm</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${isBetter ? "text-[#7c3aed]" : "text-[#dc2626]"}`}>
                       {diffStr} mm
                     </td>
                     <td className="px-4 py-3 text-xs text-[#64748b]">{note}</td>
@@ -291,8 +291,8 @@ export default function ResultsPage() {
                 <th className="px-4 py-2.5 text-left font-semibold text-[#475569]">시나리오</th>
                 <th className="px-4 py-2.5 text-right font-semibold text-[#475569]">Raw</th>
                 <th className="px-4 py-2.5 text-right font-semibold text-[#475569]">Fixed KF</th>
-                <th className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">CM-AKF</th>
-                <th className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">TinyML-AKF</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">CM-AKF</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#ea580c]">TinyML-AKF</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
@@ -300,22 +300,22 @@ export default function ResultsPage() {
                 <td className="px-4 py-2.5 font-medium text-[#111827]">E1 — 정상 baseline</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E1.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E1.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">{PAPER_RESULTS.E1.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E1.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E1.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E1.tinyml.rmse}</td>
               </tr>
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">E2 — 흰 우드락</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.white.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.white.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
               </tr>
               <tr>
                 <td className="px-4 py-2.5 text-[#475569]">E2 — 검정 우드락</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.black.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.black.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
               </tr>
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">
@@ -324,29 +324,29 @@ export default function ResultsPage() {
                 </td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.acryl.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#16a34a]">{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#ea580c]">{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
               </tr>
               <tr>
                 <td className="px-4 py-2.5 font-medium text-[#111827]">E3 — ToF 차단 구간</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E3.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E3.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">{PAPER_RESULTS.E3.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E3.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E3.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E3.tinyml.rmse}</td>
               </tr>
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">E4 — 정적 장기 안정성</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E4.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E4.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">{PAPER_RESULTS.E4.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E4.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E4.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E4.tinyml.rmse}</td>
               </tr>
               <tr>
                 <td className="px-4 py-2.5 text-[#475569]">E5 — 미지 표면 일반화</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E5.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E5.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#16a34a]">{PAPER_RESULTS.E5.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E5.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E5.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E5.tinyml.rmse}</td>
               </tr>
             </tbody>
           </table>

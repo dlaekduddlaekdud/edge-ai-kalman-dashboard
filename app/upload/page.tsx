@@ -28,7 +28,7 @@ interface ScenarioCfg {
   files: { runId: RunId; path: string }[] | null;
 }
 
-type DataKey = "E1" | "E2_white" | "E2_black" | "E2_acryl" | "E3" | "E5";
+type DataKey = "E1" | "E2_white" | "E2_black" | "E2_acryl" | "E3" | "E4" | "E5";
 
 const DATA_FILES: Record<DataKey, { runId: RunId; path: string }[]> = {
   E1:       Array.from({ length: 5 }, (_, i) => ({ runId: `run${i + 1}` as RunId, path: `/data/E1_run0${i + 1}.csv` })),
@@ -36,6 +36,7 @@ const DATA_FILES: Record<DataKey, { runId: RunId; path: string }[]> = {
   E2_black: Array.from({ length: 3 }, (_, i) => ({ runId: `run${i + 1}` as RunId, path: `/data/E2_black_run0${i + 1}.csv` })),
   E2_acryl: Array.from({ length: 3 }, (_, i) => ({ runId: `run${i + 1}` as RunId, path: `/data/E2_acryl_run0${i + 1}.csv` })),
   E3:       Array.from({ length: 5 }, (_, i) => ({ runId: `run${i + 1}` as RunId, path: `/data/E3_run0${i + 1}.csv` })),
+  E4:       Array.from({ length: 3 }, (_, i) => ({ runId: `run${i + 1}` as RunId, path: `/data/E4_run0${i + 1}.csv` })),
   E5:       Array.from({ length: 5 }, (_, i) => ({ runId: `run${i + 1}` as RunId, path: `/data/E5_run0${i + 1}.csv` })),
 };
 
@@ -49,7 +50,7 @@ const SCENARIOS: ScenarioCfg[] = [
   { label: "E1", title: "E1 — 정상 baseline",      desc: "5 run · ~1,167 frames",      files: DATA_FILES.E1 },
   { label: "E2", title: "E2 — 벽 재질별",           desc: "3 surface × 3 run",           files: DATA_FILES.E2_white },
   { label: "E3", title: "E3 — ToF 차단 구간",       desc: "5 run · ~1,152 frames",      files: DATA_FILES.E3 },
-  { label: "E4", title: "E4 — 정적 장기 안정성",    desc: "논문 확정값 · CSV 없음",      files: null },
+  { label: "E4", title: "E4 — 정적 장기 안정성",    desc: "3 run · 30분 정적",          files: DATA_FILES.E4 },
   { label: "E5", title: "E5 — 미지 표면 일반화",    desc: "5 run · ~963 frames",         files: DATA_FILES.E5 },
 ];
 

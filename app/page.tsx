@@ -21,18 +21,12 @@ const KPI_CARDS = [
     value: `${e3RmseImprovement}%`,
     sub: `Raw ${PAPER_RESULTS.E3.raw.rmse} mm → CM-AKF ${PAPER_RESULTS.E3.cm.rmse} mm`,
     detail: "ToF 차단 구간에서 적응형 필터가 고정 파라미터 대비 달성한 오차 감소율",
-    color: "#16a34a",
-    bg: "#f0fdf4",
-    border: "#bbf7d0",
   },
   {
     label: "TinyML 추론 마진",
     value: `${PAPER_RESULTS.realtime.tinymlMarginX}×`,
     sub: `${PAPER_RESULTS.realtime.tinymlActual_us} µs / ${PAPER_RESULTS.realtime.tinymlBudget_us} µs 목표`,
     detail: "200 Hz 루프 500 µs 예산 대비 실측 평균 추론 시간 여유 (오버런 0건)",
-    color: "#7c3aed",
-    bg: "#faf5ff",
-    border: "#ede9fe",
   },
   {
     label: "총 실험 프레임",
@@ -43,18 +37,12 @@ const KPI_CARDS = [
       `E4×${PAPER_RESULTS.E4.runs}`,
     ].join(", ")} 포함`,
     detail: "STM32에서 수집·필터링된 전체 센서 프레임 수",
-    color: "#0369a1",
-    bg: "#f0f9ff",
-    border: "#bae6fd",
   },
   {
     label: "E3 회복 배속",
     value: `${PAPER_RESULTS.E3.recoverySpeedup}×`,
     sub: `CM ${PAPER_RESULTS.E3.recoveryTimeCM_ms} ms → TinyML ${PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms`,
     detail: "ToF 차단 해제 후 R̂ 회복 시간 — TinyML-AKF가 CM-AKF보다 빠른 이유",
-    color: "#b45309",
-    bg: "#fffbeb",
-    border: "#fde68a",
   },
 ];
 
@@ -100,104 +88,47 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
+      <section className="rounded-lg border border-[#d1d5db] bg-white p-8 shadow-sm">
+        <p className="text-base font-bold uppercase tracking-[0.14em] text-[#111827]">
           Edge AI Kalman Dashboard
         </p>
-        <h2 className="mt-3 max-w-3xl text-3xl font-semibold text-[#111827]">
+        <h2 className="mt-4 max-w-5xl text-4xl font-bold leading-tight text-[#111827]">
           STM32 센서 데이터 파이프라인 · 실시간 시각화 풀스택 시스템
         </h2>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
+        <p className="mt-5 max-w-4xl text-lg leading-8 text-[#374151]">
           STM32F446RE에서 수집한 VL53L0X ToF 센서 데이터를 CSV로 내보내
           Fixed KF · CM-AKF · TinyML-AKF의 정확도와 실시간성 지표를 논문 정의에 맞춰 분석합니다.
           CSV 파싱부터 지표 계산·시각화까지 TypeScript로 구현한 단일 데이터 파이프라인입니다.
         </p>
-
-        {/* 아키텍처 미니 플로우 */}
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          {[
-            { label: "STM32F446RE", sub: "200 Hz loop" },
-            { label: "CSV Export", sub: "25 / 28 col" },
-            { label: "PapaParse", sub: "type-safe 파싱" },
-            { label: "Zustand Store", sub: "run-slot 상태" },
-            { label: "Metrics Engine", sub: "RMSE·NIS·Tconv" },
-            { label: "Recharts", sub: "시계열·비교 차트" },
-          ].map((node, i, arr) => (
-            <span key={node.label} className="flex items-center gap-2">
-              <span className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-3 py-2 text-center">
-                <span className="block text-sm font-semibold text-[#374151]">{node.label}</span>
-                <span className="block text-xs text-[#94a3b8]">{node.sub}</span>
-              </span>
-              {i < arr.length - 1 && (
-                <span className="text-sm text-[#94a3b8]">→</span>
-              )}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2 text-sm font-semibold">
-          <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-[#1d4ed8]">
-            Next.js 15 App Router
-          </span>
-          <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-[#15803d]">
-            25/28컬럼 dual-schema
-          </span>
-          <span className="rounded-full border border-[#ede9fe] bg-[#faf5ff] px-3 py-1 text-[#6d28d9]">
-            TypeScript strict
-          </span>
-          <span className="rounded-full border border-[#fde68a] bg-[#fffbeb] px-3 py-1 text-[#92400e]">
-            Zustand · Recharts
-          </span>
-        </div>
       </section>
 
       {/* ── KPI 카드 4개 ─────────────────────────────────────────────── */}
       <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">
+        <h3 className="mb-4 text-xl font-bold text-[#111827]">
           실험 결과 핵심 지표
         </h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {KPI_CARDS.map((card) => (
             <div
               key={card.label}
-              className="rounded-lg border p-5 shadow-sm"
-              style={{ borderColor: card.border, backgroundColor: card.bg }}
+              className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-5 shadow-sm"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.12em]"
-                style={{ color: card.color }}>
+              <p className="text-base font-bold text-[#111827]">
                 {card.label}
               </p>
-              <p className="mt-2 text-4xl font-bold tracking-tight"
-                style={{ color: card.color }}>
+              <p className="mt-2 text-4xl font-black tracking-tight text-[#111827]">
                 {card.value}
               </p>
-              <p className="mt-1.5 text-xs font-medium text-[#374151]">{card.sub}</p>
-              <p className="mt-2 text-[11px] leading-5 text-[#64748b]">{card.detail}</p>
+              <p className="mt-2 text-sm font-semibold text-[#1f2937]">{card.sub}</p>
+              <p className="mt-3 text-sm leading-6 text-[#4b5563]">{card.detail}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Quick Start 배너 ─────────────────────────────────────────── */}
-      <section className="flex flex-col items-start gap-3 rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-[#1d4ed8]">바로 시작하기</p>
-          <p className="mt-0.5 text-sm text-[#3b82f6]">
-            E1 또는 E3 데모 데이터를 즉시 로드해 대시보드를 확인하세요.
-            CSV 파일 없이도 모든 기능을 탐색할 수 있습니다.
-          </p>
-        </div>
-        <Link
-          href="/upload"
-          className="shrink-0 rounded-md bg-[#2563eb] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#1d4ed8]"
-        >
-          데모 데이터 로드 →
-        </Link>
-      </section>
-
       {/* ── 페이지 내비게이션 ─────────────────────────────────────────── */}
       <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.12em] text-[#94a3b8]">
+        <h3 className="mb-3 text-lg font-bold text-[#111827]">
           분석 화면
         </h3>
         <div className="grid gap-4 md:grid-cols-2">
@@ -205,14 +136,14 @@ export default function HomePage() {
             <Link
               key={page.href}
               href={page.href}
-              className="group rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm transition hover:border-[#2563eb] hover:shadow-md"
+              className="group rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm transition hover:border-[#111827] hover:bg-[#f9fafb]"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#111827] group-hover:text-[#2563eb]">
+                <h3 className="text-lg font-bold text-[#111827]">
                   {page.title}
                 </h3>
                 {page.badge && (
-                  <span className="rounded-full border border-[#e2e8f0] bg-[#f8fafc] px-2 py-0.5 text-[11px] font-semibold text-[#64748b]">
+                  <span className="rounded-full border border-[#d1d5db] bg-[#f3f4f6] px-2 py-0.5 text-xs font-semibold text-[#374151]">
                     {page.badge}
                   </span>
                 )}

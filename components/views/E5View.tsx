@@ -117,22 +117,22 @@ export default function E5View() {
           <p className="mt-2 text-2xl font-bold text-[#dc2626]">{E5.raw.rmse} mm</p>
           <p className="mt-0.5 text-xs text-[#94a3b8]">MAE {E5.raw.mae} mm</p>
         </div>
-        <div className="rounded-lg border border-[#d1fae5] bg-[#f0fdf4] p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#10b981]">Fixed KF</p>
-          <p className="mt-2 text-2xl font-bold text-[#047857]">{E5.fixed.rmse} mm</p>
-          <p className="mt-0.5 text-xs text-[#34d399]">
+        <div className="rounded-lg border border-[#d4d4d8] bg-[#f4f4f5] p-5 shadow-sm">
+          <p className="text-xs font-semibold text-[#0f766e]">Fixed KF</p>
+          <p className="mt-2 text-2xl font-bold text-[#0f766e]">{E5.fixed.rmse} mm</p>
+          <p className="mt-0.5 text-xs text-[#5eead4]">
             MAE {E5.fixed.mae} mm · NIS {E5.fixed.nis != null ? `${(E5.fixed.nis * 100).toFixed(1)}%` : "—"}
           </p>
         </div>
-        <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#2563eb]">CM-AKF</p>
-          <p className="mt-2 text-2xl font-bold text-[#1d4ed8]">{E5.cm.rmse} mm</p>
-          <p className="mt-0.5 text-xs text-[#93c5fd]">MAE {E5.cm.mae} mm · {cmImprovement}% 개선</p>
+        <div className="rounded-lg border border-[#ede9fe] bg-[#f5f3ff] p-5 shadow-sm">
+          <p className="text-xs font-semibold text-[#7c3aed]">CM-AKF</p>
+          <p className="mt-2 text-2xl font-bold text-[#7c3aed]">{E5.cm.rmse} mm</p>
+          <p className="mt-0.5 text-xs text-[#a78bfa]">MAE {E5.cm.mae} mm · {cmImprovement}% 개선</p>
         </div>
-        <div className="rounded-lg border border-[#ede9fe] bg-[#faf5ff] p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#7c3aed]">TinyML-AKF</p>
-          <p className="mt-2 text-2xl font-bold text-[#6d28d9]">{E5.tinyml.rmse} mm</p>
-          <p className="mt-0.5 text-xs text-[#a78bfa]">MAE {E5.tinyml.mae} mm · CM+{tinymlVsCm}mm</p>
+        <div className="rounded-lg border border-[#fed7aa] bg-[#fff7ed] p-5 shadow-sm">
+          <p className="text-xs font-semibold text-[#ea580c]">TinyML-AKF</p>
+          <p className="mt-2 text-2xl font-bold text-[#ea580c]">{E5.tinyml.rmse} mm</p>
+          <p className="mt-0.5 text-xs text-[#c2410c]">MAE {E5.tinyml.mae} mm · CM+{tinymlVsCm}mm</p>
         </div>
       </div>
 
@@ -141,9 +141,9 @@ export default function E5View() {
         <h3 className="text-base font-semibold text-[#111827]">성능 순위 (RMSE 기준)</h3>
         <div className="mt-3 space-y-2">
           {[
-            { rank: 1, label: "CM-AKF",     rmse: E5.cm.rmse,     color: "#2563eb", note: "미지 표면 최적 적응" },
-            { rank: 2, label: "TinyML-AKF", rmse: E5.tinyml.rmse, color: "#7c3aed", note: `CM보다 +${tinymlVsCm}mm (일반화 한계)` },
-            { rank: 3, label: "Fixed KF",   rmse: E5.fixed.rmse,  color: "#10b981", note: "고정 R — 표면 변화 미적응" },
+            { rank: 1, label: "CM-AKF",     rmse: E5.cm.rmse,     color: "#7c3aed", note: "미지 표면 최적 적응" },
+            { rank: 2, label: "TinyML-AKF", rmse: E5.tinyml.rmse, color: "#ea580c", note: `CM보다 +${tinymlVsCm}mm (일반화 한계)` },
+            { rank: 3, label: "Fixed KF",   rmse: E5.fixed.rmse,  color: "#0f766e", note: "고정 R — 표면 변화 미적응" },
             { rank: 4, label: "Raw ToF",    rmse: E5.raw.rmse,    color: "#64748b", note: "필터 없음" },
           ].map(({ rank, label, rmse, color, note }) => (
             <div key={label} className="flex items-center gap-3">

@@ -505,21 +505,21 @@ export default function E3View() {
             28컬럼 TinyML CSV 업로드 시 동적 차트로 전환됩니다.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="rounded-md bg-[#f0fdf4] p-4">
-              <p className="text-xs font-semibold text-[#15803d]">TinyML-AKF</p>
-              <p className="mt-1 text-2xl font-bold text-[#16a34a]">
+            <div className="rounded-md bg-[#fffbeb] p-4">
+              <p className="text-xs font-semibold text-[#a16207]">TinyML-AKF</p>
+              <p className="mt-1 text-2xl font-bold text-[#a16207]">
                 {PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms
               </p>
-              <p className="mt-0.5 text-xs text-[#4ade80]">
+              <p className="mt-0.5 text-xs text-[#d97706]">
                 3 frames @ 50Hz
               </p>
             </div>
-            <div className="rounded-md bg-[#eff6ff] p-4">
-              <p className="text-xs font-semibold text-[#1d4ed8]">CM-AKF</p>
-              <p className="mt-1 text-2xl font-bold text-[#2563eb]">
+            <div className="rounded-md bg-[#f0fdfa] p-4">
+              <p className="text-xs font-semibold text-[#0f766e]">CM-AKF</p>
+              <p className="mt-1 text-2xl font-bold text-[#0f766e]">
                 {PAPER_RESULTS.E3.recoveryTimeCM_ms} ms
               </p>
-              <p className="mt-0.5 text-xs text-[#93c5fd]">
+              <p className="mt-0.5 text-xs text-[#5eead4]">
                 8 frames @ 50Hz
               </p>
             </div>

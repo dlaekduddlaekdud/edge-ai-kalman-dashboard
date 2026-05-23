@@ -10,17 +10,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useE1Store, type E2Surface } from "@/lib/e1-store";
+import { useE1Store, E1_ALGORITHM_COLORS, type E2Surface } from "@/lib/e1-store";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 
 const E2 = PAPER_RESULTS.E2;
 
-const ALGO_COLORS = {
-  raw:    "#64748b",
-  fixed:  "#10b981",
-  cm:     "#2563eb",
-  tinyml: "#7c3aed",
-};
+// 로컬 ALGO_COLORS 제거 — E1_ALGORITHM_COLORS를 단일 진실 소스로 사용
+const ALGO_COLORS = E1_ALGORITHM_COLORS;
 
 const barData = [
   {
@@ -115,27 +111,27 @@ export default function E2View() {
             <p className="mt-1 text-2xl font-bold text-[#dc2626]">{sel.raw.rmse} mm</p>
             <p className="mt-0.5 text-xs text-[#94a3b8]">MAE {sel.raw.mae} mm</p>
           </div>
-          <div className="rounded-lg border border-[#d1fae5] bg-[#f0fdf4] p-4">
-            <p className="text-xs font-semibold text-[#10b981]">Fixed KF</p>
-            <p className="mt-1 text-2xl font-bold text-[#047857]">{sel.fixed.rmse} mm</p>
-            <p className="mt-0.5 text-xs text-[#34d399]">
+          <div className="rounded-lg border border-[#d4d4d8] bg-[#f4f4f5] p-4">
+            <p className="text-xs font-semibold text-[#0f766e]">Fixed KF</p>
+            <p className="mt-1 text-2xl font-bold text-[#0f766e]">{sel.fixed.rmse} mm</p>
+            <p className="mt-0.5 text-xs text-[#5eead4]">
               NIS {sel.fixed.nis != null ? `${(sel.fixed.nis * 100).toFixed(1)}%` : "—"}
             </p>
           </div>
-          <div className={`rounded-lg border p-4 ${currentSurface === "acryl" ? "border-[#e9d5ff] bg-[#faf5ff]" : "border-[#bfdbfe] bg-[#eff6ff]"}`}>
-            <p className="text-xs font-semibold text-[#2563eb]">CM-AKF</p>
-            <p className="mt-1 text-2xl font-bold text-[#1d4ed8]">{sel.cm.rmse} mm</p>
-            <p className="mt-0.5 text-xs text-[#93c5fd]">{cmImprovement}% 개선</p>
+          <div className="rounded-lg border border-[#ede9fe] bg-[#f5f3ff] p-4">
+            <p className="text-xs font-semibold text-[#7c3aed]">CM-AKF</p>
+            <p className="mt-1 text-2xl font-bold text-[#7c3aed]">{sel.cm.rmse} mm</p>
+            <p className="mt-0.5 text-xs text-[#a78bfa]">{cmImprovement}% 개선</p>
           </div>
-          <div className={`rounded-lg border p-4 ${currentSurface === "acryl" ? "border-[#c4b5fd] bg-[#f5f3ff]" : "border-[#ede9fe] bg-[#faf5ff]"}`}>
-            <p className="text-xs font-semibold text-[#7c3aed]">
+          <div className={`rounded-lg border p-4 ${currentSurface === "acryl" ? "border-[#fed7aa] bg-[#fff7ed]" : "border-[#fdba74] bg-[#fff7ed]"}`}>
+            <p className="text-xs font-semibold text-[#ea580c]">
               TinyML-AKF
-              {currentSurface === "acryl" && <span className="ml-1 text-[#f59e0b]">★</span>}
+              {currentSurface === "acryl" && <span className="ml-1 text-[#f97316]">★</span>}
             </p>
-            <p className={`mt-1 text-2xl font-bold ${currentSurface === "acryl" ? "text-[#7c3aed]" : "text-[#6d28d9]"}`}>
+            <p className="mt-1 text-2xl font-bold text-[#ea580c]">
               {sel.tinyml.rmse} mm
             </p>
-            <p className="mt-0.5 text-xs text-[#a78bfa]">
+            <p className="mt-0.5 text-xs text-[#c2410c]">
               CM {Number(tinymlVsCm) > 0 ? `+${tinymlVsCm}` : tinymlVsCm}mm
               {currentSurface === "acryl" && " (Best ★)"}
             </p>
@@ -216,9 +212,9 @@ export default function E2View() {
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">표면</th>
                 <th className="px-4 py-3 text-right font-semibold text-[#475569]">Raw RMSE</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#10b981]">Fixed KF</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#2563eb]">CM-AKF</th>
-                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">TinyML</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#0f766e]">Fixed KF</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#7c3aed]">CM-AKF</th>
+                <th className="px-4 py-3 text-right font-semibold text-[#ea580c]">TinyML</th>
                 <th className="px-4 py-3 text-right font-semibold text-[#475569]">cm_R 평균</th>
                 <th className="px-4 py-3 text-right font-semibold text-[#475569]">Signal Rate</th>
                 <th className="px-4 py-3 text-right font-semibold text-[#475569]">TinyML R̂</th>
@@ -241,9 +237,9 @@ export default function E2View() {
                       {isSelected && <span className="ml-2 text-xs text-[#2563eb]">← 선택됨</span>}
                     </td>
                     <td className="px-4 py-3 text-right text-[#475569]">{s.raw.rmse}</td>
-                    <td className="px-4 py-3 text-right text-[#10b981]">{s.fixed.rmse}</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${key === "acryl" ? "text-[#2563eb]" : "text-[#2563eb]"}`}>{s.cm.rmse}</td>
-                    <td className={`px-4 py-3 text-right ${key === "acryl" ? "font-semibold text-[#7c3aed]" : "text-[#7c3aed]"}`}>{s.tinyml.rmse}</td>
+                    <td className="px-4 py-3 text-right text-[#0f766e]">{s.fixed.rmse}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-[#7c3aed]">{s.cm.rmse}</td>
+                    <td className={`px-4 py-3 text-right ${key === "acryl" ? "font-semibold text-[#ea580c]" : "text-[#ea580c]"}`}>{s.tinyml.rmse}</td>
                     <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.cmRMean}</td>
                     <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.signalRate} MCps</td>
                     <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.tinymlR}{key === "acryl" && " ★"}</td>

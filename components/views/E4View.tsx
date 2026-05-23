@@ -112,20 +112,20 @@ export default function E4View() {
                 <td className="px-4 py-3 text-right text-[#94a3b8]">—</td>
               </tr>
               <tr className="bg-[#fafafa]">
-                <td className="px-4 py-3 text-[#10b981]">Fixed KF</td>
+                <td className="px-4 py-3 text-[#0f766e]">Fixed KF</td>
                 <td className="px-4 py-3 text-right">{E4.fixed.rmse}</td>
                 <td className="px-4 py-3 text-right">{E4.fixed.mae}</td>
                 <td className="px-4 py-3 text-right">{E4.fixed.nis != null ? `${(E4.fixed.nis * 100).toFixed(1)}%` : "—"}</td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-semibold text-[#2563eb]">CM-AKF</td>
-                <td className="px-4 py-3 text-right font-semibold text-[#2563eb]">{E4.cm.rmse}</td>
+                <td className="px-4 py-3 font-semibold text-[#7c3aed]">CM-AKF</td>
+                <td className="px-4 py-3 text-right font-semibold text-[#7c3aed]">{E4.cm.rmse}</td>
                 <td className="px-4 py-3 text-right">{E4.cm.mae}</td>
                 <td className="px-4 py-3 text-right">{E4.cm.nis != null ? `${(E4.cm.nis * 100).toFixed(1)}%` : "—"}</td>
               </tr>
               <tr className="bg-[#fafafa]">
-                <td className="px-4 py-3 text-[#7c3aed]">TinyML-AKF</td>
-                <td className="px-4 py-3 text-right text-[#7c3aed]">{E4.tinyml.rmse}</td>
+                <td className="px-4 py-3 text-[#ea580c]">TinyML-AKF</td>
+                <td className="px-4 py-3 text-right text-[#ea580c]">{E4.tinyml.rmse}</td>
                 <td className="px-4 py-3 text-right">{E4.tinyml.mae}</td>
                 <td className="px-4 py-3 text-right text-[#94a3b8]">—</td>
               </tr>
@@ -142,7 +142,7 @@ export default function E4View() {
           budget={`${TINYML_BUDGET_US.toLocaleString()} µs (0.5ms 목표)`}
           usagePct={tinymlUsagePct}
           unit="µs"
-          color="#7c3aed"
+          color="#ea580c"
           note={`최대 ${E4.tinymlInferMax_us} µs · std ${E4.tinymlInferStd_us} µs · ${E4.tinymlInferCount.toLocaleString()}회`}
         />
         <GaugeCard
@@ -151,37 +151,37 @@ export default function E4View() {
           budget={`${MAIN_LOOP_BUDGET_MS} ms`}
           usagePct={mainLoopUsagePct}
           unit="ms"
-          color="#2563eb"
+          color="#0f766e"
           note={`최대 ${E4.mainLoopMax_ms} ms · 오버런 ${E4.overrunCount}/${E4.totalLoopCount.toLocaleString()}`}
         />
       </div>
 
       {/* TinyML 여유 마진 강조 */}
-      <div className="rounded-lg border border-[#ede9fe] bg-[#faf5ff] p-5 shadow-sm">
-        <p className="text-xs font-semibold text-[#7c3aed]">TinyML 추론 여유 마진</p>
+      <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-5 shadow-sm">
+        <p className="text-xs font-semibold text-[#ea580c]">TinyML 추론 여유 마진</p>
         <div className="mt-3 flex flex-wrap gap-4">
           <div className="rounded-md bg-white px-4 py-3 shadow-sm">
             <p className="text-xs text-[#94a3b8]">예산</p>
             <p className="text-xl font-bold text-[#111827]">{TINYML_BUDGET_US.toLocaleString()} µs</p>
           </div>
           <div className="flex items-center">
-            <span className="text-2xl text-[#7c3aed]">÷</span>
+            <span className="text-2xl text-[#ea580c]">÷</span>
           </div>
           <div className="rounded-md bg-white px-4 py-3 shadow-sm">
             <p className="text-xs text-[#94a3b8]">실측</p>
             <p className="text-xl font-bold text-[#111827]">{E4.tinymlInferMean_us} µs</p>
           </div>
           <div className="flex items-center">
-            <span className="text-2xl text-[#7c3aed]">=</span>
+            <span className="text-2xl text-[#ea580c]">=</span>
           </div>
-          <div className="rounded-md bg-[#7c3aed] px-4 py-3 shadow-sm">
-            <p className="text-xs text-[#ede9fe]">여유 마진</p>
+          <div className="rounded-md bg-[#ea580c] px-4 py-3 shadow-sm">
+            <p className="text-xs text-[#fde68a]">여유 마진</p>
             <p className="text-2xl font-bold text-white">
               {(TINYML_BUDGET_US / E4.tinymlInferMean_us).toFixed(1)}×
             </p>
           </div>
         </div>
-        <p className="mt-3 text-xs text-[#6d28d9]">
+        <p className="mt-3 text-xs text-[#92400e]">
           TinyML 추론 목표 0.5ms 대비 사용률은 {tinymlUsagePct.toFixed(2)}%.
           200Hz 메인 루프 5ms 예산은 별도 게이지에서 확인합니다.
         </p>

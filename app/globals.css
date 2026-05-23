@@ -1,11 +1,28 @@
 @import "tailwindcss";
 
 :root {
+  /* 기존 5개 유지 */
   --background: #f7f8fb;
   --foreground: #111827;
   --muted: #64748b;
   --panel: #ffffff;
   --line: #d9e0ea;
+
+  /* 시맨틱 토큰 추가 */
+  --text-secondary: #334155;
+  --brand: #2563eb;
+  --brand-hover: #1d4ed8;
+  --danger: #b91c1c;
+  --warning-text: #92400e;
+
+  /* 알고리즘 색상 토큰 */
+  --raw:    #71717a;
+  --fixed:  #0f766e;
+  --cm:     #7c3aed;   /* 보라/바이올렛 — 핵심 적응 알고리즘 */
+  --tinyml: #ea580c;   /* 번트 오렌지 — 온디바이스 대안 */
+
+  /* 시맨틱 성능 토큰 */
+  --positive: #16a34a; /* "성능 향상" — CM-AKF 알고리즘 색과 별도 */
 }
 
 * {
@@ -16,10 +33,14 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-noto), "Apple SD Gothic Neo", "Malgun Gothic", Arial, sans-serif;
 }
 
 a {
   color: inherit;
   text-decoration: none;
 }
+
+/* 숫자 비교 컬럼 정렬 — tabular-nums */
+.tabular { font-variant-numeric: tabular-nums; }
+td, th { font-variant-numeric: tabular-nums; }
