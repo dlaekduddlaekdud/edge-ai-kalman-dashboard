@@ -19,12 +19,12 @@ export const metadata: Metadata = {
     "STM32 Edge AI adaptive Kalman filter experiments rebuilt as a CSV-based research dashboard.",
 };
 
-// additionalPaths: /upload 하위 흐름인 /dashboard도 Analyze 활성 처리
+// additionalPaths: /upload 하위 흐름인 /dashboard도 분석하기 활성 처리
 const navItems = [
-  { href: "/upload", label: "Scenario Dashboard", additionalPaths: ["/dashboard"] },
+  { href: "/upload", label: "분석하기", additionalPaths: ["/dashboard"] },
+  { href: "/results", label: "연구 결과", additionalPaths: ["/realtime"] },
+  { href: "/method", label: "방법/지표", additionalPaths: [] as string[] },
   { href: "/ablation", label: "Ablation", additionalPaths: [] as string[] },
-  { href: "/results", label: "Results", additionalPaths: ["/realtime"] },
-  { href: "/method", label: "Method", additionalPaths: [] as string[] },
 ];
 
 export default function RootLayout({

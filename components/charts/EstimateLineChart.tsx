@@ -12,13 +12,14 @@ import {
   YAxis,
 } from "recharts";
 import { type AlgorithmId, type AlgorithmData, ALGORITHM_LABELS } from "@/lib/dataset";
+import { algorithmColors } from "@/lib/palette";
 
-// E1_ALGORITHM_COLORS와 동일한 팔레트 유지 (dataset.ts는 e1-store에 의존하지 않으므로 여기서 상수 정의)
+// 팔레트 단일 진실 소스에서 참조 (dataset.ts는 e1-store에 의존하지 않으므로 여기서 매핑)
 const ALGO_COLORS: Record<AlgorithmId, string> = {
-  raw: "#6B7280",
-  fixed: "#2563EB",
-  cm: "#16A34A",
-  tinyml: "#7C3AED",
+  raw: algorithmColors.raw,
+  fixed: algorithmColors.fixed,
+  cm: algorithmColors.cm,
+  tinyml: algorithmColors.tinyml,
 };
 
 interface ChartPoint {
