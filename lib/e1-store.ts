@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { ALL_RUNS, type E1Row, type RunId } from "@/lib/e1-csv-parser";
 import type { ScenarioLabel } from "@/lib/dataset";
+import { algorithmColors } from "@/lib/palette";
 
 export type E1AlgorithmId = "raw" | "fixed" | "cm" | "tinyml";
 export type E2Surface = "white" | "black" | "acryl";
@@ -12,11 +13,12 @@ export const E1_ALGORITHM_LABELS: Record<E1AlgorithmId, string> = {
   tinyml: "TinyML-AKF",
 };
 
+// 팔레트 단일 진실 소스에서 참조
 export const E1_ALGORITHM_COLORS: Record<E1AlgorithmId, string> = {
-  raw: "#6B7280",
-  fixed: "#2563EB",
-  cm: "#16A34A",
-  tinyml: "#7C3AED",
+  raw: algorithmColors.raw,
+  fixed: algorithmColors.fixed,
+  cm: algorithmColors.cm,
+  tinyml: algorithmColors.tinyml,
 };
 
 interface E1RunData {

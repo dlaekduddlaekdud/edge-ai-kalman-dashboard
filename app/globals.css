@@ -1,28 +1,28 @@
 @import "tailwindcss";
 
 :root {
-  /* 기존 5개 유지 */
+  /* 레이아웃 토큰 */
   --background: #f7f8fb;
   --foreground: #111827;
   --muted: #64748b;
   --panel: #ffffff;
   --line: #d9e0ea;
 
-  /* 시맨틱 토큰 추가 */
+  /* 시맨틱 토큰 */
   --text-secondary: #334155;
-  --brand: #111827;
-  --brand-hover: #374151;
+  --brand: #1f4f8f;
+  --brand-hover: #1e3a6e;
   --danger: #b91c1c;
   --warning-text: #92400e;
 
-  /* 알고리즘 색상 토큰 */
-  --raw:    #6b7280;
-  --fixed:  #2563eb;
-  --cm:     #16a34a;
-  --tinyml: #7c3aed;
+  /* 알고리즘 색상 토큰 — lib/palette.ts와 동기화 유지 */
+  --raw:    #71717a;   /* Raw ToF   — 원본 기준선 */
+  --fixed:  #0f766e;   /* Fixed KF  — 안정적 baseline */
+  --cm:     #be123c;   /* CM-AKF    — covariance matching 적응 필터 */
+  --tinyml: #a16207;   /* TinyML-AKF — Edge AI 대안 */
 
   /* 시맨틱 성능 토큰 */
-  --positive: #16a34a; /* "성능 향상" — CM-AKF 알고리즘 색과 별도 */
+  --positive: #15803d; /* 성능 향상 표시 */
 }
 
 * {
@@ -41,6 +41,6 @@ a {
   text-decoration: none;
 }
 
-/* 숫자 비교 컬럼 정렬 — tabular-nums */
+/* 숫자 비교 컬럼 — tabular-nums */
 .tabular { font-variant-numeric: tabular-nums; }
 td, th { font-variant-numeric: tabular-nums; }

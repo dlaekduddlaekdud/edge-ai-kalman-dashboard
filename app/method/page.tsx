@@ -1,53 +1,63 @@
-const COLORS = {
-  fixed: "#2563EB",
-  cm: "#16A34A",
-  tinyml: "#7C3AED",
-  danger: "#DC2626",
-  raw: "#6B7280",
-};
+import { ALGO_COLORS, semanticColors } from "@/lib/palette";
 
-function metricColor(name: string) {
-  if (name.includes("TinyML")) return COLORS.tinyml;
-  if (name.includes("NIS") || name === "R 평균" || name.includes("R Drift")) return COLORS.cm;
-  if (name.includes("Tconv") || name.includes("추론")) return COLORS.fixed;
-  return COLORS.raw;
+function metricColor(name: string): string {
+  if (name.includes("TinyML")) return ALGO_COLORS.tinyml;
+  if (name.includes("NIS") || name === "R 평균" || name.includes("R Drift")) return ALGO_COLORS.cm;
+  if (name.includes("Tconv") || name.includes("추론")) return ALGO_COLORS.fixed;
+  return ALGO_COLORS.raw;
 }
 
 export default function MethodPage() {
   return (
     <div className="space-y-6">
+      {/* 헤더 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
-          Method
+        <p
+          className="text-xs font-semibold uppercase tracking-[0.14em]"
+          style={{ color: semanticColors.brand }}
+        >
+          방법 / 지표
         </p>
-        <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
-          평가지표
-        </h2>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
+        <h2 className="mt-3 text-2xl font-bold text-[#111827]">평가지표</h2>
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-[#475569]">
           실험 CSV를 분석하는 데 사용된 평가 지표 정의와 TypeScript 구현 위치를 정리합니다.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
-          <div className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] p-4">
-            <p className="text-sm font-black text-[#2563EB]">CSV Parse</p>
-            <p className="mt-1 text-xs font-semibold text-[#1D4ED8]">25/28컬럼 schema</p>
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: "#c7d2fe", backgroundColor: "#eef2ff" }}
+          >
+            <p className="text-sm font-bold" style={{ color: semanticColors.brand }}>CSV Parse</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.brand }}>
+              25/28컬럼 schema
+            </p>
           </div>
-          <div className="rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] p-4">
-            <p className="text-sm font-black text-[#16A34A]">Metrics</p>
-            <p className="mt-1 text-xs font-semibold text-[#15803D]">RMSE · NIS · Tconv</p>
+          <div className="rounded-lg border border-[#fda4af] bg-[#fff1f2] p-4">
+            <p className="text-sm font-bold" style={{ color: ALGO_COLORS.cm }}>Metrics</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: ALGO_COLORS.cm }}>
+              RMSE · NIS · Tconv
+            </p>
           </div>
-          <div className="rounded-lg border border-[#DDD6FE] bg-[#F5F3FF] p-4">
-            <p className="text-sm font-black text-[#7C3AED]">TinyML</p>
-            <p className="mt-1 text-xs font-semibold text-[#6D28D9]">R̂ label tracking</p>
+          <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">
+            <p className="text-sm font-bold" style={{ color: ALGO_COLORS.tinyml }}>TinyML</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+              R̂ label tracking
+            </p>
           </div>
-          <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-4">
-            <p className="text-sm font-black text-[#DC2626]">Limit</p>
-            <p className="mt-1 text-xs font-semibold text-[#B91C1C]">GT bias 주의</p>
+          <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-4">
+            <p className="text-sm font-bold" style={{ color: semanticColors.danger }}>Limit</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.danger }}>
+              GT bias 주의
+            </p>
           </div>
         </div>
       </section>
 
+      {/* Spec to Implementation */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#2563EB]">Spec to Implementation</h3>
+        <h3 className="text-base font-semibold" style={{ color: semanticColors.brand }}>
+          Spec to Implementation
+        </h3>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-[#f8fafc]">
@@ -111,9 +121,11 @@ export default function MethodPage() {
                 },
               ].map(({ name, def, impl }) => (
                 <tr key={name}>
-                  <td className="px-4 py-3 font-medium" style={{ color: metricColor(name) }}>{name}</td>
+                  <td className="px-4 py-3 font-semibold" style={{ color: metricColor(name) }}>
+                    {name}
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs text-[#475569]">{def}</td>
-                  <td className="px-4 py-3 text-[#64748b]">{impl}</td>
+                  <td className="px-4 py-3 text-xs text-[#64748b]">{impl}</td>
                 </tr>
               ))}
             </tbody>
@@ -121,29 +133,44 @@ export default function MethodPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-[#FECACA] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#DC2626]">GT 복원 방식 및 한계</h3>
-        <div className="mt-4 rounded-md border border-[#FECACA] bg-[#FEF2F2] p-4 font-mono text-xs text-[#7F1D1D]">
+      {/* GT 복원 방식 및 한계 */}
+      <section className="rounded-lg border border-[#fecaca] bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold" style={{ color: semanticColors.danger }}>
+          GT 복원 방식 및 한계
+        </h3>
+        <div className="mt-4 rounded-md border border-[#fecaca] bg-[#fef2f2] p-4 font-mono text-xs text-[#7f1d1d]">
           <p>stop_mask  = rows where encoder_distance_mm == 0</p>
           <p>base       = mean(tof_distance_mm[stop_mask])</p>
           <p>gt[k]      = base - encoder_distance_mm[k]</p>
         </div>
-        <p className="mt-3 text-sm font-medium text-[#7F1D1D]">
+        <p className="mt-3 text-sm text-[#7f1d1d]">
           base를 ToF 센서값에서 추출하므로 ToF 정적 bias가 RMSE에 반영됩니다.
           알고리즘 간 상대 비교에는 유효하나, 절대 정확도 비교는 외부 기준(줄자/레이저)이 필요합니다.
         </p>
       </section>
 
+      {/* CSV 스키마 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#7C3AED]">CSV 스키마</h3>
+        <h3 className="text-base font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+          CSV 스키마
+        </h3>
         <div className="mt-4 space-y-3 text-sm text-[#475569]">
-          <div className="rounded-md border border-[#BFDBFE] bg-[#EFF6FF] p-4">
-            <p className="font-semibold text-[#2563EB]">25컬럼 (Fixed KF + CM-AKF)</p>
-            <p className="mt-1 text-xs">공통 12 + Fixed KF 6 + CM-AKF 7</p>
+          <div
+            className="rounded-md border p-4"
+            style={{ borderColor: "#c7d2fe", backgroundColor: "#eef2ff" }}
+          >
+            <p className="font-semibold" style={{ color: semanticColors.brand }}>
+              25컬럼 (Fixed KF + CM-AKF)
+            </p>
+            <p className="mt-1 text-xs text-[#475569]">공통 12 + Fixed KF 6 + CM-AKF 7</p>
           </div>
-          <div className="rounded-md border border-[#DDD6FE] bg-[#F5F3FF] p-4">
-            <p className="font-semibold text-[#7C3AED]">28컬럼 (+ TinyML-AKF)</p>
-            <p className="mt-1 text-xs">25컬럼 + tinyml_estimate_mm + tinyml_R + tinyml_infer_us</p>
+          <div className="rounded-md border border-[#fde68a] bg-[#fffbeb] p-4">
+            <p className="font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+              28컬럼 (+ TinyML-AKF)
+            </p>
+            <p className="mt-1 text-xs text-[#475569]">
+              25컬럼 + tinyml_estimate_mm + tinyml_R + tinyml_infer_us
+            </p>
           </div>
           <p className="text-xs text-[#94a3b8]">
             TinyML 3컬럼이 모두 있을 때만 TinyML 분석 활성화. NIS는 Fixed/CM만 계산 (TinyML은 innovation_cov 없음).
@@ -151,8 +178,11 @@ export default function MethodPage() {
         </div>
       </section>
 
+      {/* 필터 파라미터 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#16A34A]">필터 파라미터 및 구현 세부사항</h3>
+        <h3 className="text-base font-semibold" style={{ color: ALGO_COLORS.cm }}>
+          필터 파라미터 및 구현 세부사항
+        </h3>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-[#f8fafc]">
@@ -198,7 +228,7 @@ export default function MethodPage() {
                 <tr key={item}>
                   <td className="px-4 py-3 font-medium text-[#111827]">{item}</td>
                   <td className="px-4 py-3 font-mono text-xs text-[#111827]">{value}</td>
-                  <td className="px-4 py-3 text-[#64748b]">{note}</td>
+                  <td className="px-4 py-3 text-xs text-[#64748b]">{note}</td>
                 </tr>
               ))}
             </tbody>
