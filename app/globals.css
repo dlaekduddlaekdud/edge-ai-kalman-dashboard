@@ -12,14 +12,14 @@
   --text-secondary: #334155;
   --brand: #1f4f8f;
   --brand-hover: #1e3a6e;
-  --danger: #b91c1c;
-  --warning-text: #92400e;
+  --danger: #DC2626;
+  --warning-text: #B45309;
 
-  /* 알고리즘 색상 토큰 — lib/palette.ts와 동기화 유지 */
-  --raw:    #71717a;   /* Raw ToF   — 원본 기준선 */
-  --fixed:  #0f766e;   /* Fixed KF  — 안정적 baseline */
-  --cm:     #be123c;   /* CM-AKF    — covariance matching 적응 필터 */
-  --tinyml: #a16207;   /* TinyML-AKF — Edge AI 대안 */
+  /* 알고리즘 차트 색상 토큰 — lib/palette.ts와 동기화 유지 */
+  --raw:    #6B7280;   /* Raw ToF   — 원본 기준선 */
+  --fixed:  #2563EB;   /* Fixed KF  — 안정적 baseline */
+  --cm:     #DB2777;   /* CM-AKF    — covariance matching 적응 필터 */
+  --tinyml: #7C3AED;   /* TinyML-AKF — Edge AI 대안 */
 
   /* 시맨틱 성능 토큰 */
   --positive: #15803d; /* 성능 향상 표시 */

@@ -65,7 +65,7 @@ export default function ResidualChart() {
 
   return (
     <div className="space-y-2">
-      <p className="text-lg font-black text-[#111827]">
+      <p className="text-2xl font-black text-[#111827]">
         차트 2 — 잔차 (Residual)
         {activeRun === "all" && (
           <span className="ml-2 text-base font-semibold text-[#6b7280]">
@@ -73,25 +73,26 @@ export default function ResidualChart() {
           </span>
         )}
       </p>
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={310}>
         <LineChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
           <XAxis
             dataKey="timestamp_ms"
             ticks={xTicks}
-            tick={{ fontSize: 13 }}
+            tick={{ fontSize: 15 }}
             tickFormatter={(v: number) => String(v)}
-            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
-            height={40}
+            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 15 }}
+            height={46}
           />
           <YAxis
-            tick={{ fontSize: 13 }}
-            label={{ value: "residual (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
+            domain={["dataMin - 1", "dataMax + 1"]}
+            tick={{ fontSize: 15 }}
+            label={{ value: "residual (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 15 }}
           />
           <Tooltip
             formatter={(v) => [typeof v === "number" ? `${v.toFixed(3)} mm` : v]}
             labelFormatter={(l) => `t = ${l} ms`}
           />
-          <Legend verticalAlign="top" height={28} />
+          <Legend verticalAlign="top" height={34} wrapperStyle={{ fontSize: 16, fontWeight: 700 }} />
           <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 2" />
           {selectedAlgorithms.includes("fixed") && (
             <Line
@@ -99,7 +100,7 @@ export default function ResidualChart() {
               dataKey="fixed_residual"
               name="Fixed KF 잔차"
               stroke={E1_ALGORITHM_COLORS.fixed}
-              strokeWidth={1.2}
+              strokeWidth={2.2}
               dot={false}
               connectNulls={false}
             />
@@ -110,7 +111,7 @@ export default function ResidualChart() {
               dataKey="cm_residual"
               name="CM-AKF 잔차"
               stroke={E1_ALGORITHM_COLORS.cm}
-              strokeWidth={1.2}
+              strokeWidth={2.2}
               dot={false}
               connectNulls={false}
             />

@@ -1,5 +1,5 @@
 import { PAPER_RESULTS } from "@/lib/paper-results";
-import { ALGO_COLORS, semanticColors } from "@/lib/palette";
+import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
 
 const RT = PAPER_RESULTS.realtime;
 const E4 = PAPER_RESULTS.E4;
@@ -123,15 +123,21 @@ export default function ResultsPage() {
               TinyML 추론 {RT.tinymlActual_us} µs
             </p>
           </div>
-          <div className="rounded-lg border border-[#fda4af] bg-[#fff1f2] p-4">
-            <p className="text-sm font-bold" style={{ color: ALGO_COLORS.cm }}>RQ2 적응 필터</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: ALGO_COLORS.cm }}>
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: algorithmStyles.cmAkf.border, backgroundColor: algorithmStyles.cmAkf.bg }}
+          >
+            <p className="text-sm font-bold" style={{ color: algorithmStyles.cmAkf.text }}>RQ2 적응 필터</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.cmAkf.text }}>
               CM-AKF 개선 구간 강조
             </p>
           </div>
-          <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">
-            <p className="text-sm font-bold" style={{ color: ALGO_COLORS.tinyml }}>RQ3 TinyML 대안성</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
+          >
+            <p className="text-sm font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>RQ3 TinyML 대안성</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>
               온디바이스 R̂ 추론 비교
             </p>
           </div>
@@ -187,13 +193,16 @@ export default function ResultsPage() {
         <div className="grid gap-4 sm:grid-cols-3">
           <div
             className="rounded-lg border p-5 shadow-sm"
-            style={{ borderColor: "#fde68a", backgroundColor: "#fffbeb" }}
+            style={{
+              borderColor: algorithmStyles.tinymlAkf.border,
+              backgroundColor: algorithmStyles.tinymlAkf.bg,
+            }}
           >
-            <p className="text-xs font-semibold" style={{ color: ALGO_COLORS.tinyml }}>TinyML 여유 마진</p>
-            <p className="tabular-nums mt-2 text-3xl font-bold" style={{ color: ALGO_COLORS.tinyml }}>
+            <p className="text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML 여유 마진</p>
+            <p className="tabular-nums mt-2 text-3xl font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
               {RT.tinymlMarginX}×
             </p>
-            <p className="mt-1 text-xs" style={{ color: ALGO_COLORS.tinyml }}>
+            <p className="mt-1 text-xs" style={{ color: algorithmStyles.tinymlAkf.text }}>
               {RT.tinymlBudget_us.toLocaleString()} µs ÷ {RT.tinymlActual_us} µs
             </p>
           </div>
@@ -220,7 +229,7 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        <div className="rounded-md border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-xs font-semibold text-[#991b1b]">
+        <div className="rounded-md border border-[#fde68a] bg-[#fffbeb] px-4 py-3 text-xs font-semibold text-[#78350f]">
           ⚠ {RT.note}
         </div>
       </section>
@@ -263,11 +272,11 @@ export default function ResultsPage() {
                     <td className="px-4 py-3 font-medium text-[#111827]">{label}</td>
                     <td className="tabular-nums px-4 py-3 text-right" style={{ color: ALGO_COLORS.fixed }}>{fixed.toFixed(2)} mm</td>
                     <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{cm.toFixed(2)} mm</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: cmPositive ? semanticColors.positive : semanticColors.danger }}>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: cmPositive ? semanticColors.positive : semanticColors.warning }}>
                       {cmPositive ? "↓" : "↑"} {Math.abs(parseFloat(cmImprov)).toFixed(1)}%
                     </td>
                     <td className="tabular-nums px-4 py-3 text-right" style={{ color: ALGO_COLORS.tinyml }}>{tinyml.toFixed(2)} mm</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: tmlPositive ? semanticColors.positive : semanticColors.danger }}>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: tmlPositive ? semanticColors.positive : semanticColors.warning }}>
                       {tmlPositive ? "↓" : "↑"} {Math.abs(parseFloat(tmlImprov)).toFixed(1)}%
                     </td>
                   </tr>
@@ -314,10 +323,10 @@ export default function ResultsPage() {
                 const diff = tinyml - cm;
                 const diffStr = diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
                 const isBetter = tinyml < cm;
-                const diffColor = isBetter ? semanticColors.positive : diff > 1 ? semanticColors.danger : semanticColors.muted;
+                const diffColor = isBetter ? semanticColors.positive : diff > 1 ? semanticColors.warning : semanticColors.muted;
                 const isStarRow = label.includes("★");
                 return (
-                  <tr key={label} className={isStarRow ? "bg-[#fffbeb]" : ""}>
+                  <tr key={label} style={isStarRow ? { backgroundColor: algorithmStyles.tinymlAkf.bg } : undefined}>
                     <td className="px-4 py-3 font-medium text-[#111827]">{label}</td>
                     <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{cm.toFixed(2)} mm</td>
                     <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.tinyml }}>{tinyml.toFixed(2)} mm</td>

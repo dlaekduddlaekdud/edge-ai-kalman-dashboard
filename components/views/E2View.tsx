@@ -10,7 +10,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useE1Store, E1_ALGORITHM_COLORS, type E2Surface } from "@/lib/e1-store";
+import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_STYLES, type E2Surface } from "@/lib/e1-store";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 
 const E2 = PAPER_RESULTS.E2;
@@ -126,41 +126,36 @@ export default function E2View({
               label: "Raw ToF",
               value: `${sel.raw.rmse} mm`,
               sub: `MAE ${sel.raw.mae} mm`,
-              bg: "#F3F4F6",
-              border: "#D1D5DB",
             },
             {
               id: "fixed" as const,
               label: "Fixed KF",
               value: `${sel.fixed.rmse} mm`,
               sub: `NIS ${sel.fixed.nis != null ? `${(sel.fixed.nis * 100).toFixed(1)}%` : "—"}`,
-              bg: "#EFF6FF",
-              border: "#BFDBFE",
             },
             {
               id: "cm" as const,
               label: "CM-AKF",
               value: `${sel.cm.rmse} mm`,
               sub: `${cmImprovement}% 개선`,
-              bg: "#F0FDF4",
-              border: "#BBF7D0",
             },
             {
               id: "tinyml" as const,
               label: "TinyML-AKF",
               value: `${sel.tinyml.rmse} mm`,
               sub: `CM ${Number(tinymlVsCm) > 0 ? `+${tinymlVsCm}` : tinymlVsCm} mm${currentSurface === "acryl" ? " · Best" : ""}`,
-              bg: "#F5F3FF",
-              border: "#DDD6FE",
             },
           ].map((card) => (
             <div
               key={card.label}
               className="min-h-[8rem] rounded-lg border p-5"
-              style={{ borderColor: card.border, backgroundColor: card.bg }}
+              style={{
+                borderColor: E1_ALGORITHM_STYLES[card.id].border,
+                backgroundColor: E1_ALGORITHM_STYLES[card.id].bg,
+              }}
             >
-              <p className="text-base font-black" style={{ color: E1_ALGORITHM_COLORS[card.id] }}>{card.label}</p>
-              <p className="mt-2 text-3xl font-black tracking-tight" style={{ color: E1_ALGORITHM_COLORS[card.id] }}>{card.value}</p>
+              <p className="text-base font-black" style={{ color: E1_ALGORITHM_STYLES[card.id].text }}>{card.label}</p>
+              <p className="mt-2 text-3xl font-black tracking-tight" style={{ color: E1_ALGORITHM_STYLES[card.id].text }}>{card.value}</p>
               <p className="mt-2 text-base font-semibold text-[#4b5563]">{card.sub}</p>
             </div>
           ))}

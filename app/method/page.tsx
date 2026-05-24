@@ -1,4 +1,4 @@
-import { ALGO_COLORS, semanticColors } from "@/lib/palette";
+import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
 
 function metricColor(name: string): string {
   if (name.includes("TinyML")) return ALGO_COLORS.tinyml;
@@ -32,21 +32,27 @@ export default function MethodPage() {
               25/28컬럼 schema
             </p>
           </div>
-          <div className="rounded-lg border border-[#fda4af] bg-[#fff1f2] p-4">
-            <p className="text-sm font-bold" style={{ color: ALGO_COLORS.cm }}>Metrics</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: ALGO_COLORS.cm }}>
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: algorithmStyles.cmAkf.border, backgroundColor: algorithmStyles.cmAkf.bg }}
+          >
+            <p className="text-sm font-bold" style={{ color: algorithmStyles.cmAkf.text }}>Metrics</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.cmAkf.text }}>
               RMSE · NIS · Tconv
             </p>
           </div>
-          <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">
-            <p className="text-sm font-bold" style={{ color: ALGO_COLORS.tinyml }}>TinyML</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
+          >
+            <p className="text-sm font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>
               R̂ label tracking
             </p>
           </div>
-          <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-4">
-            <p className="text-sm font-bold" style={{ color: semanticColors.danger }}>Limit</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.danger }}>
+          <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">
+            <p className="text-sm font-bold" style={{ color: semanticColors.warning }}>Limit</p>
+            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.warning }}>
               GT bias 주의
             </p>
           </div>
@@ -134,16 +140,16 @@ export default function MethodPage() {
       </section>
 
       {/* GT 복원 방식 및 한계 */}
-      <section className="rounded-lg border border-[#fecaca] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold" style={{ color: semanticColors.danger }}>
+      <section className="rounded-lg border border-[#fde68a] bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold" style={{ color: semanticColors.warning }}>
           GT 복원 방식 및 한계
         </h3>
-        <div className="mt-4 rounded-md border border-[#fecaca] bg-[#fef2f2] p-4 font-mono text-xs text-[#7f1d1d]">
+        <div className="mt-4 rounded-md border border-[#fde68a] bg-[#fffbeb] p-4 font-mono text-xs text-[#78350f]">
           <p>stop_mask  = rows where encoder_distance_mm == 0</p>
           <p>base       = mean(tof_distance_mm[stop_mask])</p>
           <p>gt[k]      = base - encoder_distance_mm[k]</p>
         </div>
-        <p className="mt-3 text-sm text-[#7f1d1d]">
+        <p className="mt-3 text-sm text-[#78350f]">
           base를 ToF 센서값에서 추출하므로 ToF 정적 bias가 RMSE에 반영됩니다.
           알고리즘 간 상대 비교에는 유효하나, 절대 정확도 비교는 외부 기준(줄자/레이저)이 필요합니다.
         </p>
@@ -164,8 +170,11 @@ export default function MethodPage() {
             </p>
             <p className="mt-1 text-xs text-[#475569]">공통 12 + Fixed KF 6 + CM-AKF 7</p>
           </div>
-          <div className="rounded-md border border-[#fde68a] bg-[#fffbeb] p-4">
-            <p className="font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+          <div
+            className="rounded-md border p-4"
+            style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
+          >
+            <p className="font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>
               28컬럼 (+ TinyML-AKF)
             </p>
             <p className="mt-1 text-xs text-[#475569]">

@@ -16,6 +16,7 @@ import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, type E1AlgorithmI
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim, getGroundTruth } from "@/lib/e1-metrics";
 import { PAPER_RESULTS } from "@/lib/paper-results";
+import { algorithmStyles } from "@/lib/palette";
 import type { E1Row } from "@/lib/e1-csv-parser";
 import RunSelector from "@/components/e1/RunSelector";
 import AlgorithmToggle from "@/components/e1/AlgorithmToggle";
@@ -107,6 +108,15 @@ interface RChartPoint {
   tinyml_R?: number;
 }
 
+function paddedPositionDomain(values: number[]): [number, number] {
+  if (values.length === 0) return [0, 600];
+  const min = values.reduce((m, value) => Math.min(m, value), Infinity);
+  const max = values.reduce((m, value) => Math.max(m, value), -Infinity);
+  const span = Math.max(max - min, 1);
+  const pad = Math.max(span * 0.04, 8);
+  return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)];
+}
+
 export default function E3View() {
   const { runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail } =
     useE1Store();
@@ -150,7 +160,7 @@ export default function E3View() {
     return { rChartData: points, rXTicks: ticks, rYMax: Math.ceil(maxR * 1.1) };
   }, [runs, activeRun, hasTinyML, autoExcludeStop, trimTail]);
 
-  const { blockedIntervals, detectionMethod, chartData, xTicks, activeAlgos, showGT } =
+  const { blockedIntervals, detectionMethod, chartData, xTicks, activeAlgos, showGT, yDomain } =
     useMemo(() => {
       const runId: RunId | undefined =
         activeRun === "all"
@@ -166,6 +176,7 @@ export default function E3View() {
           xTicks: undefined,
           activeAlgos: [] as E1AlgorithmId[],
           showGT: false,
+          yDomain: [0, 600] as [number, number],
         };
       }
 
@@ -178,6 +189,7 @@ export default function E3View() {
           xTicks: undefined,
           activeAlgos: [] as E1AlgorithmId[],
           showGT: false,
+          yDomain: [0, 600] as [number, number],
         };
       }
 
@@ -211,6 +223,11 @@ export default function E3View() {
         if (ticks[ticks.length - 1] !== last) ticks.push(last);
       }
 
+      const yValues = points.flatMap((point) =>
+        [showGT ? point.gt : undefined, point.raw, point.fixed, point.cm, point.tinyml]
+          .filter((value): value is number => typeof value === "number" && Number.isFinite(value)),
+      );
+
       return {
         blockedIntervals: intervals,
         detectionMethod: method,
@@ -218,6 +235,7 @@ export default function E3View() {
         xTicks: ticks,
         activeAlgos: visibleAlgos,
         showGT,
+        yDomain: paddedPositionDomain(yValues),
       };
     }, [runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail]);
 
@@ -377,7 +395,7 @@ export default function E3View() {
       {/* 위치 시계열 차트 */}
       {chartData.length > 0 && (
         <div className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
-          <p className="text-lg font-black text-[#111827]">
+          <p className="text-2xl font-black text-[#111827]">
             차트 — E3 위치 추정 (GT · Raw · Fixed · CM
             {activeAlgos.includes("tinyml") ? " · TinyML" : ""})
             {activeRun === "all" && (
@@ -387,19 +405,20 @@ export default function E3View() {
             )}
           </p>
           <div className="mt-3">
-            <ResponsiveContainer width="100%" height={320}>
+            <ResponsiveContainer width="100%" height={380}>
               <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                 <XAxis
                   dataKey="timestamp_ms"
                   ticks={xTicks}
-                  tick={{ fontSize: 13 }}
+                  tick={{ fontSize: 15 }}
                   tickFormatter={(v: number) => String(v)}
-                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
-                  height={40}
+                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 15 }}
+                  height={46}
                 />
                 <YAxis
-                  tick={{ fontSize: 13 }}
-                  label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
+                  domain={yDomain}
+                  tick={{ fontSize: 15 }}
+                  label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 15 }}
                 />
                 <Tooltip
                   formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
@@ -409,7 +428,7 @@ export default function E3View() {
                   verticalAlign="top"
                   height={32}
                   content={() => (
-                    <div className="flex flex-wrap justify-center gap-4 text-sm font-semibold text-[#374151]">
+                    <div className="flex flex-wrap justify-center gap-5 text-base font-bold text-[#374151]">
                       {positionLegendItems.map((item) => (
                         <span key={item.id} className="inline-flex items-center gap-1.5">
                           <span
@@ -428,7 +447,7 @@ export default function E3View() {
                     x1={interval.x1}
                     x2={interval.x2}
                     fill="#fee2e2"
-                    fillOpacity={0.6}
+                    fillOpacity={0.45}
                     strokeOpacity={0}
                   />
                 ))}
@@ -438,7 +457,7 @@ export default function E3View() {
                     dataKey="gt"
                     name="GT"
                     stroke="#94a3b8"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     strokeDasharray="4 2"
                     dot={false}
                     connectNulls={false}
@@ -451,7 +470,8 @@ export default function E3View() {
                     dataKey={algoId}
                     name={E1_ALGORITHM_LABELS[algoId]}
                     stroke={E1_ALGORITHM_COLORS[algoId]}
-                    strokeWidth={1.5}
+                    strokeWidth={algoId === "raw" ? 2 : 2.5}
+                    strokeOpacity={algoId === "raw" ? 0.78 : 1}
                     dot={false}
                     connectNulls={false}
                   />
@@ -465,7 +485,7 @@ export default function E3View() {
       {/* R̂ 회복 시계열 (그림 5-1 대응) */}
       {rChartData.length > 0 && hasTinyMLRChart ? (
         <div className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
-          <p className="text-lg font-black text-[#111827]">
+          <p className="text-2xl font-black text-[#111827]">
             차트 — R̂ 회복 시계열 (CM-AKF vs TinyML-AKF)
             {activeRun === "all" && (
               <span className="ml-2 text-base font-semibold text-[#6b7280]">
@@ -473,37 +493,37 @@ export default function E3View() {
               </span>
             )}
           </p>
-          <p className="mt-1 text-base text-[#6b7280]">
+          <p className="mt-1 text-lg text-[#6b7280]">
             차단 이탈 후 적응 노이즈 공분산 R̂ 회복 속도 비교. 클램프 10,000 mm².
           </p>
           <div className="mt-3">
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={320}>
               <LineChart data={rChartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
                 <XAxis
                   dataKey="timestamp_ms"
                   ticks={rXTicks}
-                  tick={{ fontSize: 13 }}
+                  tick={{ fontSize: 15 }}
                   tickFormatter={(v: number) => String(v)}
-                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
-                  height={40}
+                  label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 15 }}
+                  height={46}
                 />
                 <YAxis
                   domain={[0, rYMax]}
-                  tick={{ fontSize: 13 }}
-                  label={{ value: "R̂ (mm²)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
+                  tick={{ fontSize: 15 }}
+                  label={{ value: "R̂ (mm²)", angle: -90, position: "insideLeft", offset: 10, fontSize: 15 }}
                 />
                 <Tooltip
                   formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm²` : v]}
                   labelFormatter={(l) => `t = ${l} ms`}
                 />
-                <Legend verticalAlign="top" height={28} />
+                <Legend verticalAlign="top" height={34} wrapperStyle={{ fontSize: 16, fontWeight: 700 }} />
                 {blockedIntervals.map((interval, i) => (
                   <ReferenceArea
                     key={i}
                     x1={interval.x1}
                     x2={interval.x2}
                     fill="#fee2e2"
-                    fillOpacity={0.6}
+                    fillOpacity={0.45}
                     strokeOpacity={0}
                   />
                 ))}
@@ -512,7 +532,7 @@ export default function E3View() {
                   dataKey="cm_R"
                   name="CM-AKF R̂"
                   stroke={E1_ALGORITHM_COLORS.cm}
-                  strokeWidth={1.5}
+                  strokeWidth={2.5}
                   dot={false}
                   connectNulls={false}
                 />
@@ -521,7 +541,7 @@ export default function E3View() {
                   dataKey="tinyml_R"
                   name="TinyML-AKF R̂"
                   stroke={E1_ALGORITHM_COLORS.tinyml}
-                  strokeWidth={1.5}
+                  strokeWidth={2.5}
                   dot={false}
                   connectNulls={false}
                 />
@@ -539,18 +559,30 @@ export default function E3View() {
             28컬럼 TinyML CSV 업로드 시 동적 차트로 전환됩니다.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="rounded-md bg-[#f3f4f6] p-4">
-              <p className="text-base font-black text-[#111827]">TinyML-AKF</p>
-              <p className="mt-1 text-3xl font-black text-[#111827]">
+            <div
+              className="rounded-md border p-4"
+              style={{
+                borderColor: algorithmStyles.tinymlAkf.border,
+                backgroundColor: algorithmStyles.tinymlAkf.bg,
+              }}
+            >
+              <p className="text-base font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML-AKF</p>
+              <p className="mt-1 text-3xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
                 {PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms
               </p>
               <p className="mt-0.5 text-xs text-[#4b5563]">
                 3 frames @ 50Hz
               </p>
             </div>
-            <div className="rounded-md bg-[#f3f4f6] p-4">
-              <p className="text-xs font-semibold text-[#111827]">CM-AKF</p>
-              <p className="mt-1 text-2xl font-bold text-[#111827]">
+            <div
+              className="rounded-md border p-4"
+              style={{
+                borderColor: algorithmStyles.cmAkf.border,
+                backgroundColor: algorithmStyles.cmAkf.bg,
+              }}
+            >
+              <p className="text-xs font-semibold" style={{ color: algorithmStyles.cmAkf.text }}>CM-AKF</p>
+              <p className="mt-1 text-2xl font-bold" style={{ color: algorithmStyles.cmAkf.text }}>
                 {PAPER_RESULTS.E3.recoveryTimeCM_ms} ms
               </p>
               <p className="mt-0.5 text-xs text-[#4b5563]">

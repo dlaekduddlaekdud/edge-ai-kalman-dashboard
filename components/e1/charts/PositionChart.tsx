@@ -23,19 +23,28 @@ interface ChartPoint {
   tinyml?: number;
 }
 
+function paddedDomain(values: number[]): [number, number] {
+  if (values.length === 0) return [0, 600];
+  const min = values.reduce((m, value) => Math.min(m, value), Infinity);
+  const max = values.reduce((m, value) => Math.max(m, value), -Infinity);
+  const span = Math.max(max - min, 1);
+  const pad = Math.max(span * 0.04, 8);
+  return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)];
+}
+
 export default function PositionChart() {
   const { runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail } =
     useE1Store();
 
-  const { data, xTicks, showGT } = useMemo(() => {
+  const { data, xTicks, showGT, yDomain } = useMemo(() => {
     const runId = activeRun === "all"
       ? ALL_RUNS.find((r) => runs[r] !== undefined)
       : (activeRun as RunId);
     const runData = runId ? runs[runId] : undefined;
-    if (!runData || runData.rows.length === 0) return { data: [], xTicks: undefined, showGT: false };
+    if (!runData || runData.rows.length === 0) return { data: [], xTicks: undefined, showGT: false, yDomain: [0, 600] as [number, number] };
 
     const trimmed = applyTrim(runData.rows, autoExcludeStop, trimTail);
-    if (trimmed.length === 0) return { data: [], xTicks: undefined, showGT: false };
+    if (trimmed.length === 0) return { data: [], xTicks: undefined, showGT: false, yDomain: [0, 600] as [number, number] };
 
     const gt = getGroundTruth(trimmed);
     // 데모 CSV는 gt=0 → GT 라인 숨김
@@ -61,7 +70,12 @@ export default function PositionChart() {
       if (ticks[ticks.length - 1] !== last) ticks.push(last);
     }
 
-    return { data: points, xTicks: ticks, showGT };
+    const yValues = points.flatMap((point) =>
+      [showGT ? point.gt : undefined, point.raw, point.fixed, point.cm, point.tinyml]
+        .filter((value): value is number => typeof value === "number" && Number.isFinite(value)),
+    );
+
+    return { data: points, xTicks: ticks, showGT, yDomain: paddedDomain(yValues) };
   }, [runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail]);
 
   if (data.length === 0) {
@@ -90,7 +104,7 @@ export default function PositionChart() {
 
   return (
     <div className="space-y-2">
-      <p className="text-lg font-black text-[#111827]">
+      <p className="text-2xl font-black text-[#111827]">
         차트 1 — 위치 추정 (Raw · Fixed · CM · TinyML)
         {activeRun === "all" && (
           <span className="ml-2 text-base font-semibold text-[#6b7280]">
@@ -98,19 +112,20 @@ export default function PositionChart() {
           </span>
         )}
       </p>
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveContainer width="100%" height={380}>
         <LineChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
           <XAxis
             dataKey="timestamp_ms"
             ticks={xTicks}
-            tick={{ fontSize: 13 }}
+            tick={{ fontSize: 15 }}
             tickFormatter={(v: number) => String(v)}
-            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 13 }}
-            height={40}
+            label={{ value: "timestamp (ms)", position: "insideBottom", offset: -2, fontSize: 15 }}
+            height={46}
           />
           <YAxis
-            tick={{ fontSize: 13 }}
-            label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 13 }}
+            domain={yDomain}
+            tick={{ fontSize: 15 }}
+            label={{ value: "distance (mm)", angle: -90, position: "insideLeft", offset: 10, fontSize: 15 }}
           />
           <Tooltip
             formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
@@ -120,7 +135,7 @@ export default function PositionChart() {
             verticalAlign="top"
             height={32}
             content={() => (
-              <div className="flex flex-wrap justify-center gap-4 text-sm font-semibold text-[#374151]">
+              <div className="flex flex-wrap justify-center gap-5 text-base font-bold text-[#374151]">
                 {legendItems.map((item) => (
                   <span key={item.id} className="inline-flex items-center gap-1.5">
                     <span
@@ -139,7 +154,7 @@ export default function PositionChart() {
               dataKey="gt"
               name="GT"
               stroke="#94a3b8"
-              strokeWidth={1.5}
+              strokeWidth={2}
               strokeDasharray="4 2"
               dot={false}
               connectNulls={false}
@@ -152,7 +167,8 @@ export default function PositionChart() {
               dataKey={id}
               name={E1_ALGORITHM_LABELS[id]}
               stroke={E1_ALGORITHM_COLORS[id]}
-              strokeWidth={1.5}
+              strokeWidth={id === "raw" ? 2 : 2.5}
+              strokeOpacity={id === "raw" ? 0.78 : 1}
               dot={false}
               connectNulls={false}
             />
