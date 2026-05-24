@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, type E1AlgorithmId } from "@/lib/e1-store";
+import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, E1_CHART_LINE_COLORS, type E1AlgorithmId } from "@/lib/e1-store";
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim, getGroundTruth } from "@/lib/e1-metrics";
 import { PAPER_RESULTS } from "@/lib/paper-results";
@@ -249,7 +249,7 @@ export default function E3View() {
     ...activeAlgos.map((id) => ({
       value: E1_ALGORITHM_LABELS[id],
       type: "line" as const,
-      color: E1_ALGORITHM_COLORS[id],
+      color: E1_CHART_LINE_COLORS[id],
       id,
     })),
     ...(showGT
@@ -469,10 +469,10 @@ export default function E3View() {
                     type="monotone"
                     dataKey={algoId}
                     name={E1_ALGORITHM_LABELS[algoId]}
-                    stroke={E1_ALGORITHM_COLORS[algoId]}
-                    strokeWidth={algoId === "raw" ? 1.5 : algoId === "cm" ? 3.5 : 2.5}
-                    strokeOpacity={algoId === "raw" ? 0.5 : 1}
-                    strokeDasharray={algoId === "fixed" ? "5 2" : algoId === "tinyml" ? "3 2" : undefined}
+                    stroke={E1_CHART_LINE_COLORS[algoId]}
+                    strokeWidth={algoId === "raw" ? 1 : 1.5}
+                    strokeOpacity={algoId === "raw" ? 0.35 : 1}
+                    strokeDasharray={algoId === "fixed" ? "6 3" : algoId === "tinyml" ? "2 3" : undefined}
                     dot={false}
                     connectNulls={false}
                   />
@@ -532,8 +532,8 @@ export default function E3View() {
                   type="monotone"
                   dataKey="cm_R"
                   name="CM-AKF R̂"
-                  stroke={E1_ALGORITHM_COLORS.cm}
-                  strokeWidth={3.5}
+                  stroke={E1_CHART_LINE_COLORS.cm}
+                  strokeWidth={1.5}
                   dot={false}
                   connectNulls={false}
                 />
@@ -541,9 +541,9 @@ export default function E3View() {
                   type="monotone"
                   dataKey="tinyml_R"
                   name="TinyML-AKF R̂"
-                  stroke={E1_ALGORITHM_COLORS.tinyml}
-                  strokeWidth={2.5}
-                  strokeDasharray="3 2"
+                  stroke={E1_CHART_LINE_COLORS.tinyml}
+                  strokeWidth={1.5}
+                  strokeDasharray="2 3"
                   dot={false}
                   connectNulls={false}
                 />

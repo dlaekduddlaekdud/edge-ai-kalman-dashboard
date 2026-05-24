@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS } from "@/lib/e1-store";
+import { useE1Store, E1_ALGORITHM_COLORS, E1_ALGORITHM_LABELS, E1_CHART_LINE_COLORS } from "@/lib/e1-store";
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim, getGroundTruth } from "@/lib/e1-metrics";
 
@@ -91,7 +91,7 @@ export default function PositionChart() {
     ...activeAlgos.map((id) => ({
       value: E1_ALGORITHM_LABELS[id],
       type: "line" as const,
-      color: E1_ALGORITHM_COLORS[id],
+      color: E1_CHART_LINE_COLORS[id],
       id,
     })),
     ...(showGT
@@ -166,10 +166,10 @@ export default function PositionChart() {
               type="monotone"
               dataKey={id}
               name={E1_ALGORITHM_LABELS[id]}
-              stroke={E1_ALGORITHM_COLORS[id]}
-              strokeWidth={id === "raw" ? 1.5 : id === "cm" ? 3.5 : 2.5}
-              strokeOpacity={id === "raw" ? 0.5 : 1}
-              strokeDasharray={id === "fixed" ? "5 2" : id === "tinyml" ? "3 2" : undefined}
+              stroke={E1_CHART_LINE_COLORS[id]}
+              strokeWidth={id === "raw" ? 1 : 1.5}
+              strokeOpacity={id === "raw" ? 0.35 : 1}
+              strokeDasharray={id === "fixed" ? "6 3" : id === "tinyml" ? "2 3" : undefined}
               dot={false}
               connectNulls={false}
             />

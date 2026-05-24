@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useE1Store, E1_ALGORITHM_COLORS } from "@/lib/e1-store";
+import { useE1Store, E1_CHART_LINE_COLORS } from "@/lib/e1-store";
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim } from "@/lib/e1-metrics";
 
@@ -104,9 +104,9 @@ export default function KalmanGainChart() {
               type="monotone"
               dataKey="fixed_kalman_gain"
               name="Fixed KF Gain"
-              stroke={E1_ALGORITHM_COLORS.fixed}
-              strokeWidth={2.5}
-              strokeDasharray="5 2"
+              stroke={E1_CHART_LINE_COLORS.fixed}
+              strokeWidth={1.5}
+              strokeDasharray="6 3"
               dot={false}
               connectNulls={false}
             />
@@ -116,8 +116,8 @@ export default function KalmanGainChart() {
               type="monotone"
               dataKey="cm_kalman_gain"
               name="CM-AKF Gain"
-              stroke={E1_ALGORITHM_COLORS.cm}
-              strokeWidth={3.5}
+              stroke={E1_CHART_LINE_COLORS.cm}
+              strokeWidth={1.5}
               dot={false}
               connectNulls={false}
             />

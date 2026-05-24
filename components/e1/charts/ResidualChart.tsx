@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useE1Store, E1_ALGORITHM_COLORS } from "@/lib/e1-store";
+import { useE1Store, E1_CHART_LINE_COLORS } from "@/lib/e1-store";
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim } from "@/lib/e1-metrics";
 
@@ -99,9 +99,9 @@ export default function ResidualChart() {
               type="monotone"
               dataKey="fixed_residual"
               name="Fixed KF 잔차"
-              stroke={E1_ALGORITHM_COLORS.fixed}
-              strokeWidth={2.5}
-              strokeDasharray="5 2"
+              stroke={E1_CHART_LINE_COLORS.fixed}
+              strokeWidth={1.5}
+              strokeDasharray="6 3"
               dot={false}
               connectNulls={false}
             />
@@ -111,8 +111,8 @@ export default function ResidualChart() {
               type="monotone"
               dataKey="cm_residual"
               name="CM-AKF 잔차"
-              stroke={E1_ALGORITHM_COLORS.cm}
-              strokeWidth={3}
+              stroke={E1_CHART_LINE_COLORS.cm}
+              strokeWidth={1.5}
               dot={false}
               connectNulls={false}
             />

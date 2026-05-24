@@ -77,3 +77,15 @@ export const ALGO_COLORS = {
   tinyml: algorithmColors.tinyml,
   danger: semanticColors.danger,
 } as const;
+
+/**
+ * 차트 라인 전용 색상.
+ * UI 강조색(ALGO_COLORS)보다 연하고 가늘게 설정해
+ * 3-4개 라인이 겹쳐도 구분 가능하도록 최적화.
+ */
+export const CHART_COLORS = {
+  raw:    "#9CA3AF",  // gray-400  — 얇고 흐린 기준선
+  fixed:  "#3B82F6",  // blue-500  — 긴 점선 파란 라인
+  cm:     "#F472B6",  // pink-400  — 연분홍 솔리드 (UI pink-600 대비 밝음)
+  tinyml: "#A78BFA",  // violet-400 — 짧은 점선 보라 라인
+} as const;
