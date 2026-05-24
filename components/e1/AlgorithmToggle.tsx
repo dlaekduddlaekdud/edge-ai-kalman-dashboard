@@ -4,7 +4,7 @@ import {
   useE1Store,
   type E1AlgorithmId,
   E1_ALGORITHM_LABELS,
-  E1_ALGORITHM_COLORS,
+  E1_ALGORITHM_STYLES,
 } from "@/lib/e1-store";
 
 const ALL_ALGOS: E1AlgorithmId[] = ["raw", "fixed", "cm", "tinyml"];
@@ -17,7 +17,7 @@ export default function AlgorithmToggle() {
       {ALL_ALGOS.map((id) => {
         const isDisabled = id === "tinyml" && !hasTinyML;
         const isSelected = selectedAlgorithms.includes(id);
-        const color = E1_ALGORITHM_COLORS[id];
+        const algoStyle = E1_ALGORITHM_STYLES[id];
 
         return (
           <button
@@ -30,12 +30,17 @@ export default function AlgorithmToggle() {
               isDisabled
                 ? "cursor-not-allowed border-[#e2e8f0] bg-[#f8fafc] text-[#cbd5e1]"
                 : isSelected
-                  ? "border-transparent text-white"
-                  : "border-[#d9e0ea] bg-white text-[#475569] hover:border-[#94a3b8]"
+                  ? "shadow-sm ring-2 ring-offset-2"
+                  : "border-[#d1d5db] bg-white text-[#374151] hover:border-[#111827] hover:bg-[#f3f4f6]"
             }`}
             style={
               isSelected && !isDisabled
-                ? { backgroundColor: color, borderColor: color }
+                ? {
+                    backgroundColor: algoStyle.bg,
+                    color: algoStyle.text,
+                    borderColor: algoStyle.border,
+                    boxShadow: `0 0 0 2px #ffffff, 0 0 0 4px ${algoStyle.border}`,
+                  }
                 : undefined
             }
           >

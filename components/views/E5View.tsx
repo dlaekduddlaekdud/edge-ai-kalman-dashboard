@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useE1Store } from "@/lib/e1-store";
 import { PAPER_RESULTS } from "@/lib/paper-results";
+import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
 import RunSelector from "@/components/e1/RunSelector";
 import AlgorithmToggle from "@/components/e1/AlgorithmToggle";
 import TrimControl from "@/components/e1/TrimControl";
@@ -112,26 +113,38 @@ export default function E5View() {
 
       {/* ── 논문 확정값 RMSE 카드 (항상 표시) ── */}
       <div className="grid gap-4 sm:grid-cols-4">
-        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#64748b]">Raw ToF</p>
-          <p className="mt-2 text-2xl font-bold text-[#111827]">{E5.raw.rmse} mm</p>
+        <div
+          className="rounded-lg border p-5 shadow-sm"
+          style={{ borderColor: algorithmStyles.raw.border, backgroundColor: algorithmStyles.raw.bg }}
+        >
+          <p className="text-xs font-semibold" style={{ color: algorithmStyles.raw.text }}>Raw ToF</p>
+          <p className="mt-2 text-2xl font-bold" style={{ color: algorithmStyles.raw.text }}>{E5.raw.rmse} mm</p>
           <p className="mt-0.5 text-xs text-[#94a3b8]">MAE {E5.raw.mae} mm</p>
         </div>
-        <div className="rounded-lg border border-[#d4d4d8] bg-[#f4f4f5] p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#111827]">Fixed KF</p>
-          <p className="mt-2 text-2xl font-bold text-[#111827]">{E5.fixed.rmse} mm</p>
+        <div
+          className="rounded-lg border p-5 shadow-sm"
+          style={{ borderColor: algorithmStyles.fixed.border, backgroundColor: algorithmStyles.fixed.bg }}
+        >
+          <p className="text-xs font-semibold" style={{ color: algorithmStyles.fixed.text }}>Fixed KF</p>
+          <p className="mt-2 text-2xl font-bold" style={{ color: algorithmStyles.fixed.text }}>{E5.fixed.rmse} mm</p>
           <p className="mt-0.5 text-xs text-[#4b5563]">
             MAE {E5.fixed.mae} mm · NIS {E5.fixed.nis != null ? `${(E5.fixed.nis * 100).toFixed(1)}%` : "—"}
           </p>
         </div>
-        <div className="rounded-lg border border-[#d1d5db] bg-[#f5f3ff] p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#111827]">CM-AKF</p>
-          <p className="mt-2 text-2xl font-bold text-[#111827]">{E5.cm.rmse} mm</p>
+        <div
+          className="rounded-lg border p-5 shadow-sm"
+          style={{ borderColor: algorithmStyles.cmAkf.border, backgroundColor: algorithmStyles.cmAkf.bg }}
+        >
+          <p className="text-xs font-semibold" style={{ color: algorithmStyles.cmAkf.text }}>CM-AKF</p>
+          <p className="mt-2 text-2xl font-bold" style={{ color: algorithmStyles.cmAkf.text }}>{E5.cm.rmse} mm</p>
           <p className="mt-0.5 text-xs text-[#4b5563]">MAE {E5.cm.mae} mm · {cmImprovement}% 개선</p>
         </div>
-        <div className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#4b5563]">TinyML-AKF</p>
-          <p className="mt-2 text-2xl font-bold text-[#4b5563]">{E5.tinyml.rmse} mm</p>
+        <div
+          className="rounded-lg border p-5 shadow-sm"
+          style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
+        >
+          <p className="text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML-AKF</p>
+          <p className="mt-2 text-2xl font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>{E5.tinyml.rmse} mm</p>
           <p className="mt-0.5 text-xs text-[#4b5563]">MAE {E5.tinyml.mae} mm · CM+{tinymlVsCm}mm</p>
         </div>
       </div>
@@ -141,16 +154,16 @@ export default function E5View() {
         <h3 className="text-base font-semibold text-[#111827]">성능 순위 (RMSE 기준)</h3>
         <div className="mt-3 space-y-2">
           {[
-            { rank: 1, label: "CM-AKF",     rmse: E5.cm.rmse,     color: "#111827", note: "미지 표면 최적 적응" },
-            { rank: 2, label: "TinyML-AKF", rmse: E5.tinyml.rmse, color: "#4b5563", note: `CM보다 +${tinymlVsCm}mm (일반화 한계)` },
-            { rank: 3, label: "Fixed KF",   rmse: E5.fixed.rmse,  color: "#111827", note: "고정 R — 표면 변화 미적응" },
-            { rank: 4, label: "Raw ToF",    rmse: E5.raw.rmse,    color: "#64748b", note: "필터 없음" },
-          ].map(({ rank, label, rmse, color, note }) => (
+            { rank: 1, id: "cm" as const,     label: "CM-AKF",     rmse: E5.cm.rmse,     note: "미지 표면 최적 적응" },
+            { rank: 2, id: "tinyml" as const, label: "TinyML-AKF", rmse: E5.tinyml.rmse, note: `CM보다 +${tinymlVsCm}mm (일반화 한계)` },
+            { rank: 3, id: "fixed" as const,  label: "Fixed KF",   rmse: E5.fixed.rmse,  note: "고정 R — 표면 변화 미적응" },
+            { rank: 4, id: "raw" as const,    label: "Raw ToF",    rmse: E5.raw.rmse,    note: "필터 없음" },
+          ].map(({ rank, id, label, rmse, note }) => (
             <div key={label} className="flex items-center gap-3">
               <span className="w-5 text-center text-xs font-bold text-[#94a3b8]">{rank}</span>
               <div className="flex flex-1 items-center gap-2">
-                <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-sm font-medium" style={{ color }}>{label}</span>
+                <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: ALGO_COLORS[id] }} />
+                <span className="text-sm font-medium text-[#111827]">{label}</span>
               </div>
               <span className="font-mono text-sm font-semibold text-[#111827]">{rmse} mm</span>
               <span className="text-xs text-[#94a3b8]">{note}</span>
@@ -160,12 +173,12 @@ export default function E5View() {
       </div>
 
       {/* Anomaly 강조 */}
-      <div className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-5 shadow-sm">
-        <p className="text-xs font-semibold text-[#111827]">⚠ Run 5 — 비정상 R̂ 피크</p>
+      <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-5 shadow-sm">
+        <p className="text-xs font-semibold" style={{ color: semanticColors.danger }}>⚠ Run 5 — 비정상 R̂ 피크</p>
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <div>
             <p className="text-xs text-[#94a3b8]">cm_R_max (Run 5)</p>
-            <p className="text-2xl font-bold text-[#111827]">{E5.run5CmRMax} mm²</p>
+            <p className="text-2xl font-bold" style={{ color: semanticColors.danger }}>{E5.run5CmRMax} mm²</p>
           </div>
           <div className="flex-1 text-sm text-[#374151]">
             Run 5에서 cm_R이 {E5.run5CmRMax}mm²로 폭발적 상승.
@@ -198,8 +211,8 @@ export default function E5View() {
         </p>
       </div>
 
-      <div className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-xs text-[#64748b]">
-        <p className="font-semibold text-[#475569]">한계 및 해석 주의사항</p>
+      <div className="rounded-md border border-[#fde68a] bg-[#fffbeb] px-4 py-3 text-xs text-[#64748b]">
+        <p className="font-semibold" style={{ color: semanticColors.warning }}>한계 및 해석 주의사항</p>
         <p className="mt-1">{E5.note}</p>
         <p className="mt-1">
           TinyML이 CM-AKF보다 0.53mm 높은 RMSE를 보이는 것은 6-feature 모델이

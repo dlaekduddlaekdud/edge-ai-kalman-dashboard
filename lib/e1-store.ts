@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { ALL_RUNS, type E1Row, type RunId } from "@/lib/e1-csv-parser";
 import type { ScenarioLabel } from "@/lib/dataset";
-import { algorithmColors } from "@/lib/palette";
+import { algorithmColors, algorithmStyleById } from "@/lib/palette";
 
 export type E1AlgorithmId = "raw" | "fixed" | "cm" | "tinyml";
 export type E2Surface = "white" | "black" | "acryl";
@@ -19,6 +19,13 @@ export const E1_ALGORITHM_COLORS: Record<E1AlgorithmId, string> = {
   fixed: algorithmColors.fixed,
   cm: algorithmColors.cm,
   tinyml: algorithmColors.tinyml,
+};
+
+export const E1_ALGORITHM_STYLES: Record<E1AlgorithmId, (typeof algorithmStyleById)[E1AlgorithmId]> = {
+  raw: algorithmStyleById.raw,
+  fixed: algorithmStyleById.fixed,
+  cm: algorithmStyleById.cm,
+  tinyml: algorithmStyleById.tinyml,
 };
 
 interface E1RunData {

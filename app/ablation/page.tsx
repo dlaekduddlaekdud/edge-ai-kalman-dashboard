@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import { PAPER_RESULTS } from "@/lib/paper-results";
-import { ALGO_COLORS, semanticColors } from "@/lib/palette";
+import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
 
 // ── 표 5-3 동적 CSV 로드 ────────────────────────────────────────────────
 
@@ -64,7 +64,7 @@ function Table4_10Card() {
                 <td className="tabular-nums px-4 py-3 text-right text-[#111827]">{row.maeR_int8.toFixed(2)}</td>
                 <td
                   className="tabular-nums px-4 py-3 text-right font-semibold"
-                  style={{ color: row.int8DeltaPct < 0 ? semanticColors.positive : semanticColors.danger }}
+                  style={{ color: row.int8DeltaPct < 0 ? semanticColors.positive : semanticColors.warning }}
                 >
                   {row.int8DeltaPct > 0 ? "+" : ""}{row.int8DeltaPct.toFixed(1)}%
                 </td>
@@ -157,7 +157,7 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
                 </td>
                 <td
                   className="tabular-nums px-4 py-3 text-right font-semibold"
-                  style={{ color: row.cmVs3fDiff > 0 ? semanticColors.danger : semanticColors.positive }}
+                  style={{ color: row.cmVs3fDiff > 0 ? (row.diverged ? semanticColors.danger : semanticColors.warning) : semanticColors.positive }}
                 >
                   {row.cmVs3fDiff > 0 ? "+" : ""}{row.cmVs3fDiff.toFixed(2)}
                 </td>
@@ -173,12 +173,12 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
               <td className="tabular-nums px-4 py-3 text-right" style={{ color: ALGO_COLORS.cm }}>
                 {avg.cm.toFixed(2)}
               </td>
-              <td className="tabular-nums px-4 py-3 text-right" style={{ color: semanticColors.danger }}>
+              <td className="tabular-nums px-4 py-3 text-right" style={{ color: semanticColors.warning }}>
                 {avg.tinyml3f.toFixed(2)}
               </td>
               <td
                 className="tabular-nums px-4 py-3 text-right"
-                style={{ color: avg.cmVs3fDiff > 0 ? semanticColors.danger : semanticColors.positive }}
+                style={{ color: avg.cmVs3fDiff > 0 ? semanticColors.warning : semanticColors.positive }}
               >
                 {avg.cmVs3fDiff > 0 ? "+" : ""}{avg.cmVs3fDiff.toFixed(2)}
               </td>
@@ -301,7 +301,11 @@ export default function AblationPage() {
         </div>
         <div
           className="rounded-md border px-4 py-2 text-xs font-semibold"
-          style={{ borderColor: "#fde68a", backgroundColor: "#fffbeb", color: ALGO_COLORS.tinyml }}
+          style={{
+            borderColor: algorithmStyles.tinymlAkf.border,
+            backgroundColor: algorithmStyles.tinymlAkf.bg,
+            color: algorithmStyles.tinymlAkf.text,
+          }}
         >
           6-feature: tof_dist, residual, residual_var, residual_mean, signal_rate, range_status |
           3-feature: residual, residual_var, residual_mean
