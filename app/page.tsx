@@ -49,24 +49,24 @@ const KPI_CARDS = [
 const pages = [
   {
     href: "/upload",
-    title: "CSV Upload",
-    badge: "데모 데이터 포함",
-    description:
-      "실험 CSV를 업로드하거나 내장 데모 데이터를 즉시 로드합니다. 28컬럼 감지 시 TinyML 차트 자동 활성화.",
-  },
-  {
-    href: "/dashboard",
     title: "Scenario Dashboard",
-    badge: "E0~E5",
+    badge: "E1~E5",
     description:
-      "E1/E3는 업로드 CSV 기반 동적 분석, E0/E2/E4/E5는 논문 확정값 카드·표로 제공합니다.",
+      "시나리오와 표면을 선택하면 내장 실험 CSV를 자동 파싱하고 같은 화면에서 결과 대시보드를 바로 표시합니다.",
   },
   {
     href: "/ablation",
     title: "Ablation",
     badge: "표 4-10 · 5-3",
     description:
-      "6-feature / 3-feature TinyML 모델의 R̂ 라벨 추적도(MAE_R/MAPE_R)를 비교합니다.",
+      "6-feature / 3-feature TinyML 모델의 R̂ 라벨 추적도와 hold-out RMSE를 비교합니다.",
+  },
+  {
+    href: "/results",
+    title: "Results",
+    badge: "RQ1~3",
+    description:
+      "RQ1 실시간성, RQ2 적응 필터 우위, RQ3 TinyML 대안 가능성을 시나리오별 결과로 정리합니다.",
   },
   {
     href: "/method",
@@ -74,13 +74,6 @@ const pages = [
     badge: "지표 정의",
     description:
       "RMSE, NIS pass rate, RMSEss, Tconv 등 평가 지표의 구현 공식과 논문 매핑을 정리합니다.",
-  },
-  {
-    href: "/results",
-    title: "Results",
-    badge: "RQ1~3",
-    description:
-      "RQ1 실시간성 · RQ2 적응 필터 우위 · RQ3 TinyML 대안 가능성을 시나리오별 RMSE 비교 표로 정리합니다.",
   },
 ];
 

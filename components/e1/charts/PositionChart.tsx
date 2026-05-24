@@ -73,16 +73,27 @@ export default function PositionChart() {
   const activeAlgos = (["raw", "fixed", "cm", "tinyml"] as const).filter(
     (id) => selectedAlgorithms.includes(id) && (id !== "tinyml" || hasTinyML),
   );
+  const legendItems = [
+    ...activeAlgos.map((id) => ({
+      value: E1_ALGORITHM_LABELS[id],
+      type: "line" as const,
+      color: E1_ALGORITHM_COLORS[id],
+      id,
+    })),
+    ...(showGT
+      ? [{ value: "GT", type: "line" as const, color: "#94a3b8", id: "gt" }]
+      : []),
+  ];
   const displayedRunId = activeRun === "all"
     ? ALL_RUNS.find((r) => runs[r] !== undefined)
     : (activeRun as RunId);
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-[#64748b]">
-        차트 1 — 위치 추정 (GT · Raw · Fixed · CM)
+      <p className="text-lg font-black text-[#111827]">
+        차트 1 — 위치 추정 (Raw · Fixed · CM · TinyML)
         {activeRun === "all" && (
-          <span className="ml-1.5 font-normal text-[#94a3b8]">
+          <span className="ml-2 text-base font-semibold text-[#6b7280]">
             (All: 메트릭은 평균, 차트는 {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
           </span>
         )}
@@ -105,7 +116,23 @@ export default function PositionChart() {
             formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
             labelFormatter={(l) => `t = ${l} ms`}
           />
-          <Legend verticalAlign="top" height={28} />
+          <Legend
+            verticalAlign="top"
+            height={32}
+            content={() => (
+              <div className="flex flex-wrap justify-center gap-4 text-sm font-semibold text-[#374151]">
+                {legendItems.map((item) => (
+                  <span key={item.id} className="inline-flex items-center gap-1.5">
+                    <span
+                      className="inline-block h-2.5 w-5 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    {item.value}
+                  </span>
+                ))}
+              </div>
+            )}
+          />
           {showGT && (
             <Line
               type="monotone"

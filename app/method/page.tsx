@@ -1,8 +1,23 @@
+const COLORS = {
+  fixed: "#2563EB",
+  cm: "#16A34A",
+  tinyml: "#7C3AED",
+  danger: "#DC2626",
+  raw: "#6B7280",
+};
+
+function metricColor(name: string) {
+  if (name.includes("TinyML")) return COLORS.tinyml;
+  if (name.includes("NIS") || name === "R 평균" || name.includes("R Drift")) return COLORS.cm;
+  if (name.includes("Tconv") || name.includes("추론")) return COLORS.fixed;
+  return COLORS.raw;
+}
+
 export default function MethodPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563EB]">
           Method
         </p>
         <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
@@ -11,10 +26,28 @@ export default function MethodPage() {
         <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
           실험 CSV를 분석하는 데 사용된 평가 지표 정의와 TypeScript 구현 위치를 정리합니다.
         </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-4">
+          <div className="rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] p-4">
+            <p className="text-sm font-black text-[#2563EB]">CSV Parse</p>
+            <p className="mt-1 text-xs font-semibold text-[#1D4ED8]">25/28컬럼 schema</p>
+          </div>
+          <div className="rounded-lg border border-[#BBF7D0] bg-[#F0FDF4] p-4">
+            <p className="text-sm font-black text-[#16A34A]">Metrics</p>
+            <p className="mt-1 text-xs font-semibold text-[#15803D]">RMSE · NIS · Tconv</p>
+          </div>
+          <div className="rounded-lg border border-[#DDD6FE] bg-[#F5F3FF] p-4">
+            <p className="text-sm font-black text-[#7C3AED]">TinyML</p>
+            <p className="mt-1 text-xs font-semibold text-[#6D28D9]">R̂ label tracking</p>
+          </div>
+          <div className="rounded-lg border border-[#FECACA] bg-[#FEF2F2] p-4">
+            <p className="text-sm font-black text-[#DC2626]">Limit</p>
+            <p className="mt-1 text-xs font-semibold text-[#B91C1C]">GT bias 주의</p>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#111827]">Spec to Implementation</h3>
+        <h3 className="text-base font-semibold text-[#2563EB]">Spec to Implementation</h3>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-[#f8fafc]">
@@ -78,7 +111,7 @@ export default function MethodPage() {
                 },
               ].map(({ name, def, impl }) => (
                 <tr key={name}>
-                  <td className="px-4 py-3 font-medium text-[#111827]">{name}</td>
+                  <td className="px-4 py-3 font-medium" style={{ color: metricColor(name) }}>{name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-[#475569]">{def}</td>
                   <td className="px-4 py-3 text-[#64748b]">{impl}</td>
                 </tr>
@@ -88,28 +121,28 @@ export default function MethodPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#111827]">GT 복원 방식 및 한계</h3>
-        <div className="mt-4 rounded-md bg-[#f8fafc] p-4 font-mono text-xs text-[#475569]">
+      <section className="rounded-lg border border-[#FECACA] bg-white p-6 shadow-sm">
+        <h3 className="text-base font-semibold text-[#DC2626]">GT 복원 방식 및 한계</h3>
+        <div className="mt-4 rounded-md border border-[#FECACA] bg-[#FEF2F2] p-4 font-mono text-xs text-[#7F1D1D]">
           <p>stop_mask  = rows where encoder_distance_mm == 0</p>
           <p>base       = mean(tof_distance_mm[stop_mask])</p>
           <p>gt[k]      = base - encoder_distance_mm[k]</p>
         </div>
-        <p className="mt-3 text-sm text-[#64748b]">
+        <p className="mt-3 text-sm font-medium text-[#7F1D1D]">
           base를 ToF 센서값에서 추출하므로 ToF 정적 bias가 RMSE에 반영됩니다.
           알고리즘 간 상대 비교에는 유효하나, 절대 정확도 비교는 외부 기준(줄자/레이저)이 필요합니다.
         </p>
       </section>
 
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#111827]">CSV 스키마</h3>
+        <h3 className="text-base font-semibold text-[#7C3AED]">CSV 스키마</h3>
         <div className="mt-4 space-y-3 text-sm text-[#475569]">
-          <div className="rounded-md bg-[#f8fafc] p-4">
-            <p className="font-semibold text-[#111827]">25컬럼 (Fixed KF + CM-AKF)</p>
+          <div className="rounded-md border border-[#BFDBFE] bg-[#EFF6FF] p-4">
+            <p className="font-semibold text-[#2563EB]">25컬럼 (Fixed KF + CM-AKF)</p>
             <p className="mt-1 text-xs">공통 12 + Fixed KF 6 + CM-AKF 7</p>
           </div>
-          <div className="rounded-md bg-[#f8fafc] p-4">
-            <p className="font-semibold text-[#111827]">28컬럼 (+ TinyML-AKF)</p>
+          <div className="rounded-md border border-[#DDD6FE] bg-[#F5F3FF] p-4">
+            <p className="font-semibold text-[#7C3AED]">28컬럼 (+ TinyML-AKF)</p>
             <p className="mt-1 text-xs">25컬럼 + tinyml_estimate_mm + tinyml_R + tinyml_infer_us</p>
           </div>
           <p className="text-xs text-[#94a3b8]">
@@ -119,7 +152,7 @@ export default function MethodPage() {
       </section>
 
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold text-[#111827]">필터 파라미터 및 구현 세부사항</h3>
+        <h3 className="text-base font-semibold text-[#16A34A]">필터 파라미터 및 구현 세부사항</h3>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead className="bg-[#f8fafc]">
@@ -164,7 +197,7 @@ export default function MethodPage() {
               ].map(({ item, value, note }) => (
                 <tr key={item}>
                   <td className="px-4 py-3 font-medium text-[#111827]">{item}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-[#2563eb]">{value}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-[#111827]">{value}</td>
                   <td className="px-4 py-3 text-[#64748b]">{note}</td>
                 </tr>
               ))}

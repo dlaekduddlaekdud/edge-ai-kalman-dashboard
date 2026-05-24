@@ -26,7 +26,7 @@ export default function AlgorithmToggle() {
             disabled={isDisabled}
             title={isDisabled ? "TinyML CSV 수집 후 활성화됩니다" : undefined}
             onClick={() => !isDisabled && toggleAlgorithm(id)}
-            className={`rounded-lg border px-4 py-1.5 text-sm font-semibold transition ${
+            className={`rounded-lg border px-5 py-2 text-base font-bold transition ${
               isDisabled
                 ? "cursor-not-allowed border-[#e2e8f0] bg-[#f8fafc] text-[#cbd5e1]"
                 : isSelected
@@ -41,7 +41,7 @@ export default function AlgorithmToggle() {
           >
             {E1_ALGORITHM_LABELS[id]}
             {isDisabled && (
-              <span className="ml-1.5 text-[10px] font-normal">준비 중</span>
+              <span className="ml-1.5 text-xs font-normal">준비 중</span>
             )}
           </button>
         );

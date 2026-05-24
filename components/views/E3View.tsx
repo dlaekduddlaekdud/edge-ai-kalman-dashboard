@@ -227,19 +227,30 @@ export default function E3View() {
   const displayedRunId = activeRun === "all"
     ? ALL_RUNS.find((r) => runs[r] !== undefined)
     : (activeRun as RunId);
+  const positionLegendItems = [
+    ...activeAlgos.map((id) => ({
+      value: E1_ALGORITHM_LABELS[id],
+      type: "line" as const,
+      color: E1_ALGORITHM_COLORS[id],
+      id,
+    })),
+    ...(showGT
+      ? [{ value: "GT", type: "line" as const, color: "#94a3b8", id: "gt" }]
+      : []),
+  ];
   if (!hasAnyRun) {
     return (
-      <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-6 shadow-sm">
-        <p className="text-base font-semibold text-[#92400e]">업로드된 CSV가 없습니다.</p>
-        <p className="mt-2 text-sm text-[#78350f]">
+      <div className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-6 shadow-sm">
+        <p className="text-base font-semibold text-[#4b5563]">업로드된 CSV가 없습니다.</p>
+        <p className="mt-2 text-sm text-[#374151]">
           Data 탭에서 E3 시나리오를 선택하고 데이터를 불러오세요.
           파일명 형식:{" "}
-          <code className="rounded bg-[#fef3c7] px-1">E3_run01.csv</code> ~{" "}
-          <code className="rounded bg-[#fef3c7] px-1">E3_run05.csv</code>
+          <code className="rounded bg-[#f3f4f6] px-1">E3_run01.csv</code> ~{" "}
+          <code className="rounded bg-[#f3f4f6] px-1">E3_run05.csv</code>
         </p>
         <Link
           href="/upload"
-          className="mt-4 inline-block rounded-md bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d4ed8]"
+          className="mt-4 inline-block rounded-md bg-[#111827] px-4 py-2 text-sm font-semibold text-white hover:bg-[#111827]"
         >
           Data 탭으로 이동
         </Link>
@@ -249,30 +260,30 @@ export default function E3View() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+      <div className="rounded-lg border border-[#d1d5db] bg-white p-6 shadow-sm">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+            <p className="text-xl font-black text-[#111827]">
               업로드 CSV 계산값
             </p>
-            <span className="rounded-full border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-1 text-xs font-semibold text-[#15803d]">
+            <span className="rounded-full border border-[#111827] bg-[#111827] px-3 py-1 text-sm font-bold text-white">
               동적 분석
             </span>
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+            <p className="mb-2 text-lg font-black text-[#111827]">
               런 선택
             </p>
             <RunSelector />
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+            <p className="mb-2 text-lg font-black text-[#111827]">
               알고리즘
             </p>
             <AlgorithmToggle />
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+            <p className="mb-2 text-lg font-black text-[#111827]">
               트림 설정
             </p>
             <TrimControl />
@@ -281,24 +292,31 @@ export default function E3View() {
       </div>
 
       {/* 메트릭 테이블 — 논문 확정값 */}
-      <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#e2e8f0] px-4 py-2.5">
-          <p className="text-xs font-semibold text-[#475569]">알고리즘별 성능 (E3 — ToF 차단 구간)</p>
-          <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2.5 py-0.5 text-[11px] font-semibold text-[#1d4ed8]">
+      <div className="overflow-x-auto rounded-lg border border-[#d1d5db] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#e5e7eb] px-6 py-4">
+          <p className="text-2xl font-black text-[#111827]">알고리즘별 성능 (E3 — ToF 차단 구간)</p>
+          <span className="rounded-full border border-[#111827] bg-[#111827] px-3 py-1 text-sm font-bold text-white">
             논문 확정값
           </span>
         </div>
-        <table className="min-w-full text-sm">
+        <table className="w-full min-w-[760px] table-fixed text-base">
+          <colgroup>
+            <col className="w-[30%]" />
+            <col className="w-[17.5%]" />
+            <col className="w-[17.5%]" />
+            <col className="w-[17.5%]" />
+            <col className="w-[17.5%]" />
+          </colgroup>
           <thead className="bg-[#f8fafc]">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-[#475569]">알고리즘</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">RMSE</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">MAE</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">NIS 95%</th>
-              <th className="px-4 py-3 text-right font-semibold text-[#475569]">RMSEss</th>
+              <th className="px-6 py-4 text-left font-black text-[#374151]">알고리즘</th>
+              <th className="px-6 py-4 text-right font-black text-[#374151]">RMSE</th>
+              <th className="px-6 py-4 text-right font-black text-[#374151]">MAE</th>
+              <th className="px-6 py-4 text-right font-black text-[#374151]">NIS 95%</th>
+              <th className="px-6 py-4 text-right font-black text-[#374151]">RMSEss</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#e2e8f0]">
+          <tbody className="divide-y divide-[#e5e7eb]">
             {(
               [
                 { id: "raw",    label: "Raw ToF",    m: PAPER_RESULTS.E3.raw },
@@ -310,25 +328,25 @@ export default function E3View() {
               .filter(({ id }) => selectedAlgorithms.includes(id as E1AlgorithmId))
               .map(({ id, label, m }) => (
                 <tr key={id}>
-                  <td className="px-4 py-3 font-medium text-[#111827]">
+                  <td className="px-6 py-4 font-bold text-[#111827]">
                     <span className="flex items-center gap-2">
                       <span
-                        className="inline-block h-2.5 w-2.5 rounded-full"
+                        className="inline-block h-3 w-3 rounded-full"
                         style={{ backgroundColor: E1_ALGORITHM_COLORS[id as E1AlgorithmId] }}
                       />
                       {label}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-[#111827]">{m.rmse.toFixed(2)} mm</td>
-                  <td className="px-4 py-3 text-right text-[#111827]">{m.mae.toFixed(2)} mm</td>
-                  <td className="px-4 py-3 text-right text-[#111827]">
+                  <td className="px-6 py-4 text-right font-semibold text-[#111827]">{m.rmse.toFixed(2)} mm</td>
+                  <td className="px-6 py-4 text-right font-semibold text-[#111827]">{m.mae.toFixed(2)} mm</td>
+                  <td className="px-6 py-4 text-right font-semibold text-[#111827]">
                     {id === "tinyml" || id === "raw"
                       ? "—"
                       : m.nis != null
                         ? `${(m.nis * 100).toFixed(1)}%`
                         : "—"}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#111827]">
+                  <td className="px-6 py-4 text-right font-semibold text-[#111827]">
                     {m.rmseSS != null ? `${m.rmseSS.toFixed(2)} mm` : "—"}
                   </td>
                 </tr>
@@ -358,12 +376,12 @@ export default function E3View() {
 
       {/* 위치 시계열 차트 */}
       {chartData.length > 0 && (
-        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#64748b]">
+        <div className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
+          <p className="text-lg font-black text-[#111827]">
             차트 — E3 위치 추정 (GT · Raw · Fixed · CM
             {activeAlgos.includes("tinyml") ? " · TinyML" : ""})
             {activeRun === "all" && (
-              <span className="ml-1.5 font-normal text-[#94a3b8]">
+              <span className="ml-2 text-base font-semibold text-[#6b7280]">
                 (All: 메트릭은 평균, 차트는 {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
               </span>
             )}
@@ -387,7 +405,23 @@ export default function E3View() {
                   formatter={(v) => [typeof v === "number" ? `${v.toFixed(2)} mm` : v]}
                   labelFormatter={(l) => `t = ${l} ms`}
                 />
-                <Legend verticalAlign="top" height={28} />
+                <Legend
+                  verticalAlign="top"
+                  height={32}
+                  content={() => (
+                    <div className="flex flex-wrap justify-center gap-4 text-sm font-semibold text-[#374151]">
+                      {positionLegendItems.map((item) => (
+                        <span key={item.id} className="inline-flex items-center gap-1.5">
+                          <span
+                            className="inline-block h-2.5 w-5 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
+                          {item.value}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                />
                 {blockedIntervals.map((interval, i) => (
                   <ReferenceArea
                     key={i}
@@ -430,16 +464,16 @@ export default function E3View() {
 
       {/* R̂ 회복 시계열 (그림 5-1 대응) */}
       {rChartData.length > 0 && hasTinyMLRChart ? (
-        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#64748b]">
+        <div className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
+          <p className="text-lg font-black text-[#111827]">
             차트 — R̂ 회복 시계열 (CM-AKF vs TinyML-AKF)
             {activeRun === "all" && (
-              <span className="ml-1.5 font-normal text-[#94a3b8]">
+              <span className="ml-2 text-base font-semibold text-[#6b7280]">
                 (All: {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
               </span>
             )}
           </p>
-          <p className="mt-1 text-xs text-[#94a3b8]">
+          <p className="mt-1 text-base text-[#6b7280]">
             차단 이탈 후 적응 노이즈 공분산 R̂ 회복 속도 비교. 클램프 10,000 mm².
           </p>
           <div className="mt-3">
@@ -497,38 +531,38 @@ export default function E3View() {
         </div>
       ) : (
         /* 25컬럼 CSV 또는 데이터 없을 때: 논문 확정 수치 fallback 카드 */
-        <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold text-[#64748b]">
+        <div className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
+          <p className="text-lg font-black text-[#111827]">
             R̂ 회복 시간 — 논문 확정 수치 (그림 5-1 기준)
           </p>
-          <p className="mt-1 text-xs text-[#94a3b8]">
+          <p className="mt-1 text-base text-[#6b7280]">
             28컬럼 TinyML CSV 업로드 시 동적 차트로 전환됩니다.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-4">
-            <div className="rounded-md bg-[#fffbeb] p-4">
-              <p className="text-xs font-semibold text-[#a16207]">TinyML-AKF</p>
-              <p className="mt-1 text-2xl font-bold text-[#a16207]">
+            <div className="rounded-md bg-[#f3f4f6] p-4">
+              <p className="text-base font-black text-[#111827]">TinyML-AKF</p>
+              <p className="mt-1 text-3xl font-black text-[#111827]">
                 {PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms
               </p>
-              <p className="mt-0.5 text-xs text-[#d97706]">
+              <p className="mt-0.5 text-xs text-[#4b5563]">
                 3 frames @ 50Hz
               </p>
             </div>
-            <div className="rounded-md bg-[#f0fdfa] p-4">
-              <p className="text-xs font-semibold text-[#0f766e]">CM-AKF</p>
-              <p className="mt-1 text-2xl font-bold text-[#0f766e]">
+            <div className="rounded-md bg-[#f3f4f6] p-4">
+              <p className="text-xs font-semibold text-[#111827]">CM-AKF</p>
+              <p className="mt-1 text-2xl font-bold text-[#111827]">
                 {PAPER_RESULTS.E3.recoveryTimeCM_ms} ms
               </p>
-              <p className="mt-0.5 text-xs text-[#5eead4]">
+              <p className="mt-0.5 text-xs text-[#4b5563]">
                 8 frames @ 50Hz
               </p>
             </div>
           </div>
-          <div className="mt-3 rounded-md bg-[#fefce8] px-4 py-2">
-            <p className="text-sm font-semibold text-[#854d0e]">
+          <div className="mt-3 rounded-md bg-[#f3f4f6] px-4 py-2">
+            <p className="text-sm font-semibold text-[#374151]">
               → TinyML {PAPER_RESULTS.E3.recoverySpeedup}× 빠른 회복
             </p>
-            <p className="mt-0.5 text-xs text-[#92400e]">
+            <p className="mt-0.5 text-xs text-[#4b5563]">
               CM-AKF는 R̂ 재학습(160ms), TinyML은 추론 즉시 반응(60ms)
             </p>
           </div>

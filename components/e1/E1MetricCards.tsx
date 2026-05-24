@@ -21,15 +21,15 @@ interface MetricRowProps {
 
 function MetricRow({ label, color, value }: MetricRowProps) {
   return (
-    <div className="flex items-center justify-between py-1">
-      <span className="flex items-center gap-1.5 text-sm text-[#475569]">
+    <div className="flex items-center justify-between gap-6 py-2">
+      <span className="flex items-center gap-2 text-base font-semibold text-[#374151]">
         <span
-          className="inline-block h-2.5 w-2.5 rounded-full"
+          className="inline-block h-3 w-3 rounded-full"
           style={{ backgroundColor: color }}
         />
         {label}
       </span>
-      <span className="text-sm font-semibold text-[#111827]">{value}</span>
+      <span className="shrink-0 text-base font-black text-[#111827]">{value}</span>
     </div>
   );
 }
@@ -42,11 +42,11 @@ interface CardProps {
 
 function Card({ title, subtitle, children }: CardProps) {
   return (
-    <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#64748b]">
+    <div className="rounded-lg border border-[#d1d5db] bg-white p-6 shadow-sm">
+      <p className="text-lg font-black uppercase tracking-[0.08em] text-[#111827]">
         {title}
       </p>
-      {subtitle && <p className="mt-0.5 text-xs text-[#94a3b8]">{subtitle}</p>}
+      {subtitle && <p className="mt-1 text-base font-semibold text-[#6b7280]">{subtitle}</p>}
       <div className="mt-3 divide-y divide-[#f1f5f9]">{children}</div>
     </div>
   );
@@ -92,7 +92,7 @@ export default function E1MetricCards() {
     <div className="space-y-3">
       {/* 논문 확정값 배지 */}
       <div className="flex justify-start">
-        <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-xs font-semibold text-[#1d4ed8]">
+        <span className="rounded-full border border-[#111827] bg-[#111827] px-4 py-1.5 text-base font-black text-white">
           논문 확정값
         </span>
       </div>

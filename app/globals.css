@@ -10,16 +10,16 @@
 
   /* 시맨틱 토큰 추가 */
   --text-secondary: #334155;
-  --brand: #2563eb;
-  --brand-hover: #1d4ed8;
+  --brand: #111827;
+  --brand-hover: #374151;
   --danger: #b91c1c;
   --warning-text: #92400e;
 
   /* 알고리즘 색상 토큰 */
-  --raw:    #71717a;
-  --fixed:  #0f766e;
-  --cm:     #7c3aed;   /* 보라/바이올렛 — 핵심 적응 알고리즘 */
-  --tinyml: #ea580c;   /* 번트 오렌지 — 온디바이스 대안 */
+  --raw:    #6b7280;
+  --fixed:  #2563eb;
+  --cm:     #16a34a;
+  --tinyml: #7c3aed;
 
   /* 시맨틱 성능 토큰 */
   --positive: #16a34a; /* "성능 향상" — CM-AKF 알고리즘 색과 별도 */

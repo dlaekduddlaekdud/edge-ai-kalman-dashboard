@@ -21,10 +21,10 @@ export const metadata: Metadata = {
 
 // additionalPaths: /upload 하위 흐름인 /dashboard도 Analyze 활성 처리
 const navItems = [
-  { href: "/upload", label: "Analyze", additionalPaths: ["/dashboard"] },
-  { href: "/results", label: "Results", additionalPaths: ["/realtime"] },
+  { href: "/upload", label: "Scenario Dashboard", additionalPaths: ["/dashboard"] },
   { href: "/ablation", label: "Ablation", additionalPaths: [] as string[] },
-  { href: "/method", label: "Method / Metrics", additionalPaths: [] as string[] },
+  { href: "/results", label: "Results", additionalPaths: ["/realtime"] },
+  { href: "/method", label: "Method", additionalPaths: [] as string[] },
 ];
 
 export default function RootLayout({

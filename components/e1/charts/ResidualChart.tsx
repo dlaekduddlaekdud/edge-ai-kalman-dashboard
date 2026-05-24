@@ -65,10 +65,10 @@ export default function ResidualChart() {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold text-[#64748b]">
+      <p className="text-lg font-black text-[#111827]">
         차트 2 — 잔차 (Residual)
         {activeRun === "all" && (
-          <span className="ml-1.5 font-normal text-[#94a3b8]">
+          <span className="ml-2 text-base font-semibold text-[#6b7280]">
             (All: {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
           </span>
         )}

@@ -20,9 +20,10 @@ export function ActiveNavLink({ href, label, additionalPaths = [] }: Props) {
       className={`inline-flex rounded-md border px-4 py-2.5 text-base font-semibold transition
         ${
           isActive
-            ? "border-[#111827] bg-[#111827] text-white"
+            ? "border-[#111827] bg-[#111827] !text-white"
             : "border-[#d1d5db] bg-white text-[#111827] hover:border-[#111827] hover:bg-[#f3f4f6]"
         }`}
+      style={isActive ? { color: "#ffffff" } : undefined}
     >
       {label}
     </Link>

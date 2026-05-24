@@ -15,10 +15,10 @@ import { type AlgorithmId, type AlgorithmData, ALGORITHM_LABELS } from "@/lib/da
 
 // E1_ALGORITHM_COLORS와 동일한 팔레트 유지 (dataset.ts는 e1-store에 의존하지 않으므로 여기서 상수 정의)
 const ALGO_COLORS: Record<AlgorithmId, string> = {
-  raw: "#71717a",
-  fixed: "#0f766e",
-  cm: "#7c3aed",
-  tinyml: "#ea580c",
+  raw: "#6B7280",
+  fixed: "#2563EB",
+  cm: "#16A34A",
+  tinyml: "#7C3AED",
 };
 
 interface ChartPoint {
@@ -102,7 +102,7 @@ export default function EstimateLineChart({ algorithms, title, blockedIntervals 
     <div className="space-y-3">
       {title ? <h4 className="text-sm font-semibold text-[#111827]">{title}</h4> : null}
       {hasMismatch && (
-        <p className="rounded-md border border-[#fecaca] bg-[#fff7f7] px-3 py-2 text-xs text-[#dc2626]">
+        <p className="rounded-md border border-[#d1d5db] bg-[#f9fafb] px-3 py-2 text-xs text-[#111827]">
           알고리즘 간 timestamp가 일치하지 않습니다. 동일 run의 CSV인지 확인하세요.
         </p>
       )}

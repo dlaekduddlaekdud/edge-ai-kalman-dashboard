@@ -18,7 +18,7 @@ export function MetricCard({ label, value, unit, description, color, paperBadge 
           {label}
         </p>
         {paperBadge && (
-          <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-2 py-0.5 text-[11px] font-semibold text-[#1d4ed8]">
+          <span className="rounded-full border border-[#d1d5db] bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#111827]">
             논문 확정값
           </span>
         )}

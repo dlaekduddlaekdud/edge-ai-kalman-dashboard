@@ -8,7 +8,7 @@ export default function RunSelector() {
 
   const uploadedRuns = ALL_RUNS.filter((r) => runs[r] !== undefined);
   const showAll = uploadedRuns.length > 1;
-  const tabs: (RunId | "all")[] = showAll ? [...uploadedRuns, "all"] : uploadedRuns;
+  const tabs: (RunId | "all")[] = showAll ? ["all", ...uploadedRuns] : uploadedRuns;
 
   if (tabs.length === 0) return null;
 
@@ -22,15 +22,15 @@ export default function RunSelector() {
             key={r}
             type="button"
             onClick={() => setActiveRun(r)}
-            className={`rounded-lg border px-4 py-1.5 text-sm font-semibold transition ${
+            className={`rounded-lg border px-5 py-2 text-base font-bold transition ${
               isActive
-                ? "border-[#2563eb] bg-[#eff6ff] text-[#1d4ed8]"
-                : "border-[#d9e0ea] bg-white text-[#475569] hover:border-[#94a3b8]"
+                ? "border-[#111827] bg-[#111827] text-white"
+                : "border-[#d1d5db] bg-white text-[#374151] hover:border-[#111827] hover:bg-[#f3f4f6]"
             }`}
           >
             {RUN_LABELS[r]}
             {rowCount !== undefined && (
-              <span className="ml-1.5 text-xs font-normal text-[#94a3b8]">
+              <span className={`ml-1.5 text-sm font-semibold ${isActive ? "text-[#e5e7eb]" : "text-[#6b7280]"}`}>
                 {rowCount}행
               </span>
             )}
