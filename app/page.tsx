@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PAPER_RESULTS } from "@/lib/paper-results";
-import { ALGO_COLORS } from "@/lib/palette";
+
+const NAVY = "#1E3A8A";
 
 // ── 논문 확정값 기반 KPI 계산 ────────────────────────────────────────────
 const e3RmseImprovement = Math.round(
@@ -20,21 +21,21 @@ const KPI_CARDS = [
   {
     label: "E3 RMSE 개선",
     value: `${e3RmseImprovement}%`,
-    color: ALGO_COLORS.cm,
+    color: NAVY,
     sub: `Raw ${PAPER_RESULTS.E3.raw.rmse} mm → CM-AKF ${PAPER_RESULTS.E3.cm.rmse} mm`,
     detail: "ToF 차단 구간에서 적응형 필터가 고정 파라미터 대비 달성한 오차 감소율",
   },
   {
     label: "TinyML 추론 마진",
     value: `${PAPER_RESULTS.realtime.tinymlMarginX}×`,
-    color: ALGO_COLORS.tinyml,
+    color: NAVY,
     sub: `${PAPER_RESULTS.realtime.tinymlActual_us} µs / ${PAPER_RESULTS.realtime.tinymlBudget_us} µs 목표`,
     detail: "200 Hz 루프 500 µs 예산 대비 실측 평균 추론 시간 여유 (오버런 0건)",
   },
   {
     label: "총 실험 프레임",
     value: totalFrames.toLocaleString(),
-    color: "#111827",
+    color: NAVY,
     sub: `E1~E5 전체 · ${[
       `E1×${PAPER_RESULTS.E1.runs}`,
       `E3×${PAPER_RESULTS.E3.runs}`,
@@ -45,7 +46,7 @@ const KPI_CARDS = [
   {
     label: "E3 회복 배속",
     value: `${PAPER_RESULTS.E3.recoverySpeedup}×`,
-    color: ALGO_COLORS.tinyml,
+    color: NAVY,
     sub: `CM ${PAPER_RESULTS.E3.recoveryTimeCM_ms} ms → TinyML ${PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms`,
     detail: "ToF 차단 해제 후 R̂ 회복 시간 — TinyML-AKF가 CM-AKF보다 빠른 이유",
   },
