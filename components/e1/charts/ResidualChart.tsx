@@ -111,7 +111,7 @@ export default function ResidualChart() {
               dataKey="cm_residual"
               name="CM-AKF 잔차"
               stroke={E1_CHART_LINE_COLORS.cm}
-              strokeWidth={2}
+              strokeWidth={1.5}
               dot={false}
               connectNulls={false}
             />

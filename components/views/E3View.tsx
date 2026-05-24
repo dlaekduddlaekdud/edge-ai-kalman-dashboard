@@ -473,7 +473,7 @@ export default function E3View() {
                       dataKey={algoId}
                       name={E1_ALGORITHM_LABELS[algoId]}
                       stroke={E1_CHART_LINE_COLORS[algoId]}
-                      strokeWidth={algoId === "raw" ? 1 : algoId === "cm" ? 2.5 : 2}
+                      strokeWidth={algoId === "raw" ? 1 : 1.5}
                       strokeOpacity={algoId === "raw" ? 0.45 : 1}
                       dot={false}
                       connectNulls={false}
@@ -544,7 +544,7 @@ export default function E3View() {
                   dataKey="tinyml_R"
                   name="TinyML-AKF R̂"
                   stroke={E1_CHART_LINE_COLORS.tinyml}
-                  strokeWidth={2}
+                  strokeWidth={1.5}
                   dot={false}
                   connectNulls={false}
                 />
