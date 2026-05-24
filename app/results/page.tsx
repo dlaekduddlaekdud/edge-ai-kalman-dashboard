@@ -98,17 +98,17 @@ function RQHeader({
 
 // ── RQ 핵심 결론 블록 ──────────────────────────────────────────────────────
 
-function RQConclusion({ children }: { children: React.ReactNode }) {
+function RQConclusion({ n, children }: { n: 1 | 2 | 3; children: React.ReactNode }) {
   return (
     <div
       className="rounded-lg border-l-4 bg-[#eff6ff] px-5 py-4"
       style={{ borderColor: semanticColors.brand }}
     >
       <p
-        className="text-xs font-black uppercase tracking-[0.14em]"
+        className="text-lg font-black"
         style={{ color: semanticColors.brand }}
       >
-        ✅ 핵심 결론
+        핵심 결론 {n}
       </p>
       <p className="mt-2 text-base font-semibold leading-7 text-[#111827]">{children}</p>
     </div>
@@ -237,7 +237,7 @@ export default function ResultsPage() {
           ⚠ {RT.note}
         </div>
 
-        <RQConclusion>
+        <RQConclusion n={1}>
           TinyML-AKF는 STM32F446RE 200Hz 루프에서 실시간 실행 가능하다.
           평균 추론 {RT.tinymlActual_us}µs — 예산({RT.tinymlBudget_us}µs) 대비{" "}
           {RT.tinymlMarginX}× 여유 확보.{" "}
@@ -313,7 +313,7 @@ export default function ResultsPage() {
           <span className="inline-block rounded px-1" style={{ background: "#F5F3FF" }}>연보라</span> = TinyML-AKF 개선율. ↓ = 개선, ↑ = 저하.
         </p>
 
-        <RQConclusion>
+        <RQConclusion n={2}>
           CM-AKF와 TinyML-AKF 모두 Fixed KF 대비 노이즈 변화 환경에서 정확도가 우수하다.
           E3 ToF 차단 구간: CM-AKF RMSE {PAPER_RESULTS.E3.cm.rmse}mm —
           Fixed KF {PAPER_RESULTS.E3.fixed.rmse}mm 대비 {e3CmVsFixedImprov}% 감소.
@@ -481,7 +481,7 @@ export default function ResultsPage() {
           </p>
         </div>
 
-        <RQConclusion>
+        <RQConclusion n={3}>
           TinyML-AKF는 CM-AKF의 실용적 대안 가능성을 보이나 완전한 대체는 어렵다.
           E2 아크릴에서 유일하게 CM-AKF 대비 낮은 RMSE 달성,
           E3 ToF 차단 해제 후 R̂ 회복 {PAPER_RESULTS.E3.recoverySpeedup}× 빠름(
