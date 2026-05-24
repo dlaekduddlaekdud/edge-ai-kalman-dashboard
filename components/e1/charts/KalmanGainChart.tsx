@@ -72,7 +72,7 @@ export default function KalmanGainChart() {
 
   return (
     <div className="space-y-2">
-      <p className="text-2xl font-black text-[#111827]">
+      <p className="text-xl font-black text-[#111827]">
         차트 4 — Kalman Gain
         {activeRun === "all" && (
           <span className="ml-2 text-base font-semibold text-[#6b7280]">
@@ -106,7 +106,6 @@ export default function KalmanGainChart() {
               name="Fixed KF Gain"
               stroke={E1_CHART_LINE_COLORS.fixed}
               strokeWidth={1.5}
-              strokeDasharray="6 3"
               dot={false}
               connectNulls={false}
             />

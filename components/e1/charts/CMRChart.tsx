@@ -68,7 +68,7 @@ export default function CMRChart() {
 
   return (
     <div className="space-y-2">
-      <p className="text-2xl font-black text-[#111827]">
+      <p className="text-xl font-black text-[#111827]">
         차트 3 — CM-R 적응 노이즈 추정
         {activeRun === "all" && (
           <span className="ml-2 text-base font-semibold text-[#6b7280]">

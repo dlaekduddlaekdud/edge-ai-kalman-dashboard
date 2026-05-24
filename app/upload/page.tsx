@@ -142,59 +142,59 @@ export default function DataPage() {
   const dashboardReady = activeScenario === "E4" || loadState.done;
 
   return (
-    <div className="space-y-7">
-      <section className="rounded-lg border border-[#d1d5db] bg-white p-7 shadow-sm">
-        <p className="text-base font-bold uppercase tracking-[0.14em] text-[#111827]">Data</p>
-        <h2 className="mt-3 text-4xl font-black tracking-tight text-[#111827]">실험 데이터 선택</h2>
-        <p className="mt-4 text-lg leading-8 text-[#4b5563]">
+    <div className="space-y-5">
+      <section className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
+        <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#111827]">Data</p>
+        <h2 className="mt-2 text-3xl font-black tracking-tight text-[#111827]">실험 데이터 선택</h2>
+        <p className="mt-3 text-base leading-7 text-[#4b5563]">
           시나리오를 선택하면 STM32 실험 CSV를 자동 파싱하고, 같은 화면에서 바로 결과 대시보드를 표시합니다.
         </p>
       </section>
 
-      <section className="rounded-lg border border-[#d1d5db] bg-white p-7 shadow-sm">
-        <p className="mb-4 text-2xl font-black tracking-tight text-[#111827]">
+      <section className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
+        <p className="mb-3 text-xl font-black tracking-tight text-[#111827]">
           시나리오 선택
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {SCENARIOS.map(({ label, title, desc }) => (
             <button
               key={label}
               type="button"
               onClick={() => setActiveScenario(label)}
-              className={`min-h-[7rem] rounded-lg border px-4 py-4 text-left transition ${
+              className={`min-h-[5.5rem] rounded-lg border px-3 py-3 text-left transition ${
                 activeScenario === label
                   ? "border-[#111827] bg-[#f3f4f6]"
                   : "border-[#d1d5db] bg-white hover:border-[#111827] hover:bg-[#f9fafb]"
               }`}
             >
-              <p className={`text-2xl font-black ${activeScenario === label ? "text-[#111827]" : "text-[#1f2937]"}`}>
+              <p className={`text-xl font-black ${activeScenario === label ? "text-[#111827]" : "text-[#1f2937]"}`}>
                 {label}
               </p>
-              <p className="mt-1 text-lg font-semibold text-[#4b5563]">{title.replace(`${label} — `, "")}</p>
-              <p className="mt-1 text-base font-medium text-[#6b7280]">{desc}</p>
+              <p className="mt-1 text-sm font-semibold text-[#4b5563]">{title.replace(`${label} — `, "")}</p>
+              <p className="mt-0.5 text-xs font-medium text-[#6b7280]">{desc}</p>
             </button>
           ))}
         </div>
 
         {activeScenario === "E2" && (
-          <div className="mt-6 border-t border-[#e5e7eb] pt-5">
-            <p className="mb-3 text-xl font-black text-[#111827]">
+          <div className="mt-5 border-t border-[#e5e7eb] pt-4">
+            <p className="mb-2 text-lg font-black text-[#111827]">
               E2 표면 선택
             </p>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-3">
               {E2_SURFACES.map(({ key, label, subDesc }) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setActiveE2Surface(key)}
-                  className={`min-h-[6rem] rounded-lg border px-5 py-4 text-left transition ${
+                  className={`min-h-[4.5rem] rounded-lg border px-4 py-3 text-left transition ${
                     currentSurface === key
                       ? "border-[#111827] bg-[#f3f4f6]"
                       : "border-[#d1d5db] bg-white hover:border-[#111827] hover:bg-[#f9fafb]"
                   }`}
                 >
-                  <p className="text-xl font-black text-[#111827]">{label}</p>
-                  <p className="mt-1 text-sm font-semibold text-[#6b7280]">{subDesc}</p>
+                  <p className="text-base font-black text-[#111827]">{label}</p>
+                  <p className="mt-0.5 text-xs font-semibold text-[#6b7280]">{subDesc}</p>
                 </button>
               ))}
             </div>
@@ -208,29 +208,29 @@ export default function DataPage() {
       </section>
 
       {activeFiles && activeScenario !== "E2" && (
-        <section className="rounded-lg border border-[#d1d5db] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <section className="rounded-lg border border-[#d1d5db] bg-white p-4 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="text-lg font-black text-[#111827]">
+              <p className="text-base font-black text-[#111827]">
                 {activeCfg?.title}
               </p>
-              <p className="mt-1 text-base text-[#4b5563]">
+              <p className="mt-0.5 text-sm text-[#4b5563]">
                 {activeFiles.length}개 CSV · 자동 파싱
               </p>
             </div>
             {loadState.loading && (
-              <span className="rounded-full border border-[#d1d5db] bg-[#f3f4f6] px-4 py-2 text-base font-bold text-[#374151]">
+              <span className="rounded-full border border-[#d1d5db] bg-[#f3f4f6] px-3 py-1.5 text-sm font-bold text-[#374151]">
                 파싱 중...
               </span>
             )}
             {loadState.done && loadState.totalRows != null && (
-              <span className="rounded-full border border-[#9ca3af] bg-[#111827] px-4 py-2 text-base font-bold text-white">
+              <span className="rounded-full border border-[#9ca3af] bg-[#111827] px-3 py-1.5 text-sm font-bold text-white">
                 {loadState.totalRows.toLocaleString()}행 · {loadState.durationMs} ms
               </span>
             )}
           </div>
           {loadState.error && (
-            <p className="mt-4 rounded-md border border-[#d1d5db] bg-[#f9fafb] px-4 py-3 text-base font-semibold text-[#111827]">
+            <p className="mt-3 rounded-md border border-[#d1d5db] bg-[#f9fafb] px-3 py-2 text-sm font-semibold text-[#111827]">
               {loadState.error}
             </p>
           )}
@@ -238,9 +238,9 @@ export default function DataPage() {
       )}
 
       {activeScenario === "E4" && (
-        <section className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-5 shadow-sm">
-          <p className="text-xl font-black text-[#111827]">E4 — 정적 장기 안정성</p>
-          <p className="mt-2 text-base text-[#4b5563]">
+        <section className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-4 shadow-sm">
+          <p className="text-lg font-black text-[#111827]">E4 — 정적 장기 안정성</p>
+          <p className="mt-1 text-sm text-[#4b5563]">
             E4는 논문 확정값 기준 대시보드를 즉시 표시합니다.
           </p>
         </section>
