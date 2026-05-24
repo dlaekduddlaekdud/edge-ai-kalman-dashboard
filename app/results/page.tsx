@@ -86,12 +86,15 @@ function RQHeader({
   color: string;
 }) {
   return (
-    <div className="border-l-4 pl-5" style={{ borderColor: color }}>
-      <p className="text-base font-black uppercase tracking-[0.14em]" style={{ color }}>
+    <div className="space-y-2">
+      <span
+        className="inline-block rounded-md border-2 px-3 py-1 text-xl font-black"
+        style={{ borderColor: color, color, backgroundColor: color + "14" }}
+      >
         {rq}
-      </p>
-      <h3 className="mt-1.5 text-2xl font-black text-[#111827]">{title}</h3>
-      <p className="mt-1.5 text-base leading-7 text-[#4b5563]">{desc}</p>
+      </span>
+      <h3 className="text-3xl font-black text-[#111827]">{title}</h3>
+      <p className="text-base leading-7 text-[#4b5563]">{desc}</p>
     </div>
   );
 }
@@ -139,26 +142,26 @@ export default function ResultsPage() {
           논문 5.2절 RQ1~RQ3 결과 요약. 모든 수치는 논문 확정값.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ1 실시간성</p>
-            <p className="mt-1 text-sm font-semibold text-[#475569]">
-              TinyML 추론{" "}
-              <span style={{ color: semanticColors.brand }}>{RT.tinymlActual_us} µs</span>
-            </p>
-          </div>
-          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ2 적응 필터</p>
-            <p className="mt-1 text-sm font-semibold text-[#475569]">CM-AKF 개선 구간 강조</p>
-          </div>
-          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ3 TinyML 대안성</p>
-            <p className="mt-1 text-sm font-semibold text-[#475569]">온디바이스 R̂ 추론 비교</p>
-          </div>
+          {[
+            { href: "#rq1", label: "RQ1 실시간성",   sub: `TinyML 추론 ${RT.tinymlActual_us} µs` },
+            { href: "#rq2", label: "RQ2 적응 필터",  sub: "CM-AKF 개선 구간 강조" },
+            { href: "#rq3", label: "RQ3 TinyML 대안성", sub: "온디바이스 R̂ 추론 비교" },
+          ].map(({ href, label, sub }) => (
+            <a
+              key={href}
+              href={href}
+              className="block rounded-lg border border-[#d9e0ea] bg-white p-4 transition hover:border-[#1f4f8f] hover:bg-[#eff6ff]"
+            >
+              <p className="text-base font-bold" style={{ color: semanticColors.brand }}>{label}</p>
+              <p className="mt-1 text-sm font-semibold text-[#475569]">{sub}</p>
+              <p className="mt-1 text-xs text-[#94a3b8]">↓ 바로 이동</p>
+            </a>
+          ))}
         </div>
       </section>
 
       {/* ── RQ1 ──────────────────────────────────────────────────────────── */}
-      <section className="space-y-4">
+      <section id="rq1" className="space-y-4 scroll-mt-8">
         <RQHeader
           rq="RQ1"
           title="TinyML-AKF는 MCU에서 실시간 실행 가능한가?"
@@ -247,7 +250,7 @@ export default function ResultsPage() {
       </section>
 
       {/* ── RQ2 ──────────────────────────────────────────────────────────── */}
-      <section className="space-y-4">
+      <section id="rq2" className="space-y-4 scroll-mt-8">
         <RQHeader
           rq="RQ2"
           title="노이즈 변화 환경에서 적응 필터가 Fixed KF보다 정확한가?"
@@ -322,7 +325,7 @@ export default function ResultsPage() {
       </section>
 
       {/* ── RQ3 ──────────────────────────────────────────────────────────── */}
-      <section className="space-y-4">
+      <section id="rq3" className="space-y-4 scroll-mt-8">
         <RQHeader
           rq="RQ3"
           title="TinyML-AKF는 CM-AKF의 실용적 대안인가?"

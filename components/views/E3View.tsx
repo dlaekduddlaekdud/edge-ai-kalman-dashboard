@@ -463,20 +463,22 @@ export default function E3View() {
                     connectNulls={false}
                   />
                 )}
-                {activeAlgos.map((algoId) => (
-                  <Line
-                    key={algoId}
-                    type="monotone"
-                    dataKey={algoId}
-                    name={E1_ALGORITHM_LABELS[algoId]}
-                    stroke={E1_CHART_LINE_COLORS[algoId]}
-                    strokeWidth={algoId === "raw" ? 1 : 1.5}
-                    strokeOpacity={algoId === "raw" ? 0.35 : 1}
-                    strokeDasharray={algoId === "fixed" ? "6 3" : algoId === "tinyml" ? "2 3" : undefined}
-                    dot={false}
-                    connectNulls={false}
-                  />
-                ))}
+                {/* CM → Fixed → TinyML → Raw 순서: 두꺼운 CM 바닥, 얇은 Raw 맨 위 */}
+                {(["cm", "fixed", "tinyml", "raw"] as const)
+                  .filter((id) => activeAlgos.includes(id))
+                  .map((algoId) => (
+                    <Line
+                      key={algoId}
+                      type="monotone"
+                      dataKey={algoId}
+                      name={E1_ALGORITHM_LABELS[algoId]}
+                      stroke={E1_CHART_LINE_COLORS[algoId]}
+                      strokeWidth={algoId === "raw" ? 1 : algoId === "cm" ? 2.5 : 2}
+                      strokeOpacity={algoId === "raw" ? 0.45 : 1}
+                      dot={false}
+                      connectNulls={false}
+                    />
+                  ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -542,8 +544,7 @@ export default function E3View() {
                   dataKey="tinyml_R"
                   name="TinyML-AKF R̂"
                   stroke={E1_CHART_LINE_COLORS.tinyml}
-                  strokeWidth={1.5}
-                  strokeDasharray="2 3"
+                  strokeWidth={2}
                   dot={false}
                   connectNulls={false}
                 />

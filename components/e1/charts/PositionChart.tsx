@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Line,
   LineChart,
@@ -32,9 +32,18 @@ function paddedDomain(values: number[]): [number, number] {
   return [Math.max(0, Math.floor(min - pad)), Math.ceil(max + pad)];
 }
 
+type ChartHeight = 430 | 600 | 800;
+
+const HEIGHT_OPTIONS: { label: string; value: ChartHeight }[] = [
+  { label: "기본", value: 430 },
+  { label: "중간", value: 600 },
+  { label: "크게", value: 800 },
+];
+
 export default function PositionChart() {
   const { runs, activeRun, selectedAlgorithms, hasTinyML, autoExcludeStop, trimTail } =
     useE1Store();
+  const [chartHeight, setChartHeight] = useState<ChartHeight>(430);
 
   const { data, xTicks, showGT, yDomain } = useMemo(() => {
     const runId = activeRun === "all"
@@ -104,15 +113,35 @@ export default function PositionChart() {
 
   return (
     <div className="space-y-2">
-      <p className="text-2xl font-black text-[#111827]">
-        차트 1 — 위치 추정 (Raw · Fixed · CM · TinyML)
-        {activeRun === "all" && (
-          <span className="ml-2 text-base font-semibold text-[#6b7280]">
-            (All: 메트릭은 평균, 차트는 {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
-          </span>
-        )}
-      </p>
-      <ResponsiveContainer width="100%" height={380}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <p className="text-xl font-black text-[#111827]">
+          차트 1 — 위치 추정 (Raw · Fixed · CM · TinyML)
+          {activeRun === "all" && (
+            <span className="ml-2 text-base font-semibold text-[#6b7280]">
+              (All: 메트릭은 평균, 차트는 {displayedRunId ? RUN_LABELS[displayedRunId] : "첫 run"} 표시)
+            </span>
+          )}
+        </p>
+        {/* 세로 높이 선택 — 라인 간격 가시성 제어 */}
+        <div className="flex shrink-0 items-center gap-1 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-1.5 py-1">
+          <span className="mr-1 text-xs font-semibold text-[#6b7280]">높이</span>
+          {HEIGHT_OPTIONS.map(({ label, value }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setChartHeight(value)}
+              className={`rounded px-2 py-0.5 text-xs font-bold transition ${
+                chartHeight === value
+                  ? "bg-[#111827] text-white"
+                  : "text-[#6b7280] hover:bg-[#e5e7eb] hover:text-[#111827]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <ResponsiveContainer width="100%" height={chartHeight}>
         <LineChart data={data} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
           <XAxis
             dataKey="timestamp_ms"
@@ -160,20 +189,22 @@ export default function PositionChart() {
               connectNulls={false}
             />
           )}
-          {activeAlgos.map((id) => (
-            <Line
-              key={id}
-              type="monotone"
-              dataKey={id}
-              name={E1_ALGORITHM_LABELS[id]}
-              stroke={E1_CHART_LINE_COLORS[id]}
-              strokeWidth={id === "raw" ? 1 : 1.5}
-              strokeOpacity={id === "raw" ? 0.35 : 1}
-              strokeDasharray={id === "fixed" ? "6 3" : id === "tinyml" ? "2 3" : undefined}
-              dot={false}
-              connectNulls={false}
-            />
-          ))}
+          {/* CM → Fixed → TinyML → Raw 순으로 렌더: 두꺼운 CM이 바닥에, 얇은 Raw가 맨 위 */}
+          {(["cm", "fixed", "tinyml", "raw"] as const)
+            .filter((id) => activeAlgos.includes(id))
+            .map((id) => (
+              <Line
+                key={id}
+                type="monotone"
+                dataKey={id}
+                name={E1_ALGORITHM_LABELS[id]}
+                stroke={E1_CHART_LINE_COLORS[id]}
+                strokeWidth={id === "raw" ? 1 : id === "cm" ? 2.5 : 2}
+                strokeOpacity={id === "raw" ? 0.45 : 1}
+                dot={false}
+                connectNulls={false}
+              />
+            ))}
         </LineChart>
       </ResponsiveContainer>
     </div>
