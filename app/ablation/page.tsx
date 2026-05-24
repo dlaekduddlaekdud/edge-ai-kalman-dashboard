@@ -38,7 +38,7 @@ function Table4_10Card() {
         <p className="text-xs text-[#94a3b8]">{TABLE_4_10.description}</p>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[#e2e8f0] text-sm">
+        <table className="min-w-full divide-y divide-[#e2e8f0] text-base">
           <thead>
             <tr className="bg-[#f8fafc]">
               <th className="px-4 py-3 text-left font-semibold text-[#374151]">Feature Set</th>
@@ -114,7 +114,7 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
         </span>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[#e2e8f0] text-sm">
+        <table className="min-w-full divide-y divide-[#e2e8f0] text-base">
           <thead>
             <tr className="bg-[#f8fafc]">
               <th className="px-4 py-3 text-left font-semibold text-[#374151]">시나리오</th>
@@ -265,19 +265,18 @@ export default function AblationPage() {
       {/* 헤더 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
         <p
-          className="text-xs font-semibold uppercase tracking-[0.14em]"
+          className="text-base font-bold uppercase tracking-[0.14em]"
           style={{ color: semanticColors.brand }}
         >
           Ablation Study
         </p>
-        <h2 className="mt-2 text-2xl font-bold text-[#111827]">Feature Set 비교</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748b]">
+        <h2 className="mt-2 text-3xl font-black text-[#111827]">Feature Set 비교</h2>
+        <p className="mt-2 max-w-2xl text-base leading-7 text-[#64748b]">
           TinyML-AKF 입력 feature를 6개(메인) / 3개(잔차 통계만)로 줄였을 때의
           R 라벨 추적도(MAE_R/MAPE_R)와 위치 RMSE 변화를 비교합니다.
         </p>
         <div
-          className="mt-4 rounded-md border px-4 py-2.5 text-xs font-semibold"
-          style={{ borderColor: "#c7d2fe", backgroundColor: "#eef2ff", color: semanticColors.brand }}
+          className="mt-4 rounded-md border border-[#d9e0ea] px-4 py-2.5 text-sm font-semibold text-[#64748b]"
         >
           W=20 warm-up 제외 · MAE_R = mean(|tinyml_R − cm_R|) · MAPE_R = mean(|tinyml_R − cm_R| / cm_R) × 100
         </div>
@@ -287,26 +286,19 @@ export default function AblationPage() {
       <section className="space-y-3">
         <div className="border-l-4 pl-4" style={{ borderColor: ALGO_COLORS.tinyml }}>
           <p
-            className="text-xs font-semibold uppercase tracking-[0.12em]"
+            className="text-base font-bold uppercase tracking-[0.12em]"
             style={{ color: ALGO_COLORS.tinyml }}
           >
             표 4-10
           </p>
-          <h3 className="mt-1 text-lg font-semibold text-[#111827]">
+          <h3 className="mt-1 text-2xl font-black text-[#111827]">
             R 라벨 추적도 — 6-feature vs 3-feature
           </h3>
-          <p className="mt-1 text-sm text-[#64748b]">
+          <p className="mt-1 text-base text-[#64748b]">
             MAE_R · MAPE_R · int8 양자화 영향. 평가: E1 Run4-5 + E5 전량.
           </p>
         </div>
-        <div
-          className="rounded-md border px-4 py-2 text-xs font-semibold"
-          style={{
-            borderColor: algorithmStyles.tinymlAkf.border,
-            backgroundColor: algorithmStyles.tinymlAkf.bg,
-            color: algorithmStyles.tinymlAkf.text,
-          }}
-        >
+        <div className="rounded-md border border-[#d9e0ea] px-4 py-2 text-sm font-semibold text-[#64748b]">
           6-feature: tof_dist, residual, residual_var, residual_mean, signal_rate, range_status |
           3-feature: residual, residual_var, residual_mean
         </div>
@@ -317,19 +309,19 @@ export default function AblationPage() {
       <section className="space-y-3">
         <div className="border-l-4 pl-4" style={{ borderColor: semanticColors.danger }}>
           <p
-            className="text-xs font-semibold uppercase tracking-[0.12em]"
+            className="text-base font-bold uppercase tracking-[0.12em]"
             style={{ color: semanticColors.danger }}
           >
             표 5-3
           </p>
-          <h3 className="mt-1 text-lg font-semibold text-[#111827]">
+          <h3 className="mt-1 text-2xl font-black text-[#111827]">
             3-feature Hold-out 위치 RMSE
           </h3>
-          <p className="mt-1 text-sm text-[#64748b]">
+          <p className="mt-1 text-base text-[#64748b]">
             1차 측정 데이터 기준 — GT 산출 오차 영향으로 상대 비교만 유효.
           </p>
         </div>
-        <div className="rounded-md border border-[#fecaca] bg-[#fef2f2] px-4 py-2 text-xs font-semibold text-[#991b1b]">
+        <div className="rounded-md border border-[#fecaca] bg-[#fef2f2] px-4 py-2 text-sm font-semibold text-[#991b1b]">
           ⚠ E2 아크릴: 3-feature 모델 97mm RMSE 폭발 — signal_rate 제거 시 고반사 표면에서 위험.
           CM-AKF 대비 가중 평균 RMSE +24mm 열화.
         </div>

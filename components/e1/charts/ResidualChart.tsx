@@ -100,7 +100,8 @@ export default function ResidualChart() {
               dataKey="fixed_residual"
               name="Fixed KF 잔차"
               stroke={E1_ALGORITHM_COLORS.fixed}
-              strokeWidth={2.2}
+              strokeWidth={2.5}
+              strokeDasharray="5 2"
               dot={false}
               connectNulls={false}
             />
@@ -111,7 +112,7 @@ export default function ResidualChart() {
               dataKey="cm_residual"
               name="CM-AKF 잔차"
               stroke={E1_ALGORITHM_COLORS.cm}
-              strokeWidth={2.2}
+              strokeWidth={3}
               dot={false}
               connectNulls={false}
             />

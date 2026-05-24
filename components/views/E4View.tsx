@@ -24,15 +24,15 @@ function GaugeCard({
 }) {
   return (
     <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-      <p className="text-base font-bold uppercase tracking-[0.12em] text-[#64748b]">{title}</p>
+      <p className="text-xl font-bold text-[#64748b]">{title}</p>
       <div className="mt-3 flex items-end justify-between">
         <div>
           <p className="text-4xl font-black tracking-tight text-[#111827]">{actual}</p>
-          <p className="text-base font-semibold text-[#64748b]">실측 / 예산 {budget}</p>
+          <p className="text-lg font-semibold text-[#64748b]">실측 / 예산 {budget}</p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-black" style={{ color }}>{usagePct.toFixed(1)}%</p>
-          <p className="text-base font-semibold text-[#64748b]">예산 사용</p>
+          <p className="text-3xl font-black" style={{ color }}>{usagePct.toFixed(1)}%</p>
+          <p className="text-lg font-semibold text-[#64748b]">예산 사용</p>
         </div>
       </div>
       {/* Progress bar */}
@@ -45,18 +45,18 @@ function GaugeCard({
           }}
         />
       </div>
-      {note && <p className="mt-3 text-base font-medium text-[#64748b]">{note}</p>}
+      {note && <p className="mt-3 text-lg font-medium text-[#64748b]">{note}</p>}
     </div>
   );
 }
 
 function StatRow({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
-    <div className="flex items-center justify-between py-2">
-      <span className="text-lg font-medium text-[#475569]">{label}</span>
-      <span className="text-lg font-bold text-[#111827]">
+    <div className="flex items-center justify-between py-3">
+      <span className="text-xl font-medium text-[#475569]">{label}</span>
+      <span className="text-xl font-bold text-[#111827]">
         {value}
-        {unit && <span className="ml-1 text-base font-normal text-[#94a3b8]">{unit}</span>}
+        {unit && <span className="ml-1 text-lg font-normal text-[#94a3b8]">{unit}</span>}
       </span>
     </div>
   );
@@ -96,7 +96,7 @@ export default function E4View() {
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-base">
+          <table className="min-w-full text-lg">
             <thead className="bg-[#f8fafc]">
               <tr>
                 <th className="px-5 py-4 text-left font-bold text-[#475569]">알고리즘</th>
@@ -135,8 +135,8 @@ export default function E4View() {
         </div>
       </div>
 
-      {/* 실시간 성능 게이지 */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* 실시간 성능 게이지 + TinyML 여유 마진 — 한 줄 3열 */}
+      <div className="grid gap-4 md:grid-cols-3">
         <GaugeCard
           title="TinyML 추론 시간"
           actual={`${E4.tinymlInferMean_us} µs`}
@@ -155,62 +155,46 @@ export default function E4View() {
           color={ALGO_COLORS.fixed}
           note={`최대 ${E4.mainLoopMax_ms} ms · 오버런 ${E4.overrunCount}/${E4.totalLoopCount.toLocaleString()}`}
         />
-      </div>
-
-      {/* TinyML 여유 마진 강조 */}
-      <div
-        className="rounded-lg border p-5 shadow-sm"
-        style={{
-          borderColor: algorithmStyles.tinymlAkf.border,
-          backgroundColor: algorithmStyles.tinymlAkf.bg,
-        }}
-      >
-        <p className="text-lg font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
-          TinyML 추론 여유 마진
-        </p>
-        <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)] md:items-center">
-          <div className="rounded-md bg-white px-5 py-4 shadow-sm">
-            <p className="text-base font-semibold text-[#94a3b8]">예산</p>
-            <p className="text-3xl font-black text-[#111827]">{TINYML_BUDGET_US.toLocaleString()} µs</p>
-          </div>
-          <div className="flex items-center justify-center">
-            <span className="text-3xl font-bold text-[#4b5563]">÷</span>
-          </div>
-          <div className="rounded-md bg-white px-5 py-4 shadow-sm">
-            <p className="text-base font-semibold text-[#94a3b8]">실측</p>
-            <p className="text-3xl font-black text-[#111827]">{E4.tinymlInferMean_us} µs</p>
-          </div>
-          <div className="flex items-center justify-center">
-            <span className="text-3xl font-bold text-[#4b5563]">=</span>
-          </div>
-          <div className="rounded-md border bg-white px-5 py-4 shadow-sm" style={{ borderColor: algorithmStyles.tinymlAkf.border }}>
-            <p className="text-base font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>여유 마진</p>
-            <p className="text-4xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
+        {/* TinyML 여유 마진 compact */}
+        <div
+          className="flex flex-col justify-between rounded-lg border p-6 shadow-sm"
+          style={{
+            borderColor: algorithmStyles.tinymlAkf.border,
+            backgroundColor: algorithmStyles.tinymlAkf.bg,
+          }}
+        >
+          <p className="text-xl font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
+            TinyML 추론 여유 마진
+          </p>
+          <div className="mt-4 text-center">
+            <p className="text-base text-[#94a3b8]">
+              {TINYML_BUDGET_US.toLocaleString()} µs ÷ {E4.tinymlInferMean_us} µs
+            </p>
+            <p className="mt-2 text-6xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
               {(TINYML_BUDGET_US / E4.tinymlInferMean_us).toFixed(1)}×
             </p>
           </div>
+          <p className="mt-4 text-base leading-6 text-[#4b5563]">
+            0.5ms 목표 대비 사용률 {tinymlUsagePct.toFixed(2)}%.
+          </p>
         </div>
-        <p className="mt-4 text-base leading-7 text-[#4b5563]">
-          TinyML 추론 목표 0.5ms 대비 사용률은 {tinymlUsagePct.toFixed(2)}%.
-          200Hz 메인 루프 5ms 예산은 별도 게이지에서 확인합니다.
-        </p>
       </div>
 
       {/* R̂ drift (cm_R 30분 장기 안정성) */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-        <p className="text-base font-bold uppercase tracking-[0.12em] text-[#64748b]">
-          cm_R 30분 Drift 안정성
+        <p className="text-2xl font-bold text-[#111827]">
+          CM_R 30분 DRIFT 안정성
         </p>
         <div className="mt-4 divide-y divide-[#f1f5f9]">
           <StatRow label="R̂ Drift CV (변동계수)" value={`${E4.cmRDriftCV}%`} />
           <StatRow label="오버런 횟수" value={`${E4.overrunCount} / ${E4.totalLoopCount.toLocaleString()}`} />
           <StatRow label="총 측정 루프" value={E4.totalLoopCount.toLocaleString()} unit="cycles" />
         </div>
-        <div className="mt-3 rounded-md bg-[#f3f4f6] px-3 py-2">
-          <p className="text-lg font-bold text-[#111827]">
+        <div className="mt-3 rounded-md bg-[#f3f4f6] px-4 py-3">
+          <p className="text-xl font-bold text-[#111827]">
             CV = {E4.cmRDriftCV}% → 30분 연속 동작에서 R̂ 안정적
           </p>
-          <p className="mt-1 text-base text-[#6b7280]">
+          <p className="mt-1 text-lg text-[#6b7280]">
             CV ≤ 5%: 안정. 매우 낮은 수준의 장기 드리프트 확인.
           </p>
         </div>

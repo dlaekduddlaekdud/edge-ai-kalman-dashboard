@@ -105,7 +105,8 @@ export default function KalmanGainChart() {
               dataKey="fixed_kalman_gain"
               name="Fixed KF Gain"
               stroke={E1_ALGORITHM_COLORS.fixed}
-              strokeWidth={2.3}
+              strokeWidth={2.5}
+              strokeDasharray="5 2"
               dot={false}
               connectNulls={false}
             />
@@ -116,7 +117,7 @@ export default function KalmanGainChart() {
               dataKey="cm_kalman_gain"
               name="CM-AKF Gain"
               stroke={E1_ALGORITHM_COLORS.cm}
-              strokeWidth={2.3}
+              strokeWidth={3.5}
               dot={false}
               connectNulls={false}
             />

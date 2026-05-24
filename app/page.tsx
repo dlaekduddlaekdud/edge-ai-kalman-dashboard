@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PAPER_RESULTS } from "@/lib/paper-results";
+import { ALGO_COLORS } from "@/lib/palette";
 
 // ── 논문 확정값 기반 KPI 계산 ────────────────────────────────────────────
 const e3RmseImprovement = Math.round(
@@ -19,18 +20,21 @@ const KPI_CARDS = [
   {
     label: "E3 RMSE 개선",
     value: `${e3RmseImprovement}%`,
+    color: ALGO_COLORS.cm,
     sub: `Raw ${PAPER_RESULTS.E3.raw.rmse} mm → CM-AKF ${PAPER_RESULTS.E3.cm.rmse} mm`,
     detail: "ToF 차단 구간에서 적응형 필터가 고정 파라미터 대비 달성한 오차 감소율",
   },
   {
     label: "TinyML 추론 마진",
     value: `${PAPER_RESULTS.realtime.tinymlMarginX}×`,
+    color: ALGO_COLORS.tinyml,
     sub: `${PAPER_RESULTS.realtime.tinymlActual_us} µs / ${PAPER_RESULTS.realtime.tinymlBudget_us} µs 목표`,
     detail: "200 Hz 루프 500 µs 예산 대비 실측 평균 추론 시간 여유 (오버런 0건)",
   },
   {
     label: "총 실험 프레임",
     value: totalFrames.toLocaleString(),
+    color: "#111827",
     sub: `E1~E5 전체 · ${[
       `E1×${PAPER_RESULTS.E1.runs}`,
       `E3×${PAPER_RESULTS.E3.runs}`,
@@ -41,6 +45,7 @@ const KPI_CARDS = [
   {
     label: "E3 회복 배속",
     value: `${PAPER_RESULTS.E3.recoverySpeedup}×`,
+    color: ALGO_COLORS.tinyml,
     sub: `CM ${PAPER_RESULTS.E3.recoveryTimeCM_ms} ms → TinyML ${PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms`,
     detail: "ToF 차단 해제 후 R̂ 회복 시간 — TinyML-AKF가 CM-AKF보다 빠른 이유",
   },
@@ -106,13 +111,13 @@ export default function HomePage() {
               key={card.label}
               className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-5 shadow-sm"
             >
-              <p className="text-base font-bold text-[#111827]">
+              <p className="text-lg font-bold text-[#111827]">
                 {card.label}
               </p>
-              <p className="mt-2 text-4xl font-black tracking-tight text-[#111827]">
+              <p className="mt-2 text-4xl font-black tracking-tight" style={{ color: card.color }}>
                 {card.value}
               </p>
-              <p className="mt-2 text-sm font-semibold text-[#1f2937]">{card.sub}</p>
+              <p className="mt-2 text-base font-semibold text-[#1f2937]">{card.sub}</p>
               <p className="mt-3 text-sm leading-6 text-[#4b5563]">{card.detail}</p>
             </div>
           ))}

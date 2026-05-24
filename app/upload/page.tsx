@@ -170,8 +170,8 @@ export default function DataPage() {
               <p className={`text-2xl font-black ${activeScenario === label ? "text-[#111827]" : "text-[#1f2937]"}`}>
                 {label}
               </p>
-              <p className="mt-1 text-base font-semibold text-[#4b5563]">{title.replace(`${label} — `, "")}</p>
-              <p className="mt-1 text-sm font-medium text-[#6b7280]">{desc}</p>
+              <p className="mt-1 text-lg font-semibold text-[#4b5563]">{title.replace(`${label} — `, "")}</p>
+              <p className="mt-1 text-base font-medium text-[#6b7280]">{desc}</p>
             </button>
           ))}
         </div>

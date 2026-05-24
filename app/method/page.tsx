@@ -13,59 +13,42 @@ export default function MethodPage() {
       {/* 헤더 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
         <p
-          className="text-xs font-semibold uppercase tracking-[0.14em]"
+          className="text-base font-bold uppercase tracking-[0.14em]"
           style={{ color: semanticColors.brand }}
         >
-          방법 / 지표
+          Method / Metrics
         </p>
-        <h2 className="mt-3 text-2xl font-bold text-[#111827]">평가지표</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-6 text-[#475569]">
+        <h2 className="mt-3 text-3xl font-black text-[#111827]">평가지표</h2>
+        <p className="mt-4 max-w-3xl text-base leading-7 text-[#475569]">
           실험 CSV를 분석하는 데 사용된 평가 지표 정의와 TypeScript 구현 위치를 정리합니다.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
-          <div
-            className="rounded-lg border p-4"
-            style={{ borderColor: "#c7d2fe", backgroundColor: "#eef2ff" }}
-          >
-            <p className="text-sm font-bold" style={{ color: semanticColors.brand }}>CSV Parse</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.brand }}>
-              25/28컬럼 schema
-            </p>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>CSV Parse</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">25/28컬럼 schema</p>
           </div>
-          <div
-            className="rounded-lg border p-4"
-            style={{ borderColor: algorithmStyles.cmAkf.border, backgroundColor: algorithmStyles.cmAkf.bg }}
-          >
-            <p className="text-sm font-bold" style={{ color: algorithmStyles.cmAkf.text }}>Metrics</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.cmAkf.text }}>
-              RMSE · NIS · Tconv
-            </p>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: algorithmStyles.cmAkf.text }}>Metrics</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">RMSE · NIS · Tconv</p>
           </div>
-          <div
-            className="rounded-lg border p-4"
-            style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
-          >
-            <p className="text-sm font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>
-              R̂ label tracking
-            </p>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">R̂ label tracking</p>
           </div>
-          <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4">
-            <p className="text-sm font-bold" style={{ color: semanticColors.warning }}>Limit</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.warning }}>
-              GT bias 주의
-            </p>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: semanticColors.warning }}>Limit</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">GT bias 주의</p>
           </div>
         </div>
       </section>
 
       {/* Spec to Implementation */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold" style={{ color: semanticColors.brand }}>
+        <h3 className="text-xl font-bold" style={{ color: semanticColors.brand }}>
           Spec to Implementation
         </h3>
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-base">
             <thead className="bg-[#f8fafc]">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">지표</th>
@@ -141,15 +124,15 @@ export default function MethodPage() {
 
       {/* GT 복원 방식 및 한계 */}
       <section className="rounded-lg border border-[#fde68a] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold" style={{ color: semanticColors.warning }}>
+        <h3 className="text-xl font-bold" style={{ color: semanticColors.warning }}>
           GT 복원 방식 및 한계
         </h3>
-        <div className="mt-4 rounded-md border border-[#fde68a] bg-[#fffbeb] p-4 font-mono text-xs text-[#78350f]">
+        <div className="mt-4 rounded-md border border-[#fde68a] bg-[#fffbeb] p-4 font-mono text-sm text-[#78350f]">
           <p>stop_mask  = rows where encoder_distance_mm == 0</p>
           <p>base       = mean(tof_distance_mm[stop_mask])</p>
           <p>gt[k]      = base - encoder_distance_mm[k]</p>
         </div>
-        <p className="mt-3 text-sm text-[#78350f]">
+        <p className="mt-3 text-base text-[#78350f]">
           base를 ToF 센서값에서 추출하므로 ToF 정적 bias가 RMSE에 반영됩니다.
           알고리즘 간 상대 비교에는 유효하나, 절대 정확도 비교는 외부 기준(줄자/레이저)이 필요합니다.
         </p>
@@ -157,31 +140,25 @@ export default function MethodPage() {
 
       {/* CSV 스키마 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+        <h3 className="text-xl font-bold" style={{ color: ALGO_COLORS.tinyml }}>
           CSV 스키마
         </h3>
-        <div className="mt-4 space-y-3 text-sm text-[#475569]">
-          <div
-            className="rounded-md border p-4"
-            style={{ borderColor: "#c7d2fe", backgroundColor: "#eef2ff" }}
-          >
-            <p className="font-semibold" style={{ color: semanticColors.brand }}>
+        <div className="mt-4 space-y-3 text-base text-[#475569]">
+          <div className="rounded-md border border-[#d9e0ea] bg-white p-4">
+            <p className="font-bold" style={{ color: semanticColors.brand }}>
               25컬럼 (Fixed KF + CM-AKF)
             </p>
-            <p className="mt-1 text-xs text-[#475569]">공통 12 + Fixed KF 6 + CM-AKF 7</p>
+            <p className="mt-1 text-sm text-[#475569]">공통 12 + Fixed KF 6 + CM-AKF 7</p>
           </div>
-          <div
-            className="rounded-md border p-4"
-            style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
-          >
-            <p className="font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>
+          <div className="rounded-md border border-[#d9e0ea] bg-white p-4">
+            <p className="font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
               28컬럼 (+ TinyML-AKF)
             </p>
-            <p className="mt-1 text-xs text-[#475569]">
+            <p className="mt-1 text-sm text-[#475569]">
               25컬럼 + tinyml_estimate_mm + tinyml_R + tinyml_infer_us
             </p>
           </div>
-          <p className="text-xs text-[#94a3b8]">
+          <p className="text-sm text-[#94a3b8]">
             TinyML 3컬럼이 모두 있을 때만 TinyML 분석 활성화. NIS는 Fixed/CM만 계산 (TinyML은 innovation_cov 없음).
           </p>
         </div>
@@ -189,11 +166,11 @@ export default function MethodPage() {
 
       {/* 필터 파라미터 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-base font-semibold" style={{ color: ALGO_COLORS.cm }}>
+        <h3 className="text-xl font-bold" style={{ color: ALGO_COLORS.cm }}>
           필터 파라미터 및 구현 세부사항
         </h3>
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-base">
             <thead className="bg-[#f8fafc]">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">항목</th>
