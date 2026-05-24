@@ -282,16 +282,10 @@ export default function AblationPage() {
         </div>
       </section>
 
-      {/* 표 4-10 — R 라벨 추적도 */}
+      {/* R 라벨 추적도 */}
       <section className="space-y-3">
-        <div className="border-l-4 pl-4" style={{ borderColor: ALGO_COLORS.tinyml }}>
-          <p
-            className="text-base font-bold uppercase tracking-[0.12em]"
-            style={{ color: ALGO_COLORS.tinyml }}
-          >
-            표 4-10
-          </p>
-          <h3 className="mt-1 text-2xl font-black text-[#111827]">
+        <div className="border-l-4 pl-4" style={{ borderColor: semanticColors.brand }}>
+          <h3 className="text-3xl font-black text-[#111827]">
             R 라벨 추적도 — 6-feature vs 3-feature
           </h3>
           <p className="mt-1 text-base text-[#64748b]">
@@ -305,16 +299,10 @@ export default function AblationPage() {
         <Table4_10Card />
       </section>
 
-      {/* 표 5-3 — hold-out 위치 RMSE */}
+      {/* hold-out 위치 RMSE */}
       <section className="space-y-3">
-        <div className="border-l-4 pl-4" style={{ borderColor: semanticColors.danger }}>
-          <p
-            className="text-base font-bold uppercase tracking-[0.12em]"
-            style={{ color: semanticColors.danger }}
-          >
-            표 5-3
-          </p>
-          <h3 className="mt-1 text-2xl font-black text-[#111827]">
+        <div className="border-l-4 pl-4" style={{ borderColor: semanticColors.brand }}>
+          <h3 className="text-3xl font-black text-[#111827]">
             3-feature Hold-out 위치 RMSE
           </h3>
           <p className="mt-1 text-base text-[#64748b]">
