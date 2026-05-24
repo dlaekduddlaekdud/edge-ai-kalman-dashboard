@@ -13,10 +13,10 @@ export const E1_ALGORITHM_LABELS: Record<E1AlgorithmId, string> = {
 };
 
 export const E1_ALGORITHM_COLORS: Record<E1AlgorithmId, string> = {
-  raw: "#71717a",
-  fixed: "#0f766e",
-  cm: "#7c3aed",    // 보라/바이올렛 — 에러색과 구별되는 핵심 적응 알고리즘 색상
-  tinyml: "#ea580c", // 번트 오렌지 — 온디바이스 대안, 노란색과 구별
+  raw: "#6B7280",
+  fixed: "#2563EB",
+  cm: "#16A34A",
+  tinyml: "#7C3AED",
 };
 
 interface E1RunData {
@@ -75,7 +75,7 @@ function nextActiveRunAfterRemove(
 
 export const useE1Store = create<E1Store>((set) => ({
   runs: {},
-  activeRun: "run1",
+  activeRun: "all",
   selectedAlgorithms: ["raw", "fixed", "cm", "tinyml"],
   autoExcludeStop: true,
   trimTail: 0,
@@ -86,10 +86,12 @@ export const useE1Store = create<E1Store>((set) => ({
   setRun: (id, rows, fileName) =>
     set((state) => {
       const next = { ...state.runs, [id]: { rows, fileName } };
+      const uploadedCount = ALL_RUNS.filter((runId) => next[runId]).length;
+      const activeRun = uploadedCount > 1 ? "all" : id;
       return {
         runs: next,
-        activeRun: id,
-        hasTinyML: selectedRunHasTinyML(next, id),
+        activeRun,
+        hasTinyML: selectedRunHasTinyML(next, activeRun),
       };
     }),
 
@@ -123,7 +125,7 @@ export const useE1Store = create<E1Store>((set) => ({
   setTrimTail: (n) => set({ trimTail: Math.max(0, Math.floor(n)) }),
 
   // 시나리오 변경 시 런 데이터 + E2 표면 선택 초기화
-  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, activeRun: "run1", hasTinyML: false, activeE2Surface: null }),
+  setActiveScenario: (s) => set({ activeScenario: s, runs: {}, activeRun: "all", hasTinyML: false, activeE2Surface: null }),
 
   setActiveE2Surface: (s) => set({ activeE2Surface: s }),
 }));

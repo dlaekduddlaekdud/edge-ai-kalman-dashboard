@@ -29,17 +29,17 @@ export default function E0View() {
   return (
     <div className="space-y-6">
       {/* 개요 카드 */}
-      <div className="rounded-lg border border-[#bfdbfe] bg-[#eff6ff] p-6 shadow-sm">
+      <div className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#111827]">
               E0 — Python 합성 시뮬레이션
             </p>
-            <p className="mt-1 text-sm text-[#1e40af]">
+            <p className="mt-1 text-sm text-[#374151]">
               2,000 step, σ_process=0.5mm, σ_meas=5mm, Fixed KF 단독 검증
             </p>
           </div>
-          <span className="rounded-full border border-[#bfdbfe] bg-white px-3 py-1 text-xs text-[#1d4ed8]">
+          <span className="rounded-full border border-[#d1d5db] bg-white px-3 py-1 text-xs text-[#111827]">
             CSV 업로드 없음
           </span>
         </div>
@@ -48,18 +48,18 @@ export default function E0View() {
         <div className="mt-5 flex flex-wrap items-center gap-3">
           <div className="rounded-md bg-white px-4 py-3 shadow-sm">
             <p className="text-xs text-[#64748b]">Raw RMSE</p>
-            <p className="text-xl font-bold text-[#dc2626]">{E0.rawRMSE} mm</p>
+            <p className="text-xl font-bold text-[#111827]">{E0.rawRMSE} mm</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl text-[#1d4ed8]">→</span>
-            <div className="rounded-full bg-[#dcfce7] px-3 py-1 text-sm font-semibold text-[#15803d]">
+            <span className="text-2xl text-[#111827]">→</span>
+            <div className="rounded-full bg-[#dcfce7] px-3 py-1 text-sm font-semibold text-[#111827]">
               {E0.improvement}% 개선
             </div>
-            <span className="text-2xl text-[#1d4ed8]">→</span>
+            <span className="text-2xl text-[#111827]">→</span>
           </div>
           <div className="rounded-md bg-white px-4 py-3 shadow-sm">
             <p className="text-xs text-[#64748b]">KF RMSE</p>
-            <p className="text-xl font-bold text-[#16a34a]">{E0.kfRMSE} mm</p>
+            <p className="text-xl font-bold text-[#111827]">{E0.kfRMSE} mm</p>
           </div>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default function E0View() {
               {E0.nisInterval[0]}
             </p>
           </div>
-          <div className="rounded-full bg-[#dbeafe] px-4 py-1.5 text-sm font-semibold text-[#1d4ed8]">
+          <div className="rounded-full bg-[#f3f4f6] px-4 py-1.5 text-sm font-semibold text-[#111827]">
             통과 구간
           </div>
           <div className="flex-1 rounded-md bg-[#f8fafc] p-3 text-center">
@@ -119,13 +119,13 @@ export default function E0View() {
         <p className="text-xs font-semibold text-[#64748b]">슬라이딩 윈도우 W={E0.slidingWindow}</p>
         <p className="mt-2 text-sm text-[#475569]">{E0.slidingWindowNote}</p>
         <div className="mt-3 flex gap-3">
-          <div className="rounded-md bg-[#f0fdf4] px-3 py-2 text-center">
-            <p className="text-xs text-[#4ade80]">W=20 (채택)</p>
-            <p className="mt-0.5 text-xs font-semibold text-[#15803d]">분산 추정 안정</p>
+          <div className="rounded-md bg-[#f3f4f6] px-3 py-2 text-center">
+            <p className="text-xs text-[#6b7280]">W=20 (채택)</p>
+            <p className="mt-0.5 text-xs font-semibold text-[#111827]">분산 추정 안정</p>
           </div>
-          <div className="rounded-md bg-[#fef3c7] px-3 py-2 text-center">
-            <p className="text-xs text-[#f59e0b]">W=30 (비교)</p>
-            <p className="mt-0.5 text-xs font-semibold text-[#92400e]">환경 반응 느림</p>
+          <div className="rounded-md bg-[#f3f4f6] px-3 py-2 text-center">
+            <p className="text-xs text-[#4b5563]">W=30 (비교)</p>
+            <p className="mt-0.5 text-xs font-semibold text-[#4b5563]">환경 반응 느림</p>
           </div>
         </div>
       </div>

@@ -28,20 +28,20 @@ export default function DashboardPage() {
   const hasCsvScenario = (activeScenario === "E1" || activeScenario === "E3" || activeScenario === "E5");
   const sourceLabel = hasCsvScenario && hasData ? "CSV 분석값" : "논문 확정값";
   const sourceClassName = hasCsvScenario && hasData
-    ? "border-[#bbf7d0] bg-[#f0fdf4] text-[#15803d]"
-    : "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]";
+    ? "border-[#d1d5db] bg-[#f3f4f6] text-[#111827]"
+    : "border-[#d1d5db] bg-[#f3f4f6] text-[#111827]";
 
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
+        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[#111827]">
           Dashboard
         </p>
         <h2 className="mt-3 text-2xl font-semibold text-[#111827]">
           시나리오별 분석 대시보드
         </h2>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className="rounded-full border border-[#bfdbfe] bg-[#eff6ff] px-3 py-1 text-sm font-semibold text-[#1d4ed8]">
+          <span className="rounded-full border border-[#d1d5db] bg-[#f3f4f6] px-3 py-1 text-sm font-semibold text-[#111827]">
             {activeScenario}
           </span>
           <span className={`rounded-full border px-3 py-1 text-sm font-semibold ${sourceClassName}`}>
@@ -52,7 +52,7 @@ export default function DashboardPage() {
           </span>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Link href="/upload" className="text-xs text-[#2563eb] hover:underline">
+          <Link href="/upload" className="text-xs text-[#111827] hover:underline">
             CSV 변경
           </Link>
         </div>
@@ -93,8 +93,8 @@ export default function DashboardPage() {
                 <th className="px-4 py-2.5 text-left font-semibold text-[#475569]">시나리오</th>
                 <th className="px-4 py-2.5 text-right font-semibold text-[#475569]">Raw</th>
                 <th className="px-4 py-2.5 text-right font-semibold text-[#475569]">Fixed KF</th>
-                <th className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">CM-AKF</th>
-                <th className="px-4 py-2.5 text-right font-semibold text-[#ea580c]">TinyML-AKF</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#111827]">CM-AKF</th>
+                <th className="px-4 py-2.5 text-right font-semibold text-[#4b5563]">TinyML-AKF</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
@@ -103,59 +103,59 @@ export default function DashboardPage() {
                 <td className="px-4 py-2.5 font-medium text-[#111827]">E1 — 정상 baseline</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E1.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E1.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E1.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E1.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E1.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#4b5563]">{PAPER_RESULTS.E1.tinyml.rmse}</td>
               </tr>
               {/* E2 흰 */}
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">E2 — 흰 우드락</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.white.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.white.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#4b5563]">{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
               </tr>
               {/* E2 검정 */}
               <tr>
                 <td className="px-4 py-2.5 text-[#475569]">E2 — 검정 우드락</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.black.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.black.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#4b5563]">{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
               </tr>
               {/* E2 아크릴 */}
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">
                   E2 — 투명 아크릴
-                  <span className="ml-1 text-xs text-[#f59e0b]">★TinyML Best</span>
+                  <span className="ml-1 text-xs text-[#4b5563]">★TinyML Best</span>
                 </td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.acryl.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#7c3aed]">{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#ea580c]">{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#4b5563]">{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
               </tr>
               {/* E3 */}
               <tr>
                 <td className="px-4 py-2.5 font-medium text-[#111827]">E3 — ToF 차단 구간</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E3.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E3.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E3.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E3.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E3.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#4b5563]">{PAPER_RESULTS.E3.tinyml.rmse}</td>
               </tr>
               {/* E4 */}
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">E4 — 정적 장기 안정성</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E4.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E4.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E4.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E4.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E4.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#4b5563]">{PAPER_RESULTS.E4.tinyml.rmse}</td>
               </tr>
               {/* E5 */}
               <tr>
                 <td className="px-4 py-2.5 text-[#475569]">E5 — 미지 표면 일반화</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E5.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right text-[#475569]">{PAPER_RESULTS.E5.fixed.rmse}</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-[#7c3aed]">{PAPER_RESULTS.E5.cm.rmse}</td>
-                <td className="px-4 py-2.5 text-right text-[#ea580c]">{PAPER_RESULTS.E5.tinyml.rmse}</td>
+                <td className="px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E5.cm.rmse}</td>
+                <td className="px-4 py-2.5 text-right text-[#4b5563]">{PAPER_RESULTS.E5.tinyml.rmse}</td>
               </tr>
             </tbody>
           </table>

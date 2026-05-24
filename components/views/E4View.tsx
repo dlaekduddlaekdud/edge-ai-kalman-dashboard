@@ -69,7 +69,7 @@ export default function E4View() {
     <div className="space-y-6">
       {/* 개요 카드 */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#2563eb]">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#111827]">
           E4 — 정적 장기 안정성
         </p>
         <p className="mt-1 text-sm text-[#475569]">{E4.description}</p>
@@ -112,20 +112,20 @@ export default function E4View() {
                 <td className="px-4 py-3 text-right text-[#94a3b8]">—</td>
               </tr>
               <tr className="bg-[#fafafa]">
-                <td className="px-4 py-3 text-[#0f766e]">Fixed KF</td>
+                <td className="px-4 py-3 text-[#111827]">Fixed KF</td>
                 <td className="px-4 py-3 text-right">{E4.fixed.rmse}</td>
                 <td className="px-4 py-3 text-right">{E4.fixed.mae}</td>
                 <td className="px-4 py-3 text-right">{E4.fixed.nis != null ? `${(E4.fixed.nis * 100).toFixed(1)}%` : "—"}</td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-semibold text-[#7c3aed]">CM-AKF</td>
-                <td className="px-4 py-3 text-right font-semibold text-[#7c3aed]">{E4.cm.rmse}</td>
+                <td className="px-4 py-3 font-semibold text-[#111827]">CM-AKF</td>
+                <td className="px-4 py-3 text-right font-semibold text-[#111827]">{E4.cm.rmse}</td>
                 <td className="px-4 py-3 text-right">{E4.cm.mae}</td>
                 <td className="px-4 py-3 text-right">{E4.cm.nis != null ? `${(E4.cm.nis * 100).toFixed(1)}%` : "—"}</td>
               </tr>
               <tr className="bg-[#fafafa]">
-                <td className="px-4 py-3 text-[#ea580c]">TinyML-AKF</td>
-                <td className="px-4 py-3 text-right text-[#ea580c]">{E4.tinyml.rmse}</td>
+                <td className="px-4 py-3 text-[#4b5563]">TinyML-AKF</td>
+                <td className="px-4 py-3 text-right text-[#4b5563]">{E4.tinyml.rmse}</td>
                 <td className="px-4 py-3 text-right">{E4.tinyml.mae}</td>
                 <td className="px-4 py-3 text-right text-[#94a3b8]">—</td>
               </tr>
@@ -142,7 +142,7 @@ export default function E4View() {
           budget={`${TINYML_BUDGET_US.toLocaleString()} µs (0.5ms 목표)`}
           usagePct={tinymlUsagePct}
           unit="µs"
-          color="#ea580c"
+          color="#4b5563"
           note={`최대 ${E4.tinymlInferMax_us} µs · std ${E4.tinymlInferStd_us} µs · ${E4.tinymlInferCount.toLocaleString()}회`}
         />
         <GaugeCard
@@ -151,37 +151,37 @@ export default function E4View() {
           budget={`${MAIN_LOOP_BUDGET_MS} ms`}
           usagePct={mainLoopUsagePct}
           unit="ms"
-          color="#0f766e"
+          color="#111827"
           note={`최대 ${E4.mainLoopMax_ms} ms · 오버런 ${E4.overrunCount}/${E4.totalLoopCount.toLocaleString()}`}
         />
       </div>
 
       {/* TinyML 여유 마진 강조 */}
-      <div className="rounded-lg border border-[#fde68a] bg-[#fffbeb] p-5 shadow-sm">
-        <p className="text-xs font-semibold text-[#ea580c]">TinyML 추론 여유 마진</p>
+      <div className="rounded-lg border border-[#d1d5db] bg-[#f3f4f6] p-5 shadow-sm">
+        <p className="text-xs font-semibold text-[#4b5563]">TinyML 추론 여유 마진</p>
         <div className="mt-3 flex flex-wrap gap-4">
           <div className="rounded-md bg-white px-4 py-3 shadow-sm">
             <p className="text-xs text-[#94a3b8]">예산</p>
             <p className="text-xl font-bold text-[#111827]">{TINYML_BUDGET_US.toLocaleString()} µs</p>
           </div>
           <div className="flex items-center">
-            <span className="text-2xl text-[#ea580c]">÷</span>
+            <span className="text-2xl text-[#4b5563]">÷</span>
           </div>
           <div className="rounded-md bg-white px-4 py-3 shadow-sm">
             <p className="text-xs text-[#94a3b8]">실측</p>
             <p className="text-xl font-bold text-[#111827]">{E4.tinymlInferMean_us} µs</p>
           </div>
           <div className="flex items-center">
-            <span className="text-2xl text-[#ea580c]">=</span>
+            <span className="text-2xl text-[#4b5563]">=</span>
           </div>
-          <div className="rounded-md bg-[#ea580c] px-4 py-3 shadow-sm">
-            <p className="text-xs text-[#fde68a]">여유 마진</p>
+          <div className="rounded-md bg-[#4b5563] px-4 py-3 shadow-sm">
+            <p className="text-xs text-[#d1d5db]">여유 마진</p>
             <p className="text-2xl font-bold text-white">
               {(TINYML_BUDGET_US / E4.tinymlInferMean_us).toFixed(1)}×
             </p>
           </div>
         </div>
-        <p className="mt-3 text-xs text-[#92400e]">
+        <p className="mt-3 text-xs text-[#4b5563]">
           TinyML 추론 목표 0.5ms 대비 사용률은 {tinymlUsagePct.toFixed(2)}%.
           200Hz 메인 루프 5ms 예산은 별도 게이지에서 확인합니다.
         </p>
@@ -197,11 +197,11 @@ export default function E4View() {
           <StatRow label="오버런 횟수" value={`${E4.overrunCount} / ${E4.totalLoopCount.toLocaleString()}`} />
           <StatRow label="총 측정 루프" value={E4.totalLoopCount.toLocaleString()} unit="cycles" />
         </div>
-        <div className="mt-3 rounded-md bg-[#f0fdf4] px-3 py-2">
-          <p className="text-sm font-semibold text-[#15803d]">
+        <div className="mt-3 rounded-md bg-[#f3f4f6] px-3 py-2">
+          <p className="text-sm font-semibold text-[#111827]">
             CV = {E4.cmRDriftCV}% → 30분 연속 동작에서 R̂ 안정적
           </p>
-          <p className="mt-0.5 text-xs text-[#4ade80]">
+          <p className="mt-0.5 text-xs text-[#6b7280]">
             CV ≤ 5%: 안정. 매우 낮은 수준의 장기 드리프트 확인.
           </p>
         </div>
