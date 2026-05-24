@@ -10,7 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useE1Store, E1_ALGORITHM_COLORS } from "@/lib/e1-store";
+import { useE1Store, E1_CHART_LINE_COLORS } from "@/lib/e1-store";
 import { ALL_RUNS, RUN_LABELS, type RunId } from "@/lib/e1-csv-parser";
 import { applyTrim } from "@/lib/e1-metrics";
 
@@ -100,8 +100,8 @@ export default function CMRChart() {
             type="monotone"
             dataKey="cm_R"
             name="cm_R (적응 노이즈)"
-            stroke={E1_ALGORITHM_COLORS.cm}
-            strokeWidth={3}
+            stroke={E1_CHART_LINE_COLORS.cm}
+            strokeWidth={1.5}
             dot={false}
           />
           {hasResidualVar && (
