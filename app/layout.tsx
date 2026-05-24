@@ -33,8 +33,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={notoSansKR.variable}>
-      <body>
+    // suppressHydrationWarning: 브라우저 확장(다크모드 등)이 html/body에 속성 주입 시 hydration 경고 억제
+    <html lang="ko" className={notoSansKR.variable} suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <div className="min-h-screen bg-[#f7f8fb]">
           <header className="border-b border-[#d9e0ea] bg-white">
             <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-5 md:flex-row md:items-center md:justify-between">
