@@ -26,12 +26,12 @@ export default function AlgorithmToggle() {
             disabled={isDisabled}
             title={isDisabled ? "TinyML CSV 수집 후 활성화됩니다" : undefined}
             onClick={() => !isDisabled && toggleAlgorithm(id)}
-            className={`rounded-lg border px-5 py-2 text-base font-bold transition ${
+            className={`rounded-lg px-5 py-2 text-base font-bold transition ${
               isDisabled
-                ? "cursor-not-allowed border-[#e2e8f0] bg-[#f8fafc] text-[#cbd5e1]"
+                ? "cursor-not-allowed border border-[#e2e8f0] bg-[#f8fafc] text-[#cbd5e1]"
                 : isSelected
-                  ? "shadow-sm ring-2 ring-offset-2"
-                  : "border-[#d1d5db] bg-white text-[#374151] hover:border-[#111827] hover:bg-[#f3f4f6]"
+                  ? "border-2 shadow-sm"
+                  : "border border-[#d1d5db] bg-white text-[#374151] hover:border-[#111827] hover:bg-[#f3f4f6]"
             }`}
             style={
               isSelected && !isDisabled
@@ -39,7 +39,6 @@ export default function AlgorithmToggle() {
                     backgroundColor: algoStyle.bg,
                     color: algoStyle.text,
                     borderColor: algoStyle.border,
-                    boxShadow: `0 0 0 2px #ffffff, 0 0 0 4px ${algoStyle.border}`,
                   }
                 : undefined
             }

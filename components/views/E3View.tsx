@@ -470,8 +470,9 @@ export default function E3View() {
                     dataKey={algoId}
                     name={E1_ALGORITHM_LABELS[algoId]}
                     stroke={E1_ALGORITHM_COLORS[algoId]}
-                    strokeWidth={algoId === "raw" ? 2 : 2.5}
-                    strokeOpacity={algoId === "raw" ? 0.78 : 1}
+                    strokeWidth={algoId === "raw" ? 1.5 : algoId === "cm" ? 3.5 : 2.5}
+                    strokeOpacity={algoId === "raw" ? 0.5 : 1}
+                    strokeDasharray={algoId === "fixed" ? "5 2" : algoId === "tinyml" ? "3 2" : undefined}
                     dot={false}
                     connectNulls={false}
                   />
@@ -532,7 +533,7 @@ export default function E3View() {
                   dataKey="cm_R"
                   name="CM-AKF R̂"
                   stroke={E1_ALGORITHM_COLORS.cm}
-                  strokeWidth={2.5}
+                  strokeWidth={3.5}
                   dot={false}
                   connectNulls={false}
                 />
@@ -542,6 +543,7 @@ export default function E3View() {
                   name="TinyML-AKF R̂"
                   stroke={E1_ALGORITHM_COLORS.tinyml}
                   strokeWidth={2.5}
+                  strokeDasharray="3 2"
                   dot={false}
                   connectNulls={false}
                 />

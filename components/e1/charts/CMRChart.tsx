@@ -101,7 +101,7 @@ export default function CMRChart() {
             dataKey="cm_R"
             name="cm_R (적응 노이즈)"
             stroke={E1_ALGORITHM_COLORS.cm}
-            strokeWidth={2.4}
+            strokeWidth={3}
             dot={false}
           />
           {hasResidualVar && (
@@ -110,7 +110,7 @@ export default function CMRChart() {
               dataKey="cm_residual_var"
               name="cm_residual_var"
               stroke="#94a3b8"
-              strokeWidth={1.8}
+              strokeWidth={1.5}
               strokeDasharray="4 2"
               dot={false}
             />

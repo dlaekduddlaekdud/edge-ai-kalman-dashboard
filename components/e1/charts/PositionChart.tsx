@@ -167,8 +167,9 @@ export default function PositionChart() {
               dataKey={id}
               name={E1_ALGORITHM_LABELS[id]}
               stroke={E1_ALGORITHM_COLORS[id]}
-              strokeWidth={id === "raw" ? 2 : 2.5}
-              strokeOpacity={id === "raw" ? 0.78 : 1}
+              strokeWidth={id === "raw" ? 1.5 : id === "cm" ? 3.5 : 2.5}
+              strokeOpacity={id === "raw" ? 0.5 : 1}
+              strokeDasharray={id === "fixed" ? "5 2" : id === "tinyml" ? "3 2" : undefined}
               dot={false}
               connectNulls={false}
             />

@@ -29,25 +29,25 @@ function GaugeSection({
 }) {
   return (
     <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-      <p className="text-sm font-semibold text-[#111827]">{title}</p>
-      {subtitle && <p className="mt-0.5 text-xs text-[#94a3b8]">{subtitle}</p>}
+      <p className="text-xl font-bold text-[#111827]">{title}</p>
+      {subtitle && <p className="mt-1 text-sm text-[#94a3b8]">{subtitle}</p>}
       <div className="mt-4 flex flex-wrap items-end gap-4">
         <div>
-          <p className="text-xs text-[#64748b]">실측 평균</p>
-          <p className="tabular-nums text-3xl font-bold" style={{ color }}>
+          <p className="text-sm text-[#64748b]">실측 평균</p>
+          <p className="tabular-nums text-4xl font-black" style={{ color }}>
             {actual}
-            <span className="ml-1 text-base font-normal text-[#64748b]">{actualUnit}</span>
+            <span className="ml-1 text-lg font-normal text-[#64748b]">{actualUnit}</span>
           </p>
         </div>
         <div className="text-[#94a3b8]">
-          <p className="text-xs">예산</p>
-          <p className="tabular-nums text-lg font-semibold">
+          <p className="text-sm">예산</p>
+          <p className="tabular-nums text-xl font-semibold">
             {budget} {budgetUnit}
           </p>
         </div>
         <div>
-          <p className="text-xs text-[#64748b]">사용률</p>
-          <p className="tabular-nums text-2xl font-bold" style={{ color }}>
+          <p className="text-sm text-[#64748b]">사용률</p>
+          <p className="tabular-nums text-3xl font-black" style={{ color }}>
             {usagePct.toFixed(2)}%
           </p>
         </div>
@@ -61,12 +61,12 @@ function GaugeSection({
           }}
         />
       </div>
-      <div className="mt-1 flex justify-between text-xs text-[#94a3b8]">
+      <div className="mt-1 flex justify-between text-sm text-[#94a3b8]">
         <span>0</span>
         <span>예산 한도 ({budget} {budgetUnit})</span>
       </div>
       {note && (
-        <p className="mt-3 rounded-md bg-[#f8fafc] px-3 py-2 text-xs text-[#64748b]">{note}</p>
+        <p className="mt-3 rounded-md bg-[#f8fafc] px-3 py-2 text-sm text-[#64748b]">{note}</p>
       )}
     </div>
   );
@@ -87,11 +87,11 @@ function RQHeader({
 }) {
   return (
     <div className="border-l-4 pl-5" style={{ borderColor: color }}>
-      <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color }}>
+      <p className="text-base font-black uppercase tracking-[0.14em]" style={{ color }}>
         {rq}
       </p>
-      <h3 className="mt-1.5 text-xl font-bold text-[#111827]">{title}</h3>
-      <p className="mt-1.5 text-sm leading-6 text-[#4b5563]">{desc}</p>
+      <h3 className="mt-1.5 text-2xl font-black text-[#111827]">{title}</h3>
+      <p className="mt-1.5 text-base leading-7 text-[#4b5563]">{desc}</p>
     </div>
   );
 }
@@ -107,39 +107,29 @@ export default function ResultsPage() {
       {/* 헤더 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
         <p
-          className="text-xs font-semibold uppercase tracking-[0.14em]"
+          className="text-base font-bold uppercase tracking-[0.14em]"
           style={{ color: semanticColors.brand }}
         >
-          연구 결과
+          Research Results
         </p>
-        <h2 className="mt-2 text-2xl font-bold text-[#111827]">연구 질문별 결과</h2>
-        <p className="mt-2 text-sm text-[#64748b]">
+        <h2 className="mt-2 text-3xl font-black text-[#111827]">연구 질문별 결과</h2>
+        <p className="mt-2 text-base text-[#64748b]">
           논문 5.2절 RQ1~RQ3 결과 요약. 모든 수치는 논문 확정값.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-[#c7d2fe] bg-[#eef2ff] p-4">
-            <p className="text-sm font-bold" style={{ color: semanticColors.brand }}>RQ1 실시간성</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: semanticColors.brand }}>
-              TinyML 추론 {RT.tinymlActual_us} µs
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ1 실시간성</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">
+              TinyML 추론 <span style={{ color: semanticColors.brand }}>{RT.tinymlActual_us} µs</span>
             </p>
           </div>
-          <div
-            className="rounded-lg border p-4"
-            style={{ borderColor: algorithmStyles.cmAkf.border, backgroundColor: algorithmStyles.cmAkf.bg }}
-          >
-            <p className="text-sm font-bold" style={{ color: algorithmStyles.cmAkf.text }}>RQ2 적응 필터</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.cmAkf.text }}>
-              CM-AKF 개선 구간 강조
-            </p>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: algorithmStyles.cmAkf.text }}>RQ2 적응 필터</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">CM-AKF 개선 구간 강조</p>
           </div>
-          <div
-            className="rounded-lg border p-4"
-            style={{ borderColor: algorithmStyles.tinymlAkf.border, backgroundColor: algorithmStyles.tinymlAkf.bg }}
-          >
-            <p className="text-sm font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>RQ3 TinyML 대안성</p>
-            <p className="mt-1 text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>
-              온디바이스 R̂ 추론 비교
-            </p>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
+            <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>RQ3 TinyML 대안성</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">온디바이스 R̂ 추론 비교</p>
           </div>
         </div>
       </section>
@@ -191,39 +181,30 @@ export default function ResultsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div
-            className="rounded-lg border p-5 shadow-sm"
-            style={{
-              borderColor: algorithmStyles.tinymlAkf.border,
-              backgroundColor: algorithmStyles.tinymlAkf.bg,
-            }}
-          >
-            <p className="text-xs font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML 여유 마진</p>
-            <p className="tabular-nums mt-2 text-3xl font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML 여유 마진</p>
+            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
               {RT.tinymlMarginX}×
             </p>
-            <p className="mt-1 text-xs" style={{ color: algorithmStyles.tinymlAkf.text }}>
+            <p className="mt-1 text-sm text-[#64748b]">
               {RT.tinymlBudget_us.toLocaleString()} µs ÷ {RT.tinymlActual_us} µs
             </p>
           </div>
-          <div className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] p-5 shadow-sm">
-            <p className="text-xs font-semibold" style={{ color: semanticColors.positive }}>오버런 횟수</p>
-            <p className="tabular-nums mt-2 text-3xl font-bold" style={{ color: semanticColors.positive }}>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <p className="text-base font-bold" style={{ color: semanticColors.positive }}>오버런 횟수</p>
+            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.positive }}>
               {RT.overrunCount}
             </p>
-            <p className="mt-1 text-xs text-[#4b5563]">
+            <p className="mt-1 text-sm text-[#4b5563]">
               / {RT.totalCycles.toLocaleString()} 루프 (0%)
             </p>
           </div>
-          <div
-            className="rounded-lg border p-5 shadow-sm"
-            style={{ borderColor: "#c7d2fe", backgroundColor: "#eef2ff" }}
-          >
-            <p className="text-xs font-semibold" style={{ color: semanticColors.brand }}>루프 사용률</p>
-            <p className="tabular-nums mt-2 text-3xl font-bold" style={{ color: semanticColors.brand }}>
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>루프 사용률</p>
+            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.brand }}>
               {RT.mainLoopUsage}%
             </p>
-            <p className="mt-1 text-xs" style={{ color: semanticColors.brand }}>
+            <p className="mt-1 text-sm text-[#64748b]">
               {RT.mainLoopActual_ms} ms / {RT.mainLoopBudget_ms} ms 예산
             </p>
           </div>
@@ -244,7 +225,7 @@ export default function ResultsPage() {
         />
 
         <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-base">
             <thead className="bg-[#f8fafc]">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">시나리오</th>
@@ -300,7 +281,7 @@ export default function ResultsPage() {
         />
 
         <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
-          <table className="min-w-full text-sm">
+          <table className="min-w-full text-base">
             <thead className="bg-[#f8fafc]">
               <tr>
                 <th className="px-4 py-3 text-left font-semibold text-[#475569]">시나리오</th>

@@ -21,9 +21,9 @@ export const metadata: Metadata = {
 
 // additionalPaths: /upload 하위 흐름인 /dashboard도 분석하기 활성 처리
 const navItems = [
-  { href: "/upload", label: "분석하기", additionalPaths: ["/dashboard"] },
-  { href: "/results", label: "연구 결과", additionalPaths: ["/realtime"] },
-  { href: "/method", label: "방법/지표", additionalPaths: [] as string[] },
+  { href: "/upload", label: "Analyze", additionalPaths: ["/dashboard"] },
+  { href: "/results", label: "Results", additionalPaths: ["/realtime"] },
+  { href: "/method", label: "Method", additionalPaths: [] as string[] },
   { href: "/ablation", label: "Ablation", additionalPaths: [] as string[] },
 ];
 
