@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 const navItems = [
   { href: "/upload", label: "Analyze", additionalPaths: ["/dashboard"] },
   { href: "/results", label: "Results", additionalPaths: ["/realtime"] },
-  { href: "/method", label: "Method", additionalPaths: [] as string[] },
   { href: "/ablation", label: "Ablation", additionalPaths: [] as string[] },
+  { href: "/method", label: "Method", additionalPaths: [] as string[] },
 ];
 
 export default function RootLayout({

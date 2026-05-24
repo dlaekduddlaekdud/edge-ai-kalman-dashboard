@@ -1,8 +1,8 @@
 import { PAPER_RESULTS } from "@/lib/paper-results";
-import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
+import { ALGO_COLORS, semanticColors } from "@/lib/palette";
 
 const RT = PAPER_RESULTS.realtime;
-const E4 = PAPER_RESULTS.E4;
+const E4data = PAPER_RESULTS.E4;
 
 // ── 게이지 컴포넌트 ────────────────────────────────────────────────────────
 
@@ -96,11 +96,33 @@ function RQHeader({
   );
 }
 
+// ── RQ 핵심 결론 블록 ──────────────────────────────────────────────────────
+
+function RQConclusion({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className="rounded-lg border-l-4 bg-[#eff6ff] px-5 py-4"
+      style={{ borderColor: semanticColors.brand }}
+    >
+      <p
+        className="text-xs font-black uppercase tracking-[0.14em]"
+        style={{ color: semanticColors.brand }}
+      >
+        ✅ 핵심 결론
+      </p>
+      <p className="mt-2 text-base font-semibold leading-7 text-[#111827]">{children}</p>
+    </div>
+  );
+}
+
 // ── 페이지 ────────────────────────────────────────────────────────────────
 
 export default function ResultsPage() {
   const tinymlUsagePct = (RT.tinymlActual_us / RT.tinymlBudget_us) * 100;
   const mainLoopUsagePct = (RT.mainLoopActual_ms / RT.mainLoopBudget_ms) * 100;
+
+  // RQ2 답변에서 E3 개선율 계산
+  const e3CmVsFixedImprov = Math.round((1 - PAPER_RESULTS.E3.cm.rmse / PAPER_RESULTS.E3.fixed.rmse) * 1000) / 10;
 
   return (
     <div className="space-y-10">
@@ -120,15 +142,16 @@ export default function ResultsPage() {
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
             <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ1 실시간성</p>
             <p className="mt-1 text-sm font-semibold text-[#475569]">
-              TinyML 추론 <span style={{ color: semanticColors.brand }}>{RT.tinymlActual_us} µs</span>
+              TinyML 추론{" "}
+              <span style={{ color: semanticColors.brand }}>{RT.tinymlActual_us} µs</span>
             </p>
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: algorithmStyles.cmAkf.text }}>RQ2 적응 필터</p>
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ2 적응 필터</p>
             <p className="mt-1 text-sm font-semibold text-[#475569]">CM-AKF 개선 구간 강조</p>
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>RQ3 TinyML 대안성</p>
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>RQ3 TinyML 대안성</p>
             <p className="mt-1 text-sm font-semibold text-[#475569]">온디바이스 R̂ 추론 비교</p>
           </div>
         </div>
@@ -139,7 +162,7 @@ export default function ResultsPage() {
         <RQHeader
           rq="RQ1"
           title="TinyML-AKF는 MCU에서 실시간 실행 가능한가?"
-          desc={`STM32F446RE 200Hz 루프 예산 내 TinyML 추론 실시간성 검증. 실측은 E4 정적 실험(30분, ${E4.totalLoopCount.toLocaleString()} 루프) 기준.`}
+          desc={`STM32F446RE 200Hz 루프 예산 내 TinyML 추론 실시간성 검증. 실측은 E4 정적 실험(30분, ${E4data.totalLoopCount.toLocaleString()} 루프) 기준.`}
           color={semanticColors.brand}
         />
 
@@ -152,7 +175,7 @@ export default function ResultsPage() {
           }}
         >
           DWT 사이클 카운터 기준. {RT.dwtCycles.toLocaleString()} cycles @ {RT.cpuFreqMHz} MHz = {RT.dwtToMs} ms.
-          측정 횟수: {E4.tinymlInferCount.toLocaleString()}회.
+          측정 횟수: {E4data.tinymlInferCount.toLocaleString()}회.
         </div>
 
         <div className="grid gap-4 lg:grid-cols-2">
@@ -164,8 +187,8 @@ export default function ResultsPage() {
             budget={RT.tinymlBudget_us}
             budgetUnit="µs"
             usagePct={tinymlUsagePct}
-            color={ALGO_COLORS.tinyml}
-            note={`최대 ${E4.tinymlInferMax_us} µs · std ${E4.tinymlInferStd_us} µs · ${E4.tinymlInferCount.toLocaleString()}회 측정`}
+            color={semanticColors.brand}
+            note={`최대 ${E4data.tinymlInferMax_us} µs · std ${E4data.tinymlInferStd_us} µs · ${E4data.tinymlInferCount.toLocaleString()}회 측정`}
           />
           <GaugeSection
             title="메인 루프 실행 시간"
@@ -175,15 +198,15 @@ export default function ResultsPage() {
             budget={RT.mainLoopBudget_ms}
             budgetUnit="ms"
             usagePct={mainLoopUsagePct}
-            color={ALGO_COLORS.fixed}
-            note={`최대 ${E4.mainLoopMax_ms} ms · 오버런 ${RT.overrunCount}/${RT.totalCycles.toLocaleString()} (0%)`}
+            color={semanticColors.brand}
+            note={`최대 ${E4data.mainLoopMax_ms} ms · 오버런 ${RT.overrunCount}/${RT.totalCycles.toLocaleString()} (0%)`}
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-            <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML 여유 마진</p>
-            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>TinyML 여유 마진</p>
+            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.brand }}>
               {RT.tinymlMarginX}×
             </p>
             <p className="mt-1 text-sm text-[#64748b]">
@@ -191,8 +214,8 @@ export default function ResultsPage() {
             </p>
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-            <p className="text-base font-bold" style={{ color: semanticColors.positive }}>오버런 횟수</p>
-            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.positive }}>
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>오버런 횟수</p>
+            <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.brand }}>
               {RT.overrunCount}
             </p>
             <p className="mt-1 text-sm text-[#4b5563]">
@@ -213,6 +236,14 @@ export default function ResultsPage() {
         <div className="rounded-md border border-[#fde68a] bg-[#fffbeb] px-4 py-3 text-xs font-semibold text-[#78350f]">
           ⚠ {RT.note}
         </div>
+
+        <RQConclusion>
+          TinyML-AKF는 STM32F446RE 200Hz 루프에서 실시간 실행 가능하다.
+          평균 추론 {RT.tinymlActual_us}µs — 예산({RT.tinymlBudget_us}µs) 대비{" "}
+          {RT.tinymlMarginX}× 여유 확보.{" "}
+          {E4data.tinymlInferCount.toLocaleString()}회 전 측정 오버런 0건,
+          메인 루프 사용률 {RT.mainLoopUsage}%로 실시간 안정성 입증.
+        </RQConclusion>
       </section>
 
       {/* ── RQ2 ──────────────────────────────────────────────────────────── */}
@@ -221,7 +252,7 @@ export default function ResultsPage() {
           rq="RQ2"
           title="노이즈 변화 환경에서 적응 필터가 Fixed KF보다 정확한가?"
           desc="E2(벽 재질별) · E3(ToF 차단) · E5(미지 표면) 시나리오 RMSE 비교. CM-AKF와 TinyML-AKF 개선율 포함."
-          color={ALGO_COLORS.cm}
+          color={semanticColors.brand}
         />
 
         <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
@@ -238,11 +269,11 @@ export default function ResultsPage() {
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
               {[
-                { label: "E2 흰 우드락",   fixed: PAPER_RESULTS.E2.surfaces.white.fixed.rmse, cm: PAPER_RESULTS.E2.surfaces.white.cm.rmse, tinyml: PAPER_RESULTS.E2.surfaces.white.tinyml.rmse },
-                { label: "E2 검정 우드락", fixed: PAPER_RESULTS.E2.surfaces.black.fixed.rmse, cm: PAPER_RESULTS.E2.surfaces.black.cm.rmse, tinyml: PAPER_RESULTS.E2.surfaces.black.tinyml.rmse },
-                { label: "E2 투명 아크릴", fixed: PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse, cm: PAPER_RESULTS.E2.surfaces.acryl.cm.rmse, tinyml: PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse },
-                { label: "E3 ToF 차단",    fixed: PAPER_RESULTS.E3.fixed.rmse,                cm: PAPER_RESULTS.E3.cm.rmse,                tinyml: PAPER_RESULTS.E3.tinyml.rmse },
-                { label: "E5 미지 표면",   fixed: PAPER_RESULTS.E5.fixed.rmse,                cm: PAPER_RESULTS.E5.cm.rmse,                tinyml: PAPER_RESULTS.E5.tinyml.rmse },
+                { label: "E2 흰 우드락",    fixed: PAPER_RESULTS.E2.surfaces.white.fixed.rmse, cm: PAPER_RESULTS.E2.surfaces.white.cm.rmse,  tinyml: PAPER_RESULTS.E2.surfaces.white.tinyml.rmse },
+                { label: "E2 검정 우드락",  fixed: PAPER_RESULTS.E2.surfaces.black.fixed.rmse, cm: PAPER_RESULTS.E2.surfaces.black.cm.rmse,  tinyml: PAPER_RESULTS.E2.surfaces.black.tinyml.rmse },
+                { label: "E2 투명 아크릴",  fixed: PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse, cm: PAPER_RESULTS.E2.surfaces.acryl.cm.rmse,  tinyml: PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse },
+                { label: "E3 ToF 차단",     fixed: PAPER_RESULTS.E3.fixed.rmse,                cm: PAPER_RESULTS.E3.cm.rmse,                 tinyml: PAPER_RESULTS.E3.tinyml.rmse },
+                { label: "E5 미지 표면",    fixed: PAPER_RESULTS.E5.fixed.rmse,                cm: PAPER_RESULTS.E5.cm.rmse,                 tinyml: PAPER_RESULTS.E5.tinyml.rmse },
               ].map(({ label, fixed, cm, tinyml }) => {
                 const cmImprov = (((fixed - cm) / fixed) * 100).toFixed(1);
                 const tmlImprov = (((fixed - tinyml) / fixed) * 100).toFixed(1);
@@ -251,14 +282,24 @@ export default function ResultsPage() {
                 return (
                   <tr key={label}>
                     <td className="px-4 py-3 font-medium text-[#111827]">{label}</td>
-                    <td className="tabular-nums px-4 py-3 text-right" style={{ color: ALGO_COLORS.fixed }}>{fixed.toFixed(2)} mm</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{cm.toFixed(2)} mm</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: cmPositive ? semanticColors.positive : semanticColors.warning }}>
-                      {cmPositive ? "↓" : "↑"} {Math.abs(parseFloat(cmImprov)).toFixed(1)}%
+                    <td className="tabular-nums px-4 py-3 text-right text-[#111827]">
+                      {fixed.toFixed(2)} mm
                     </td>
-                    <td className="tabular-nums px-4 py-3 text-right" style={{ color: ALGO_COLORS.tinyml }}>{tinyml.toFixed(2)} mm</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: tmlPositive ? semanticColors.positive : semanticColors.warning }}>
-                      {tmlPositive ? "↓" : "↑"} {Math.abs(parseFloat(tmlImprov)).toFixed(1)}%
+                    <td className="tabular-nums px-4 py-3 text-right text-[#111827]">
+                      {cm.toFixed(2)} mm
+                    </td>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold bg-[#FDF2F8]">
+                      <span style={{ color: cmPositive ? "#9d174d" : semanticColors.warning }}>
+                        {cmPositive ? "↓" : "↑"} {Math.abs(parseFloat(cmImprov)).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td className="tabular-nums px-4 py-3 text-right text-[#111827]">
+                      {tinyml.toFixed(2)} mm
+                    </td>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold bg-[#F5F3FF]">
+                      <span style={{ color: tmlPositive ? "#5b21b6" : semanticColors.warning }}>
+                        {tmlPositive ? "↓" : "↑"} {Math.abs(parseFloat(tmlImprov)).toFixed(1)}%
+                      </span>
                     </td>
                   </tr>
                 );
@@ -267,8 +308,17 @@ export default function ResultsPage() {
           </table>
         </div>
         <p className="text-xs text-[#94a3b8]">
-          단위: mm (RMSE). 개선율 = (Fixed KF − Adaptive) / Fixed KF × 100. ↓ = 개선, ↑ = 저하.
+          단위: mm (RMSE). 개선율 = (Fixed KF − Adaptive) / Fixed KF × 100.{" "}
+          <span className="inline-block rounded px-1" style={{ background: "#FDF2F8" }}>연분홍</span> = CM-AKF 개선율,{" "}
+          <span className="inline-block rounded px-1" style={{ background: "#F5F3FF" }}>연보라</span> = TinyML-AKF 개선율. ↓ = 개선, ↑ = 저하.
         </p>
+
+        <RQConclusion>
+          CM-AKF와 TinyML-AKF 모두 Fixed KF 대비 노이즈 변화 환경에서 정확도가 우수하다.
+          E3 ToF 차단 구간: CM-AKF RMSE {PAPER_RESULTS.E3.cm.rmse}mm —
+          Fixed KF {PAPER_RESULTS.E3.fixed.rmse}mm 대비 {e3CmVsFixedImprov}% 감소.
+          단, E2 아크릴에서는 예외적으로 TinyML-AKF가 더 낮은 RMSE 달성.
+        </RQConclusion>
       </section>
 
       {/* ── RQ3 ──────────────────────────────────────────────────────────── */}
@@ -277,9 +327,10 @@ export default function ResultsPage() {
           rq="RQ3"
           title="TinyML-AKF는 CM-AKF의 실용적 대안인가?"
           desc="온디바이스 R̂ 추론 기반 TinyML-AKF와 CM-AKF의 시나리오별 RMSE 비교."
-          color={ALGO_COLORS.tinyml}
+          color={semanticColors.brand}
         />
 
+        {/* CM vs TinyML 직접 비교 */}
         <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
           <table className="min-w-full text-base">
             <thead className="bg-[#f8fafc]">
@@ -293,28 +344,41 @@ export default function ResultsPage() {
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
               {[
-                { label: "E1 정상 baseline",   cm: PAPER_RESULTS.E1.cm.rmse,                  tinyml: PAPER_RESULTS.E1.tinyml.rmse,                  note: "—" },
-                { label: "E2 흰 우드락",        cm: PAPER_RESULTS.E2.surfaces.white.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.white.tinyml.rmse,   note: "CM 우세" },
-                { label: "E2 검정 우드락",      cm: PAPER_RESULTS.E2.surfaces.black.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.black.tinyml.rmse,   note: "CM 우세" },
-                { label: "E2 투명 아크릴 ★",   cm: PAPER_RESULTS.E2.surfaces.acryl.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse,   note: "TinyML Best" },
-                { label: "E3 ToF 차단",         cm: PAPER_RESULTS.E3.cm.rmse,                  tinyml: PAPER_RESULTS.E3.tinyml.rmse,                  note: `TinyML R̂ 회복 ${PAPER_RESULTS.E3.recoverySpeedup}× 빠름` },
-                { label: "E4 정적 안정성",      cm: PAPER_RESULTS.E4.cm.rmse,                  tinyml: PAPER_RESULTS.E4.tinyml.rmse,                  note: "거의 동등" },
-                { label: "E5 미지 표면",         cm: PAPER_RESULTS.E5.cm.rmse,                  tinyml: PAPER_RESULTS.E5.tinyml.rmse,                  note: "CM 우세, 일반화 한계" },
-              ].map(({ label, cm, tinyml, note }) => {
+                { label: "E1 정상 baseline",   cm: PAPER_RESULTS.E1.cm.rmse,                  tinyml: PAPER_RESULTS.E1.tinyml.rmse,                  note: "—",                                                    star: false },
+                { label: "E2 흰 우드락",        cm: PAPER_RESULTS.E2.surfaces.white.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.white.tinyml.rmse,   note: "CM 우세",                                              star: false },
+                { label: "E2 검정 우드락",      cm: PAPER_RESULTS.E2.surfaces.black.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.black.tinyml.rmse,   note: "CM 우세",                                              star: false },
+                { label: "E2 투명 아크릴",      cm: PAPER_RESULTS.E2.surfaces.acryl.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse,   note: "TinyML Best",                                          star: true  },
+                { label: "E3 ToF 차단",         cm: PAPER_RESULTS.E3.cm.rmse,                  tinyml: PAPER_RESULTS.E3.tinyml.rmse,                  note: `TinyML R̂ 회복 ${PAPER_RESULTS.E3.recoverySpeedup}× 빠름`, star: false },
+                { label: "E4 정적 안정성",      cm: PAPER_RESULTS.E4.cm.rmse,                  tinyml: PAPER_RESULTS.E4.tinyml.rmse,                  note: "거의 동등",                                             star: false },
+                { label: "E5 미지 표면",         cm: PAPER_RESULTS.E5.cm.rmse,                  tinyml: PAPER_RESULTS.E5.tinyml.rmse,                  note: "CM 우세, 일반화 한계",                                   star: false },
+              ].map(({ label, cm, tinyml, note, star }) => {
                 const diff = tinyml - cm;
                 const diffStr = diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
                 const isBetter = tinyml < cm;
                 const diffColor = isBetter ? semanticColors.positive : diff > 1 ? semanticColors.warning : semanticColors.muted;
-                const isStarRow = label.includes("★");
                 return (
-                  <tr key={label} style={isStarRow ? { backgroundColor: algorithmStyles.tinymlAkf.bg } : undefined}>
-                    <td className="px-4 py-3 font-medium text-[#111827]">{label}</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{cm.toFixed(2)} mm</td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.tinyml }}>{tinyml.toFixed(2)} mm</td>
+                  <tr key={label} style={star ? { backgroundColor: "#fef2f2" } : undefined}>
+                    <td className="px-4 py-3 font-medium text-[#111827]">
+                      {label}
+                      {star && (
+                        <span className="ml-1.5 font-black" style={{ color: semanticColors.danger }}>★</span>
+                      )}
+                    </td>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>
+                      {cm.toFixed(2)} mm
+                    </td>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: ALGO_COLORS.tinyml }}>
+                      {tinyml.toFixed(2)} mm
+                    </td>
                     <td className="tabular-nums px-4 py-3 text-right font-semibold" style={{ color: diffColor }}>
                       {diffStr} mm
                     </td>
-                    <td className="px-4 py-3 text-xs text-[#64748b]">{note}</td>
+                    <td
+                      className="px-4 py-3 text-xs font-semibold"
+                      style={{ color: star ? semanticColors.danger : "#64748b" }}
+                    >
+                      {note}
+                    </td>
                   </tr>
                 );
               })}
@@ -322,87 +386,109 @@ export default function ResultsPage() {
           </table>
         </div>
         <p className="text-xs text-[#94a3b8]">
-          ★ E2 아크릴: 유일하게 TinyML-AKF가 CM-AKF보다 낮은 RMSE. 아크릴 고유 반사 패턴이 6-feature 모델에 유리하게 작용.
-          E3: RMSE는 CM이 낮지만 TinyML이 R̂ 회복 2.67× 빠름(60ms vs 160ms).
+          <span style={{ color: semanticColors.danger }} className="font-bold">★</span>{" "}
+          E2 아크릴: 유일하게 TinyML-AKF가 CM-AKF보다 낮은 RMSE. 아크릴 고유 반사 패턴이 6-feature 모델에 유리하게 작용.
+          E3: RMSE는 CM이 낮지만 TinyML이 R̂ 회복 {PAPER_RESULTS.E3.recoverySpeedup}× 빠름
+          ({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
         </p>
-      </section>
 
-      {/* ── 표 5-2 종합 ──────────────────────────────────────────────────── */}
-      <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#64748b]">논문 표 5-2</p>
-        <h3 className="mt-1 text-base font-semibold text-[#111827]">시나리오별 알고리즘 RMSE 종합 (mm)</h3>
-        <p className="mt-1 text-xs text-[#94a3b8]">논문 확정 수치. TinyML NIS는 innovation_cov 미제공으로 항상 —.</p>
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-[#f8fafc]">
-              <tr>
-                <th className="px-4 py-2.5 text-left font-semibold text-[#475569]">시나리오</th>
-                <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.raw }}>Raw</th>
-                <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.fixed }}>Fixed KF</th>
-                <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>CM-AKF</th>
-                <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.tinyml }}>TinyML-AKF</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#e2e8f0]">
-              <tr>
-                <td className="px-4 py-2.5 font-medium text-[#111827]">E1 — 정상 baseline</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E1.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E1.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E1.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E1.tinyml.rmse}</td>
-              </tr>
-              <tr className="bg-[#fafafa]">
-                <td className="px-4 py-2.5 text-[#475569]">E2 — 흰 우드락</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E2.surfaces.white.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E2.surfaces.white.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-[#475569]">E2 — 검정 우드락</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E2.surfaces.black.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E2.surfaces.black.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
-              </tr>
-              <tr className="bg-[#fafafa]">
-                <td className="px-4 py-2.5 text-[#475569]">
-                  E2 — 투명 아크릴
-                  <span className="ml-1 text-xs font-semibold" style={{ color: ALGO_COLORS.tinyml }}>★TinyML Best</span>
-                </td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E2.surfaces.acryl.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 font-medium text-[#111827]">E3 — ToF 차단 구간</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E3.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E3.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E3.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E3.tinyml.rmse}</td>
-              </tr>
-              <tr className="bg-[#fafafa]">
-                <td className="px-4 py-2.5 text-[#475569]">E4 — 정적 장기 안정성</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E4.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E4.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E4.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E4.tinyml.rmse}</td>
-              </tr>
-              <tr>
-                <td className="px-4 py-2.5 text-[#475569]">E5 — 미지 표면 일반화</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E5.raw.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E5.fixed.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>{PAPER_RESULTS.E5.cm.rmse}</td>
-                <td className="tabular-nums px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.tinyml }}>{PAPER_RESULTS.E5.tinyml.rmse}</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* 표 5-2 — 시나리오별 알고리즘 RMSE 종합 */}
+        <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
+          <p
+            className="text-base font-bold"
+            style={{ color: semanticColors.brand }}
+          >
+            시나리오별 알고리즘 RMSE 종합 (논문 표 5-2)
+          </p>
+          <p className="mt-1 text-xs text-[#94a3b8]">
+            논문 확정 수치. TinyML NIS는 innovation_cov 미제공으로 항상 —.
+          </p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-[#f8fafc]">
+                <tr>
+                  <th className="px-4 py-2.5 text-left font-semibold text-[#475569]">시나리오</th>
+                  <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.raw }}>Raw</th>
+                  <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.fixed }}>Fixed KF</th>
+                  <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.cm }}>CM-AKF</th>
+                  <th className="px-4 py-2.5 text-right font-semibold" style={{ color: ALGO_COLORS.tinyml }}>TinyML-AKF</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e2e8f0]">
+                <tr>
+                  <td className="px-4 py-2.5 font-medium text-[#111827]">E1 — 정상 baseline</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E1.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E1.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E1.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E1.tinyml.rmse}</td>
+                </tr>
+                <tr className="bg-[#fafafa]">
+                  <td className="px-4 py-2.5 text-[#475569]">E2 — 흰 우드락</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.white.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.white.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E2.surfaces.white.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.white.tinyml.rmse}</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2.5 text-[#475569]">E2 — 검정 우드락</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.black.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.black.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E2.surfaces.black.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.black.tinyml.rmse}</td>
+                </tr>
+                <tr style={{ backgroundColor: "#fef2f2" }}>
+                  <td className="px-4 py-2.5 text-[#475569]">
+                    E2 — 투명 아크릴
+                    <span
+                      className="ml-1.5 text-xs font-black"
+                      style={{ color: semanticColors.danger }}
+                    >
+                      ★TinyML Best
+                    </span>
+                  </td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.acryl.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E2.surfaces.acryl.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse}</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2.5 font-medium text-[#111827]">E3 — ToF 차단 구간</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E3.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E3.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E3.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E3.tinyml.rmse}</td>
+                </tr>
+                <tr className="bg-[#fafafa]">
+                  <td className="px-4 py-2.5 text-[#475569]">E4 — 정적 장기 안정성</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E4.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E4.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E4.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E4.tinyml.rmse}</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2.5 text-[#475569]">E5 — 미지 표면 일반화</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E5.raw.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E5.fixed.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right font-semibold text-[#111827]">{PAPER_RESULTS.E5.cm.rmse}</td>
+                  <td className="tabular-nums px-4 py-2.5 text-right text-[#111827]">{PAPER_RESULTS.E5.tinyml.rmse}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-xs text-[#94a3b8]">
+            단위: mm (RMSE). CM-AKF = Covariance-Matching AKF. TinyML-AKF = 온-디바이스 R̂ 추론.
+            E3 TinyML {PAPER_RESULTS.E3.recoverySpeedup}× 빠른 R̂ 회복 ({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
+          </p>
         </div>
-        <p className="mt-3 text-xs text-[#94a3b8]">
-          단위: mm (RMSE). CM-AKF = Covariance-Matching AKF. TinyML-AKF = 온-디바이스 R̂ 추론.
-          E3 TinyML 2.7× 빠른 R̂ 회복 (160ms → 60ms).
-        </p>
+
+        <RQConclusion>
+          TinyML-AKF는 CM-AKF의 실용적 대안 가능성을 보이나 완전한 대체는 어렵다.
+          E2 아크릴에서 유일하게 CM-AKF 대비 낮은 RMSE 달성,
+          E3 ToF 차단 해제 후 R̂ 회복 {PAPER_RESULTS.E3.recoverySpeedup}× 빠름(
+          {PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
+          단, 3-feature 모델은 고반사 표면에서 RMSE 97mm 폭발 —{" "}
+          6-feature 모델 채택이 실용화의 필수 조건.
+        </RQConclusion>
       </section>
     </div>
   );

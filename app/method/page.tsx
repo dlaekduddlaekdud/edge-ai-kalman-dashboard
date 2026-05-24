@@ -1,11 +1,4 @@
-import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
-
-function metricColor(name: string): string {
-  if (name.includes("TinyML")) return ALGO_COLORS.tinyml;
-  if (name.includes("NIS") || name === "R 평균" || name.includes("R Drift")) return ALGO_COLORS.cm;
-  if (name.includes("Tconv") || name.includes("추론")) return ALGO_COLORS.fixed;
-  return ALGO_COLORS.raw;
-}
+import { semanticColors } from "@/lib/palette";
 
 export default function MethodPage() {
   return (
@@ -28,11 +21,11 @@ export default function MethodPage() {
             <p className="mt-1 text-sm font-semibold text-[#475569]">25/28컬럼 schema</p>
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: algorithmStyles.cmAkf.text }}>Metrics</p>
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>Metrics</p>
             <p className="mt-1 text-sm font-semibold text-[#475569]">RMSE · NIS · Tconv</p>
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
-            <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML</p>
+            <p className="text-base font-bold" style={{ color: semanticColors.brand }}>TinyML</p>
             <p className="mt-1 text-sm font-semibold text-[#475569]">R̂ label tracking</p>
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
@@ -110,7 +103,7 @@ export default function MethodPage() {
                 },
               ].map(({ name, def, impl }) => (
                 <tr key={name}>
-                  <td className="px-4 py-3 font-semibold" style={{ color: metricColor(name) }}>
+                  <td className="px-4 py-3 font-semibold" style={{ color: semanticColors.brand }}>
                     {name}
                   </td>
                   <td className="px-4 py-3 font-mono text-xs text-[#475569]">{def}</td>
@@ -140,7 +133,7 @@ export default function MethodPage() {
 
       {/* CSV 스키마 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-xl font-bold" style={{ color: ALGO_COLORS.tinyml }}>
+        <h3 className="text-xl font-bold" style={{ color: semanticColors.brand }}>
           CSV 스키마
         </h3>
         <div className="mt-4 space-y-3 text-base text-[#475569]">
@@ -151,7 +144,7 @@ export default function MethodPage() {
             <p className="mt-1 text-sm text-[#475569]">공통 12 + Fixed KF 6 + CM-AKF 7</p>
           </div>
           <div className="rounded-md border border-[#d9e0ea] bg-white p-4">
-            <p className="font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
+            <p className="font-bold" style={{ color: semanticColors.brand }}>
               28컬럼 (+ TinyML-AKF)
             </p>
             <p className="mt-1 text-sm text-[#475569]">
@@ -166,7 +159,7 @@ export default function MethodPage() {
 
       {/* 필터 파라미터 */}
       <section className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <h3 className="text-xl font-bold" style={{ color: ALGO_COLORS.cm }}>
+        <h3 className="text-xl font-bold" style={{ color: semanticColors.brand }}>
           필터 파라미터 및 구현 세부사항
         </h3>
         <div className="mt-4 overflow-x-auto">
