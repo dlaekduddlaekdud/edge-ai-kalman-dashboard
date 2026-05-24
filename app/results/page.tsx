@@ -291,8 +291,8 @@ export default function ResultsPage() {
                     <td className="tabular-nums px-4 py-3 text-right text-[#111827]">
                       {cm.toFixed(2)} mm
                     </td>
-                    <td className="tabular-nums px-4 py-3 text-right font-semibold bg-[#FDF2F8]">
-                      <span style={{ color: cmPositive ? "#9d174d" : semanticColors.warning }}>
+                    <td className="tabular-nums px-4 py-3 text-right font-semibold bg-[#FFF7ED]">
+                      <span style={{ color: cmPositive ? "#C2410C" : semanticColors.warning }}>
                         {cmPositive ? "↓" : "↑"} {Math.abs(parseFloat(cmImprov)).toFixed(1)}%
                       </span>
                     </td>
@@ -312,7 +312,7 @@ export default function ResultsPage() {
         </div>
         <p className="text-xs text-[#94a3b8]">
           단위: mm (RMSE). 개선율 = (Fixed KF − Adaptive) / Fixed KF × 100.{" "}
-          <span className="inline-block rounded px-1" style={{ background: "#FDF2F8" }}>연분홍</span> = CM-AKF 개선율,{" "}
+          <span className="inline-block rounded px-1" style={{ background: "#FFF7ED" }}>연주황</span> = CM-AKF 개선율,{" "}
           <span className="inline-block rounded px-1" style={{ background: "#F5F3FF" }}>연보라</span> = TinyML-AKF 개선율. ↓ = 개선, ↑ = 저하.
         </p>
 
