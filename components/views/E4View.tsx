@@ -24,15 +24,15 @@ function GaugeCard({
 }) {
   return (
     <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-      <p className="text-xl font-bold text-[#64748b]">{title}</p>
+      <p className="text-base font-bold text-[#64748b]">{title}</p>
       <div className="mt-3 flex items-end justify-between">
         <div>
-          <p className="text-4xl font-black tracking-tight text-[#111827]">{actual}</p>
-          <p className="text-lg font-semibold text-[#64748b]">실측 / 예산 {budget}</p>
+          <p className="text-3xl font-black tracking-tight text-[#111827]">{actual}</p>
+          <p className="text-base font-semibold text-[#64748b]">실측 / 예산 {budget}</p>
         </div>
         <div className="text-right">
-          <p className="text-3xl font-black" style={{ color }}>{usagePct.toFixed(1)}%</p>
-          <p className="text-lg font-semibold text-[#64748b]">예산 사용</p>
+          <p className="text-2xl font-black" style={{ color }}>{usagePct.toFixed(1)}%</p>
+          <p className="text-base font-semibold text-[#64748b]">예산 사용</p>
         </div>
       </div>
       {/* Progress bar */}
@@ -45,7 +45,7 @@ function GaugeCard({
           }}
         />
       </div>
-      {note && <p className="mt-3 text-lg font-medium text-[#64748b]">{note}</p>}
+      {note && <p className="mt-3 text-sm font-medium text-[#64748b]">{note}</p>}
     </div>
   );
 }
@@ -53,10 +53,10 @@ function GaugeCard({
 function StatRow({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <div className="flex items-center justify-between py-3">
-      <span className="text-xl font-medium text-[#475569]">{label}</span>
-      <span className="text-xl font-bold text-[#111827]">
+      <span className="text-base font-medium text-[#475569]">{label}</span>
+      <span className="text-base font-bold text-[#111827]">
         {value}
-        {unit && <span className="ml-1 text-lg font-normal text-[#94a3b8]">{unit}</span>}
+        {unit && <span className="ml-1 text-sm font-normal text-[#94a3b8]">{unit}</span>}
       </span>
     </div>
   );
@@ -70,11 +70,11 @@ export default function E4View() {
     <div className="space-y-6">
       {/* 개요 카드 */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
-        <p className="text-xl font-black text-[#111827]">
+        <p className="text-base font-black text-[#111827]">
           E4 — 정적 장기 안정성
         </p>
-        <p className="mt-2 text-lg leading-7 text-[#475569]">{E4.description}</p>
-        <div className="mt-4 flex flex-wrap gap-3 text-base">
+        <p className="mt-2 text-base leading-7 text-[#475569]">{E4.description}</p>
+        <div className="mt-4 flex flex-wrap gap-3 text-sm">
           <span className="rounded-full border border-[#e2e8f0] bg-[#f8fafc] px-3 py-1 text-[#64748b]">
             {E4.runs}run
           </span>
@@ -90,45 +90,45 @@ export default function E4View() {
       {/* 위치 추정 정밀도 카드 */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
         <div className="border-b border-[#f1f5f9] px-6 py-4">
-          <h3 className="text-2xl font-black text-[#111827]">위치 추정 정밀도 (정적 500mm)</h3>
-          <p className="mt-1 text-base font-medium text-[#64748b]">
+          <h3 className="text-lg font-black text-[#111827]">위치 추정 정밀도 (정적 500mm)</h3>
+          <p className="mt-1 text-sm font-medium text-[#64748b]">
             정적 실험이므로 RMSEss / Tconv 미적용. RMSE/MAE/NIS 기준.
           </p>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full text-lg">
+          <table className="min-w-full text-sm">
             <thead className="bg-[#f8fafc]">
               <tr>
-                <th className="px-5 py-4 text-left font-bold text-[#475569]">알고리즘</th>
-                <th className="px-5 py-4 text-right font-bold text-[#475569]">RMSE (mm)</th>
-                <th className="px-5 py-4 text-right font-bold text-[#475569]">MAE (mm)</th>
-                <th className="px-5 py-4 text-right font-bold text-[#475569]">NIS 95%</th>
+                <th className="px-5 py-3 text-left font-bold text-[#475569]">알고리즘</th>
+                <th className="px-5 py-3 text-right font-bold text-[#475569]">RMSE (mm)</th>
+                <th className="px-5 py-3 text-right font-bold text-[#475569]">MAE (mm)</th>
+                <th className="px-5 py-3 text-right font-bold text-[#475569]">NIS 95%</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e2e8f0]">
               <tr>
-                <td className="px-5 py-4 text-[#64748b]">Raw ToF</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.raw.rmse}</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.raw.mae}</td>
-                <td className="px-5 py-4 text-right text-[#94a3b8]">—</td>
+                <td className="px-5 py-3 text-[#64748b]">Raw ToF</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.raw.rmse}</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.raw.mae}</td>
+                <td className="px-5 py-3 text-right text-[#94a3b8]">—</td>
               </tr>
               <tr className="bg-[#fafafa]">
-                <td className="px-5 py-4 text-[#111827]">Fixed KF</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.fixed.rmse}</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.fixed.mae}</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.fixed.nis != null ? `${(E4.fixed.nis * 100).toFixed(1)}%` : "—"}</td>
+                <td className="px-5 py-3 text-[#111827]">Fixed KF</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.fixed.rmse}</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.fixed.mae}</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.fixed.nis != null ? `${(E4.fixed.nis * 100).toFixed(1)}%` : "—"}</td>
               </tr>
               <tr>
-                <td className="px-5 py-4 font-semibold text-[#111827]">CM-AKF</td>
-                <td className="px-5 py-4 text-right font-semibold text-[#111827]">{E4.cm.rmse}</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.cm.mae}</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.cm.nis != null ? `${(E4.cm.nis * 100).toFixed(1)}%` : "—"}</td>
+                <td className="px-5 py-3 font-semibold text-[#111827]">CM-AKF</td>
+                <td className="px-5 py-3 text-right font-semibold text-[#111827]">{E4.cm.rmse}</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.cm.mae}</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.cm.nis != null ? `${(E4.cm.nis * 100).toFixed(1)}%` : "—"}</td>
               </tr>
               <tr className="bg-[#fafafa]">
-                <td className="px-5 py-4" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML-AKF</td>
-                <td className="px-5 py-4 text-right font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>{E4.tinyml.rmse}</td>
-                <td className="px-5 py-4 text-right font-semibold">{E4.tinyml.mae}</td>
-                <td className="px-5 py-4 text-right text-[#94a3b8]">—</td>
+                <td className="px-5 py-3" style={{ color: algorithmStyles.tinymlAkf.text }}>TinyML-AKF</td>
+                <td className="px-5 py-3 text-right font-semibold" style={{ color: algorithmStyles.tinymlAkf.text }}>{E4.tinyml.rmse}</td>
+                <td className="px-5 py-3 text-right font-semibold">{E4.tinyml.mae}</td>
+                <td className="px-5 py-3 text-right text-[#94a3b8]">—</td>
               </tr>
             </tbody>
           </table>
@@ -163,18 +163,18 @@ export default function E4View() {
             backgroundColor: algorithmStyles.tinymlAkf.bg,
           }}
         >
-          <p className="text-xl font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
+          <p className="text-base font-bold" style={{ color: algorithmStyles.tinymlAkf.text }}>
             TinyML 추론 여유 마진
           </p>
           <div className="mt-4 text-center">
-            <p className="text-base text-[#94a3b8]">
+            <p className="text-sm text-[#94a3b8]">
               {TINYML_BUDGET_US.toLocaleString()} µs ÷ {E4.tinymlInferMean_us} µs
             </p>
-            <p className="mt-2 text-6xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
+            <p className="mt-2 text-5xl font-black" style={{ color: algorithmStyles.tinymlAkf.text }}>
               {(TINYML_BUDGET_US / E4.tinymlInferMean_us).toFixed(1)}×
             </p>
           </div>
-          <p className="mt-4 text-base leading-6 text-[#4b5563]">
+          <p className="mt-4 text-sm leading-6 text-[#4b5563]">
             0.5ms 목표 대비 사용률 {tinymlUsagePct.toFixed(2)}%.
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function E4View() {
 
       {/* R̂ drift (cm_R 30분 장기 안정성) */}
       <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
-        <p className="text-2xl font-bold text-[#111827]">
+        <p className="text-lg font-bold text-[#111827]">
           CM_R 30분 DRIFT 안정성
         </p>
         <div className="mt-4 divide-y divide-[#f1f5f9]">
@@ -191,16 +191,16 @@ export default function E4View() {
           <StatRow label="총 측정 루프" value={E4.totalLoopCount.toLocaleString()} unit="cycles" />
         </div>
         <div className="mt-3 rounded-md bg-[#f3f4f6] px-4 py-3">
-          <p className="text-xl font-bold text-[#111827]">
+          <p className="text-base font-bold text-[#111827]">
             CV = {E4.cmRDriftCV}% → 30분 연속 동작에서 R̂ 안정적
           </p>
-          <p className="mt-1 text-lg text-[#6b7280]">
+          <p className="mt-1 text-sm text-[#6b7280]">
             CV ≤ 5%: 안정. 매우 낮은 수준의 장기 드리프트 확인.
           </p>
         </div>
       </div>
 
-      <div className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-base text-[#64748b]">
+      <div className="rounded-md border border-[#e2e8f0] bg-[#f8fafc] px-4 py-3 text-sm text-[#64748b]">
         ⚠️ 실측값은 E4 정적 실험(30분) 기준. 동적 주행 조건에서 추론 시간 및 루프 타이밍이 달라질 수 있음.
       </div>
     </div>
