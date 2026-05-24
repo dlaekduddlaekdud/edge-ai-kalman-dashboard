@@ -20,10 +20,10 @@ export const algorithmStyles = {
     chart: "#2563EB",
   },
   cmAkf: {
-    bg: "#FDF2F8",
-    text: "#9D174D",
-    border: "#FBCFE8",
-    chart: "#EC4899",  // pink-500 — 박스 bullet과 차트 라인을 동일 색으로 통일
+    bg: "#FFF7ED",    // orange-50
+    text: "#C2410C",  // orange-700
+    border: "#FED7AA", // orange-200
+    chart: "#F97316",  // orange-500 — 박스 bullet과 차트 라인 동일 색
   },
   tinymlAkf: {
     bg: "#F5F3FF",
@@ -86,6 +86,6 @@ export const ALGO_COLORS = {
 export const CHART_COLORS = {
   raw:    "#9CA3AF",  // gray-400  — 얇고 흐린 기준선
   fixed:  "#3B82F6",  // blue-500  — 파란 라인
-  cm:     "#EC4899",  // algorithmStyles.cmAkf.chart — 박스 bullet 색과 동일한 pink-500
+  cm:     "#F97316",  // algorithmStyles.cmAkf.chart — orange-500, 박스 bullet 색과 동일
   tinyml: "#A78BFA",  // violet-400 — 보라 라인
 } as const;
