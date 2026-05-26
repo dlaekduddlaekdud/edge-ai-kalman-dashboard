@@ -23,7 +23,7 @@ const KPI_CARDS = [
     value: `${e3RmseImprovement}%`,
     color: NAVY,
     sub: `Raw ${PAPER_RESULTS.E3.raw.rmse} mm → CM-AKF ${PAPER_RESULTS.E3.cm.rmse} mm`,
-    detail: "ToF 차단 구간에서 적응형 필터가 고정 파라미터 대비 달성한 오차 감소율",
+    detail: "ToF 차단 구간에서 CM-AKF가 Raw 센서값 대비 달성한 오차 감소율",
   },
   {
     label: "TinyML 추론 마진",
