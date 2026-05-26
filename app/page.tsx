@@ -30,7 +30,7 @@ const KPI_CARDS = [
     value: `${PAPER_RESULTS.realtime.tinymlMarginX}×`,
     color: NAVY,
     sub: `${PAPER_RESULTS.realtime.tinymlActual_us} µs / ${PAPER_RESULTS.realtime.tinymlBudget_us} µs 목표`,
-    detail: "200 Hz 루프 500 µs 예산 대비 실측 평균 추론 시간 여유 (오버런 0건)",
+    detail: "TinyML 추론 목표 500 µs 대비 실측 평균 추론 시간 여유 (메인 루프 오버런 0건)",
   },
   {
     label: "총 실험 프레임",
@@ -72,7 +72,7 @@ const pages = [
     title: "Results",
     badge: "RQ1~3",
     description:
-      "RQ1 실시간성, RQ2 적응 필터 우위, RQ3 TinyML 대안 가능성을 시나리오별 결과로 정리합니다.",
+      "RQ1 실시간성, RQ2 측정 노이즈 적응성, RQ3 다변량 feature 활용의 정당성을 시나리오별 결과로 정리합니다.",
   },
   {
     href: "/method",

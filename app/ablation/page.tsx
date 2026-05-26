@@ -74,7 +74,7 @@ function Table4_10Card() {
         </table>
       </div>
       <div className="border-t border-[#f1f5f9] px-6 py-3 text-xs text-[#64748b]">
-        6-feature: MAE_R 절댓값 낮음, MAPE_R 높음 (cm_R 스케일 의존). 3-feature ablation 시 MAE_R +8.5%, 파라미터 −19%.
+        f32 MAE_R는 6-feature가 낮고, f32 MAPE_R는 3-feature가 낮음. INT8 결과와 MAPE_R는 cm_R 스케일 의존성 때문에 우위 단정 없이 해석.
       </div>
     </div>
   );
@@ -135,7 +135,7 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
                   <p className="font-medium text-[#111827]">{row.scenario}</p>
                   {row.diverged && (
                     <p className="text-xs font-semibold" style={{ color: semanticColors.danger }}>
-                      ⚠ 3f 모델 폭발
+                      ⚠ 3f 성능 열화
                     </p>
                   )}
                 </td>
@@ -190,7 +190,7 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
         <p>단위: mm (위치 RMSE). CM vs 3f: 양수 = 3f가 CM보다 높음 (성능 열화).</p>
         <p>
           ⚠ E2 acryl run03: 3-feature 모델{" "}
-          {(rows.find((r) => r.scenario.toLowerCase().includes("acryl") && r.scenario.includes("03"))?.tinyml3f?.toFixed(0) ?? "97")}mm RMSE로 폭발 — signal_rate 제거의 위험성 입증.
+          {(rows.find((r) => r.scenario.toLowerCase().includes("acryl") && r.scenario.includes("03"))?.tinyml3f?.toFixed(0) ?? "97")}mm RMSE로 열화 — 잔차 외 feature 보완 필요성 확인.
         </p>
         <p>{TABLE_5_3.note}</p>
       </div>
@@ -293,7 +293,7 @@ export default function AblationPage() {
           </p>
         </div>
         <div className="rounded-md border border-[#d9e0ea] px-4 py-2 text-sm font-semibold text-[#64748b]">
-          6-feature: tof_dist, residual, residual_var, residual_mean, signal_rate, range_status |
+          6-feature: residual, residual_var, residual_mean, sensor_disagreement, measurement_rate(valid ratio), signal_rate |
           3-feature: residual, residual_var, residual_mean
         </div>
         <Table4_10Card />
@@ -310,7 +310,7 @@ export default function AblationPage() {
           </p>
         </div>
         <div className="rounded-md border border-[#fecaca] bg-[#fef2f2] px-4 py-2 text-sm font-semibold text-[#991b1b]">
-          ⚠ E2 아크릴: 3-feature 모델 97mm RMSE 폭발 — signal_rate 제거 시 고반사 표면에서 위험.
+          ⚠ E2 아크릴: 3-feature 모델 97mm RMSE 열화 — 잔차 통계 외 feature 보완 필요.
           CM-AKF 대비 가중 평균 RMSE +24mm 열화.
         </div>
         <Table5_3Card state={holdoutState} />
@@ -323,7 +323,7 @@ export default function AblationPage() {
           본 ablation 결과는 잔차 통계 외 feature(F4·F6)의 기여가 <strong>시나리오 의존적</strong>임을 보인다.
           E1·E2 우드락처럼 학습 분포 내 정상 변동에서는 3-feature로도 충분하지만,
           E2 아크릴·E3와 같이 광학적 특이 표면 또는 동적 outlier 환경에서는
-          signal_rate 등 multi-modal feature가 필수임이 정량적으로 확인된다{" "}
+          sensor_disagreement, signal_rate 등 multi-modal feature의 보완 필요성이 정량적으로 확인된다{" "}
           <a href="/results#rq3" className="font-semibold underline underline-offset-2">→ RQ3 상세 결과</a>.
         </p>
       </section>

@@ -45,7 +45,7 @@ const barData = [
 const SURFACES: { key: E2Surface; label: string; accent?: string }[] = [
   { key: "white", label: "흰 우드락" },
   { key: "black", label: "검정 우드락" },
-  { key: "acryl",  label: "투명 아크릴", accent: "★ TinyML Best" },
+  { key: "acryl",  label: "투명 아크릴", accent: "근소한 TinyML 우세" },
 ];
 
 interface E2ViewProps {
@@ -143,7 +143,7 @@ export default function E2View({
               id: "tinyml" as const,
               label: "TinyML-AKF",
               value: `${sel.tinyml.rmse} mm`,
-              sub: `CM ${Number(tinymlVsCm) > 0 ? `+${tinymlVsCm}` : tinymlVsCm} mm${currentSurface === "acryl" ? " · Best" : ""}`,
+              sub: `CM ${Number(tinymlVsCm) > 0 ? `+${tinymlVsCm}` : tinymlVsCm} mm${currentSurface === "acryl" ? " · 근소" : ""}`,
             },
           ].map((card) => (
             <div
@@ -165,7 +165,7 @@ export default function E2View({
         <div className="mt-5 rounded-md bg-[#f8fafc] px-5 py-4 text-lg font-semibold leading-8 text-[#374151]">
           {currentSurface === "white" && "흰 우드락: 높은 signal_rate(~15.5 MCps) — CM-AKF가 TinyML보다 낮은 RMSE. R̂ 단조성 유지 확인."}
           {currentSurface === "black" && "검정 우드락: 낮은 signal_rate(~11 MCps) — CM-AKF 우위. TinyML은 저반사 환경에서 약간 성능 저하."}
-          {currentSurface === "acryl" && "투명 아크릴: 고유 반사 패턴 — TinyML-AKF가 CM-AKF보다 낮은 RMSE. 6-feature 모델이 아크릴 패턴에 유리. 유일한 TinyML Best 케이스."}
+          {currentSurface === "acryl" && "투명 아크릴: TinyML-AKF가 CM-AKF보다 근소하게 낮은 RMSE를 보였으나, 차이는 약 0.21 mm로 두 알고리즘은 거의 동등한 수준."}
         </div>
 
         <div className="mt-3 flex flex-wrap gap-4 text-base font-medium text-[#4b5563]">
@@ -220,7 +220,7 @@ export default function E2View({
           </ResponsiveContainer>
         </div>
         <p className="mt-2 text-xs text-[#4b5563]">
-          ★ 투명 아크릴: TinyML-AKF({E2.surfaces.acryl.tinyml.rmse}mm)가 CM-AKF({E2.surfaces.acryl.cm.rmse}mm)보다 낮음
+          투명 아크릴: TinyML-AKF({E2.surfaces.acryl.tinyml.rmse}mm)가 CM-AKF({E2.surfaces.acryl.cm.rmse}mm)보다 약 0.21mm 낮아 거의 동등한 수준.
         </p>
       </div>
 
@@ -256,7 +256,7 @@ export default function E2View({
                   >
                     <td className="px-4 py-3 font-medium text-[#111827]">
                       {surfaceLabel}
-                      {key === "acryl" && <span className="ml-1.5 text-xs font-semibold" style={{ color: E1_ALGORITHM_COLORS.tinyml }}>★TinyML Best</span>}
+                      {key === "acryl" && <span className="ml-1.5 text-xs font-semibold" style={{ color: E1_ALGORITHM_COLORS.tinyml }}>근소한 TinyML 우세</span>}
                       {isSelected && <span className="ml-2 text-xs text-[#111827]">← 선택됨</span>}
                     </td>
                     <td className="px-4 py-3 text-right text-[#475569]">{s.raw.rmse}</td>

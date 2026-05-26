@@ -2,8 +2,10 @@ import { PAPER_RESULTS } from "@/lib/paper-results";
 import { ALGO_COLORS, algorithmStyles } from "@/lib/palette";
 
 const E4 = PAPER_RESULTS.E4;
+const RT = PAPER_RESULTS.realtime;
 const TINYML_BUDGET_US = PAPER_RESULTS.realtime.tinymlBudget_us; // 500 µs
 const MAIN_LOOP_BUDGET_MS = PAPER_RESULTS.realtime.mainLoopBudget_ms; // 5 ms
+const MAIN_LOOP_MARGIN_MS = PAPER_RESULTS.realtime.mainLoopMargin_ms; // 4.5 ms margin
 
 function GaugeCard({
   title,
@@ -64,7 +66,7 @@ function StatRow({ label, value, unit }: { label: string; value: string; unit?: 
 
 export default function E4View() {
   const tinymlUsagePct = (E4.tinymlInferMean_us / TINYML_BUDGET_US) * 100;
-  const mainLoopUsagePct = (E4.mainLoopMean_ms / MAIN_LOOP_BUDGET_MS) * 100;
+  const mainLoopUsagePct = RT.mainLoopUsage;
 
   return (
     <div className="space-y-6">
@@ -149,11 +151,11 @@ export default function E4View() {
         <GaugeCard
           title="메인 루프 시간"
           actual={`${E4.mainLoopMean_ms} ms`}
-          budget={`${MAIN_LOOP_BUDGET_MS} ms`}
+          budget={`${MAIN_LOOP_MARGIN_MS} ms margin`}
           usagePct={mainLoopUsagePct}
           unit="ms"
           color={ALGO_COLORS.fixed}
-          note={`최대 ${E4.mainLoopMax_ms} ms · 오버런 ${E4.overrunCount}/${E4.totalLoopCount.toLocaleString()}`}
+          note={`전체 루프 예산 ${MAIN_LOOP_BUDGET_MS} ms · 최대 ${E4.mainLoopMax_ms} ms · 오버런 ${E4.overrunCount}/${E4.totalLoopCount.toLocaleString()}`}
         />
         {/* TinyML 여유 마진 compact */}
         <div
