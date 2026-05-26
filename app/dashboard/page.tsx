@@ -127,7 +127,7 @@ export default function DashboardPage() {
               <tr className="bg-[#fafafa]">
                 <td className="px-4 py-2.5 text-[#475569]">
                   E2 — 투명 아크릴
-                  <span className="ml-1 text-xs" style={{ color: ALGO_COLORS.tinyml }}>★TinyML Best</span>
+                  <span className="ml-1 text-xs" style={{ color: ALGO_COLORS.tinyml }}>근소한 TinyML 우세</span>
                 </td>
                 <td className="px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.raw }}>{PAPER_RESULTS.E2.surfaces.acryl.raw.rmse}</td>
                 <td className="px-4 py-2.5 text-right" style={{ color: ALGO_COLORS.fixed }}>{PAPER_RESULTS.E2.surfaces.acryl.fixed.rmse}</td>

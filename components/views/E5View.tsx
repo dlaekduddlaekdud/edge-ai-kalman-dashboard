@@ -154,8 +154,8 @@ export default function E5View() {
         <h3 className="text-xl font-bold text-[#111827]">성능 순위 (RMSE 기준)</h3>
         <div className="mt-4 space-y-3">
           {[
-            { rank: 1, id: "cm" as const,     label: "CM-AKF",     rmse: E5.cm.rmse,     note: "미지 표면 최적 적응" },
-            { rank: 2, id: "tinyml" as const, label: "TinyML-AKF", rmse: E5.tinyml.rmse, note: `CM보다 +${tinymlVsCm}mm (일반화 한계)` },
+            { rank: 1, id: "cm" as const,     label: "CM-AKF",     rmse: E5.cm.rmse,     note: "미지 표면 적응" },
+            { rank: 2, id: "tinyml" as const, label: "TinyML-AKF", rmse: E5.tinyml.rmse, note: `CM보다 +${tinymlVsCm}mm, 거의 동등` },
             { rank: 3, id: "fixed" as const,  label: "Fixed KF",   rmse: E5.fixed.rmse,  note: "고정 R — 표면 변화 미적응" },
             { rank: 4, id: "raw" as const,    label: "Raw ToF",    rmse: E5.raw.rmse,    note: "필터 없음" },
           ].map(({ rank, id, label, rmse, note }) => (
@@ -181,9 +181,9 @@ export default function E5View() {
             <p className="text-3xl font-black" style={{ color: semanticColors.danger }}>{E5.run5CmRMax} mm²</p>
           </div>
           <div className="flex-1 text-base text-[#374151]">
-            Run 5에서 cm_R이 {E5.run5CmRMax}mm²로 폭발적 상승.
-            회색 우드락 특유의 반사 특성이 CM-AKF R̂ 추정에 급격한 변화를 유발한 것으로 추정.
-            TinyML은 이 피크를 학습 데이터에서 본 적 없어 추적 어려움.
+            Run 5에서 cm_R이 {E5.run5CmRMax}mm²로 상승했으나 위치 추정은 정상 범위에 머물렀습니다.
+            회색 단면 우드락의 반사 특성은 학습 표면과 다르지만,
+            TinyML-AKF는 R clamp 한계에 도달하지 않고 발산 없이 동작했습니다.
           </div>
         </div>
       </div>
@@ -202,12 +202,12 @@ export default function E5View() {
           </div>
           <div className="flex items-center justify-between py-3">
             <span className="text-base text-[#475569]">차이</span>
-            <span className="text-base font-semibold text-[#4b5563]">≈ 0.52 MCps 낮음</span>
+            <span className="text-base font-semibold text-[#4b5563]">유사한 범위</span>
           </div>
         </div>
         <p className="mt-3 text-sm text-[#64748b]">
-          회색 표면은 흰 표면과 유사하나 signal_rate가 약간 낮음.
-          TinyML 6-feature 모델의 일부 적응 한계 확인.
+          회색 단면 우드락의 signal_rate는 가시광 밝기와 단순 단조 관계로 설명되지 않습니다.
+          ToF 신호 강도는 940 nm IR 반사·투과 특성, 표면 광택성, 평탄도에 영향을 받습니다.
         </p>
       </div>
 
@@ -215,9 +215,8 @@ export default function E5View() {
         <p className="text-base font-semibold" style={{ color: semanticColors.warning }}>한계 및 해석 주의사항</p>
         <p className="mt-1">{E5.note}</p>
         <p className="mt-1">
-          TinyML이 CM-AKF보다 0.53mm 높은 RMSE를 보이는 것은 6-feature 모델이
-          E2(흰/검정/아크릴) 훈련 데이터 분포에 최적화되어 있기 때문입니다.
-          미지 표면에서의 일반화 성능 향상을 위해서는 추가 표면 데이터 수집이 필요합니다.
+          CM-AKF {E5.cm.rmse}mm, TinyML-AKF {E5.tinyml.rmse}mm로 두 적응형 알고리즘은 거의 동등했습니다.
+          실용 환경 일반화 보장을 위해서는 향후 더 다양한 표면 데이터 수집이 필요합니다.
         </p>
       </div>
     </div>

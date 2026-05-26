@@ -84,7 +84,7 @@ export const PAPER_RESULTS = {
         cm:     { rmse: 13.08, mae: 10.92, nis: 0.934, rmseSS: 6.42, tconv: 2213 } as AlgoMetrics,
         tinyml: { rmse: 12.87, mae: 10.69, nis: undefined, rmseSS: 5.32, tconv: 3533 } as AlgoMetrics,
         cmRMean: 127.27, signalRate: 13.18, tinymlR: 104.22,
-        note: "TinyML이 유일하게 Best. 아크릴 고유 반사 패턴이 6-feature 모델에 유리하게 작용한 것으로 추정.",
+        note: "TinyML-AKF가 CM-AKF보다 근소하게 낮은 RMSE를 보였으나, 차이는 약 0.21 mm로 거의 동등한 수준.",
       },
     },
   },
@@ -138,7 +138,7 @@ export const PAPER_RESULTS = {
     tinyml: { rmse: 5.62, mae: 4.24, nis: undefined, rmseSS: 1.57, tconv: 3664 } as AlgoMetrics,
     run5CmRMax: 489.5,           // mm² anomaly (비정상 피크)
     graySignalRate: 14.98,       // MCps
-    note: "E5 표면은 E2 학습 데이터에 없음. TinyML 일반화 성능은 E2 대비 저하 가능성.",
+    note: "E5 표면은 E2 학습 데이터에 없지만, TinyML-AKF는 R clamp 한계에 도달하지 않고 발산 없이 동작.",
   },
 
   // ── 실시간 성능 ────────────────────────────────────────────────────────
@@ -148,14 +148,15 @@ export const PAPER_RESULTS = {
     tinymlActual_us: 35.32,
     tinymlMarginX: 14.2,          // 목표 500 µs / 35.32 µs ≈ 14× 마진
     mainLoopBudget_ms: 5,
+    mainLoopMargin_ms: 4.5,
     mainLoopActual_ms: 1.24,
-    mainLoopUsage: 24.8,          // %
+    mainLoopUsage: 27.5,          // % (4.5 ms overrun margin 기준)
     dwtCycles: 90000,
     cpuFreqMHz: 180,
     dwtToMs: 0.5,                 // 90000 cycles @ 180MHz = 0.5ms
     overrunCount: 0,
     totalCycles: 360000,
-    note: "실측값은 E4 정적 실험(30분) 기준. 동적 조건에서 달라질 수 있음.",
+    note: "실측값은 E4 정적 실험(30분) 기준. 메인 루프 사용률은 4.5 ms overrun margin 기준이며, 동적 조건에서 달라질 수 있음.",
   },
 
   // ── Ablation 표 4-10 (논문 4.3.5 확정값) ─────────────────────────────
@@ -165,7 +166,7 @@ export const PAPER_RESULTS = {
     rows: [
       {
         featureSet: "6-feature (메인)",
-        features: "tof_dist, residual, residual_var, residual_mean, signal_rate, range_status",
+        features: "residual, residual_var, residual_mean, sensor_disagreement, measurement_rate(valid ratio), signal_rate",
         params: 257,
         tfliteKB: 3.20,
         maeR_f32: 357.31,      // mm²
@@ -184,8 +185,8 @@ export const PAPER_RESULTS = {
         int8DeltaPct: +1.6,    // % (int8 손실 미미)
       },
     ],
-    // 6-feature가 maeR 절댓값은 낮지만 mapeR은 높음 (cm_R 스케일에 의존)
-    // 3-feature ablation 시 maeR 8.5% 증가, 파라미터 19% 감소
+    // f32 MAE_R는 6-feature 우세, f32 MAPE_R는 3-feature 우세.
+    // INT8 결과와 MAPE_R는 cm_R 스케일 의존성 때문에 우위 단정 없이 해석.
   },
 
   // ── 표 5-3 (3-feature hold-out 위치 RMSE, 1차 측정) ─────────────────
@@ -200,7 +201,7 @@ export const PAPER_RESULTS = {
       { scenario: "E3 run05",        n: 234, fixed: 44.80, cm: 18.27, tinyml3f: 30.79, cmVs3fDiff: +12.52 },
     ],
     weightedAvg: { n: 1165, fixed: 42.59, cm: 30.80, tinyml3f: 55.08, cmVs3fDiff: +24.28 },
-    // diverged: E2 acryl에서 3-feature 모델이 97mm RMSE로 폭발 → signal_rate 제거의 위험성 입증
+    // diverged: E2 acryl에서 3-feature 모델이 97mm RMSE로 열화 → 잔차 외 feature 보완 필요성 확인
     note: "1차 측정 GT는 encoder 기반 역산. 절대값보다 알고리즘 간 상대 비교만 신뢰 가능.",
   },
 

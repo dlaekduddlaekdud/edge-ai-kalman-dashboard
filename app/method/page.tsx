@@ -30,7 +30,7 @@ export default function MethodPage() {
           </div>
           <div className="rounded-lg border border-[#d9e0ea] bg-white p-4">
             <p className="text-base font-bold" style={{ color: semanticColors.warning }}>Limit</p>
-            <p className="mt-1 text-sm font-semibold text-[#475569]">GT bias 주의</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">GT 한계 주의</p>
           </div>
         </div>
       </section>
@@ -99,7 +99,7 @@ export default function MethodPage() {
                 {
                   name: "TinyML 추론 시간",
                   def: "DWT 카운터 기준 평균/최댓값 (목표 < 0.5 ms)",
-                  impl: "tinyml_infer_us 컬럼 — /realtime 페이지",
+                  impl: "tinyml_infer_us 컬럼 — E4 정적 안정성 결과 및 /results RQ1",
                 },
               ].map(({ name, def, impl }) => (
                 <tr key={name}>
@@ -115,19 +115,22 @@ export default function MethodPage() {
         </div>
       </section>
 
-      {/* GT 복원 방식 및 한계 */}
+      {/* GT 산출 방식 및 한계 */}
       <section className="rounded-lg border border-[#fde68a] bg-white p-6 shadow-sm">
         <h3 className="text-xl font-bold" style={{ color: semanticColors.warning }}>
-          GT 복원 방식 및 한계
+          GT 산출 방식 및 한계
         </h3>
         <div className="mt-4 rounded-md border border-[#fde68a] bg-[#fffbeb] p-4 font-mono text-sm text-[#78350f]">
-          <p>stop_mask  = rows where encoder_distance_mm == 0</p>
-          <p>base       = mean(tof_distance_mm[stop_mask])</p>
-          <p>gt[k]      = base - encoder_distance_mm[k]</p>
+          <p>GT[k] = 기준거리_mm − encoder_distance_mm[k]</p>
         </div>
-        <p className="mt-3 text-base text-[#78350f]">
-          base를 ToF 센서값에서 추출하므로 ToF 정적 bias가 RMSE에 반영됩니다.
-          알고리즘 간 상대 비교에는 유효하나, 절대 정확도 비교는 외부 기준(줄자/레이저)이 필요합니다.
+        <p className="mt-3 text-base leading-7 text-[#78350f]">
+          E1–E3·E5 동적 시나리오는 시작점과 벽 사이의 기준거리 500 mm를 줄자로 실측한 뒤,
+          엔코더 누적 이동거리를 차감하여 gt_distance_mm를 산출합니다. E4 정적 안정성 시나리오는
+          로봇이 정지한 상태이므로 줄자로 실측한 고정 거리를 GT로 사용합니다.
+        </p>
+        <p className="mt-2 text-base leading-7 text-[#78350f]">
+          단, 1차 측정 기반 ablation 결과는 wheel slip 및 수동 굴림 오차의 영향을 받을 수 있으므로,
+          절대 RMSE보다 알고리즘 간 상대 비교 중심으로 해석합니다.
         </p>
       </section>
 
