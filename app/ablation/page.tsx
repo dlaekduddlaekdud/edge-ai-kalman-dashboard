@@ -315,6 +315,18 @@ export default function AblationPage() {
         </div>
         <Table5_3Card state={holdoutState} />
       </section>
+
+      {/* RQ3 연결 결론 */}
+      <section className="rounded-lg border border-[#bbf7d0] bg-[#f0fdf4] px-5 py-4">
+        <p className="text-xs font-bold uppercase tracking-widest text-[#166534]">RQ3 연결</p>
+        <p className="mt-2 text-sm leading-6 text-[#15803d]">
+          본 ablation 결과는 잔차 통계 외 feature(F4·F6)의 기여가 <strong>시나리오 의존적</strong>임을 보인다.
+          E1·E2 우드락처럼 학습 분포 내 정상 변동에서는 3-feature로도 충분하지만,
+          E2 아크릴·E3와 같이 광학적 특이 표면 또는 동적 outlier 환경에서는
+          signal_rate 등 multi-modal feature가 필수임이 정량적으로 확인된다{" "}
+          <a href="/results#rq3" className="font-semibold underline underline-offset-2">→ RQ3 상세 결과</a>.
+        </p>
+      </section>
     </div>
   );
 }

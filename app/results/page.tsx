@@ -143,9 +143,9 @@ export default function ResultsPage() {
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
-            { href: "#rq1", label: "RQ1 실시간성",   sub: `TinyML 추론 ${RT.tinymlActual_us} µs` },
-            { href: "#rq2", label: "RQ2 적응 필터",  sub: "CM-AKF 개선 구간 강조" },
-            { href: "#rq3", label: "RQ3 TinyML 대안성", sub: "온디바이스 R̂ 추론 비교" },
+            { href: "#rq1", label: "RQ1 실시간성",         sub: `TinyML 추론 ${RT.tinymlActual_us} µs` },
+            { href: "#rq2", label: "RQ2 측정 노이즈 적응성", sub: "E2·E3·E5 위치 RMSE · R̂ 회복" },
+            { href: "#rq3", label: "RQ3 다변량 feature 활용", sub: "선행 변화 · Ablation 연결" },
           ].map(({ href, label, sub }) => (
             <a
               key={href}
@@ -253,8 +253,8 @@ export default function ResultsPage() {
       <section id="rq2" className="space-y-4 scroll-mt-8">
         <RQHeader
           rq="RQ2"
-          title="노이즈 변화 환경에서 적응 필터가 Fixed KF보다 정확한가?"
-          desc="E2(벽 재질별) · E3(ToF 차단) · E5(미지 표면) 시나리오 RMSE 비교. CM-AKF와 TinyML-AKF 개선율 포함."
+          title="TinyML-AKF는 CM-AKF 대비, 복합 노이즈 환경에서 어떠한 차이를 보이는가?"
+          desc="E2 9 run · E3 5 run · E5 5 run에서 위치 RMSE와 R̂ 회복 동역학 비교. 복합 노이즈가 존재하는 시나리오에서 두 적응 필터의 정확도와 R 추정 거동 차이를 정량화."
           color={semanticColors.brand}
         />
 
@@ -317,10 +317,10 @@ export default function ResultsPage() {
         </p>
 
         <RQConclusion n={2}>
-          CM-AKF와 TinyML-AKF 모두 Fixed KF 대비 노이즈 변화 환경에서 정확도가 우수하다.
-          E3 ToF 차단 구간: CM-AKF RMSE {PAPER_RESULTS.E3.cm.rmse}mm —
-          Fixed KF {PAPER_RESULTS.E3.fixed.rmse}mm 대비 {e3CmVsFixedImprov}% 감소.
-          단, E2 아크릴에서는 예외적으로 TinyML-AKF가 더 낮은 RMSE 달성.
+          위치 추정 RMSE 측면에서 TinyML-AKF는 CM-AKF와 동등 수준이거나 1~1.4 mm 낮은 정확도를 보였으며,
+          R 추정 거동 측면에서는 차단 이탈 후 회복 속도가 CM-AKF 대비 약{" "}
+          {PAPER_RESULTS.E3.recoverySpeedup}배 빠른 차별적 특성이 관찰되었다.
+          다만 본 실험 조건(평균 1초 내외 단발 외란)에서는 R̂ 회복 속도 차이가 위치 RMSE로 누적되지 않았다.
         </RQConclusion>
       </section>
 
@@ -328,10 +328,56 @@ export default function ResultsPage() {
       <section id="rq3" className="space-y-4 scroll-mt-8">
         <RQHeader
           rq="RQ3"
-          title="TinyML-AKF는 CM-AKF의 실용적 대안인가?"
-          desc="온디바이스 R̂ 추론 기반 TinyML-AKF와 CM-AKF의 시나리오별 RMSE 비교."
+          title="다변량 feature 활용은 잔차 통계 단일 기법 대비 어떤 이점을 제공하는가?"
+          desc="E3 차단 이탈 후 R̂ 회복 동역학, F6 signal_rate 선행 변화, 3-feature ablation 결과로 다변량 feature 기여를 세 가지 증거로 정량화."
           color={semanticColors.brand}
         />
+
+        {/* ── 증거 3개 카드 ─────────────────────────────────────────── */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* 증거 1: R̂ 회복 동역학 */}
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: semanticColors.brand }}>증거 ①</p>
+            <p className="mt-1 text-base font-black text-[#111827]">R̂ 회복 동역학</p>
+            <p className="mt-3 tabular-nums text-4xl font-black" style={{ color: semanticColors.brand }}>
+              {PAPER_RESULTS.E3.recoverySpeedup}×
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">빠른 R̂ 회복</p>
+            <p className="mt-2 text-xs leading-5 text-[#64748b]">
+              E3 차단 이탈 후 CM-AKF {PAPER_RESULTS.E3.recoveryTimeCM_ms} ms →
+              TinyML-AKF {PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms.
+              점진 감소 패턴은 잔차 단일 통계만으로 산출 불가능.
+            </p>
+          </div>
+
+          {/* 증거 2: F6 선행 변화 */}
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: semanticColors.brand }}>증거 ②</p>
+            <p className="mt-1 text-base font-black text-[#111827]">F6 signal_rate 선행 반응</p>
+            <p className="mt-3 tabular-nums text-4xl font-black" style={{ color: semanticColors.brand }}>
+              80 ms
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">차단 진입보다 먼저 반응</p>
+            <p className="mt-2 text-xs leading-5 text-[#64748b]">
+              E3 run03: F6가 차단 진입 시점보다 4 frame (80 ms) 먼저 baseline ±3σ 이탈.
+              F1 residual · F4 sensor_disagreement는 차단 진입 시점에 비로소 반응.
+            </p>
+          </div>
+
+          {/* 증거 3: Ablation */}
+          <div className="rounded-lg border border-[#fecaca] bg-[#fef2f2] p-5 shadow-sm">
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: semanticColors.danger }}>증거 ③</p>
+            <p className="mt-1 text-base font-black text-[#111827]">3-feature Ablation</p>
+            <p className="mt-3 tabular-nums text-4xl font-black" style={{ color: semanticColors.danger }}>
+              97 mm
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">E2 아크릴 RMSE 폭발</p>
+            <p className="mt-2 text-xs leading-5 text-[#64748b]">
+              signal_rate(F6) 제거 시 고반사 표면에서 RMSE 폭발.
+              E1·E2 우드락에서는 3-feature로 충분하나, 아크릴·E3에서는 필수.
+            </p>
+          </div>
+        </div>
 
         {/* CM vs TinyML 직접 비교 */}
         <div className="overflow-x-auto rounded-lg border border-[#d9e0ea] bg-white shadow-sm">
@@ -485,12 +531,12 @@ export default function ResultsPage() {
         </div>
 
         <RQConclusion n={3}>
-          TinyML-AKF는 CM-AKF의 실용적 대안 가능성을 보이나 완전한 대체는 어렵다.
-          E2 아크릴에서 유일하게 CM-AKF 대비 낮은 RMSE 달성,
-          E3 ToF 차단 해제 후 R̂ 회복 {PAPER_RESULTS.E3.recoverySpeedup}× 빠름(
-          {PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
-          단, 3-feature 모델은 고반사 표면에서 RMSE 97mm 폭발 —{" "}
-          6-feature 모델 채택이 실용화의 필수 조건.
+          다변량 feature가 R 추정에 기여함이 세 가지 증거로 입증되었다:
+          (1) E3 차단 이탈 후 TinyML R̂의 점진 감소 패턴이 잔차 단일 통계만으로 산출 불가능 —
+          회복 속도 {PAPER_RESULTS.E3.recoverySpeedup}×({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
+          (2) F6 signal_rate가 차단 진입 시점보다 4 frame (80 ms) 먼저 baseline ±3σ 이탈하는 선행 지표 특성.
+          (3) 3-feature ablation에서 E2 아크릴 97 mm RMSE 폭발 — signal_rate 제거 시 고반사 표면 위험성 확인.
+          단, 본 학습 데이터에서 F4·F6 추가의 R̂ MAE 우위는 제한적.
         </RQConclusion>
       </section>
     </div>
