@@ -163,7 +163,7 @@ export default function DashboardPage() {
         </div>
         <p className="mt-3 text-xs text-[#94a3b8]">
           단위: mm (RMSE). CM-AKF = Covariance-Matching AKF. TinyML-AKF = 온-디바이스 R̂ 추론.
-          E3 TinyML 2.7× 빠른 R̂ 회복 (160ms → 60ms).
+          E3 TinyML 약 2.7× 빠른 R̂ 회복 (160ms → 60ms).
         </p>
       </section>
     </div>

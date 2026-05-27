@@ -120,17 +120,16 @@ export default function MethodPage() {
         <h3 className="text-xl font-bold" style={{ color: semanticColors.warning }}>
           GT 산출 방식 및 한계
         </h3>
-        <div className="mt-4 rounded-md border border-[#fde68a] bg-[#fffbeb] p-4 font-mono text-sm text-[#78350f]">
-          <p>GT[k] = 기준거리_mm − encoder_distance_mm[k]</p>
+        <div className="mt-4 rounded-md border border-[#fde68a] bg-[#fffbeb] p-4 text-sm font-semibold text-[#78350f]">
+          <p>RMSE와 MAE는 CSV에 포함된 gt_distance_mm을 기준으로 산출합니다.</p>
         </div>
         <p className="mt-3 text-base leading-7 text-[#78350f]">
-          E1–E3·E5 동적 시나리오는 시작점과 벽 사이의 기준거리 500 mm를 줄자로 실측한 뒤,
-          엔코더 누적 이동거리를 차감하여 gt_distance_mm를 산출합니다. E4 정적 안정성 시나리오는
-          로봇이 정지한 상태이므로 줄자로 실측한 고정 거리를 GT로 사용합니다.
+          gt_distance_mm은 실험별 GT 복원 방식에 따라 생성된 기준 거리이며,
+          외부 레이저 기준 GT가 아니므로 절대 정확도보다 알고리즘 간 상대 비교를 중심으로 해석합니다.
         </p>
         <p className="mt-2 text-base leading-7 text-[#78350f]">
-          단, 1차 측정 기반 ablation 결과는 wheel slip 및 수동 굴림 오차의 영향을 받을 수 있으므로,
-          절대 RMSE보다 알고리즘 간 상대 비교 중심으로 해석합니다.
+          평가지표는 위치 정확도(RMSE, MAE), 수렴 특성(Tconv), 일관성(NIS pass rate),
+          정상상태 안정성(steady-state RMSE)을 함께 보기 위해 사용합니다.
         </p>
       </section>
 
@@ -194,7 +193,7 @@ export default function MethodPage() {
                 {
                   item: "Numerical Stability",
                   value: "log1p / expm1",
-                  note: "R 추정값 폭발 방지. cm_R이 이상 커지는 경우 대비.",
+                  note: "R 추정값 과대 증가 방지. cm_R이 이상 커지는 경우 대비.",
                 },
                 {
                   item: "INT8 Quantization",

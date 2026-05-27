@@ -74,7 +74,8 @@ function Table4_10Card() {
         </table>
       </div>
       <div className="border-t border-[#f1f5f9] px-6 py-3 text-xs text-[#64748b]">
-        f32 MAE_R는 6-feature가 낮고, f32 MAPE_R는 3-feature가 낮음. INT8 결과와 MAPE_R는 cm_R 스케일 의존성 때문에 우위 단정 없이 해석.
+        MAE_R은 6-feature가 낮지만, MAPE_R은 3-feature가 유리함.
+        따라서 6-feature의 절대 우위가 아니라 복합 노이즈 조건에서의 보완적 역할로 해석.
       </div>
     </div>
   );
@@ -190,9 +191,11 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
         <p>단위: mm (위치 RMSE). CM vs 3f: 양수 = 3f가 CM보다 높음 (성능 열화).</p>
         <p>
           ⚠ E2 acryl run03: 3-feature 모델{" "}
-          {(rows.find((r) => r.scenario.toLowerCase().includes("acryl") && r.scenario.includes("03"))?.tinyml3f?.toFixed(0) ?? "97")}mm RMSE로 열화 — 잔차 외 feature 보완 필요성 확인.
+          {(rows.find((r) => r.scenario.toLowerCase().includes("acryl") && r.scenario.includes("03"))?.tinyml3f?.toFixed(2) ?? "97.00")} mm,
+          CM-AKF 대비 +64.14 mm — 상대 성능 열화가 관찰됨.
         </p>
-        <p>{TABLE_5_3.note}</p>
+        <p>※ 1차 측정 데이터 기반 PC 사후추론 결과입니다.</p>
+        <p>GT 산출 오차의 영향이 있으므로 절대 RMSE 값보다 알고리즘 간 상대 비교를 중심으로 해석합니다.</p>
       </div>
     </div>
   );
@@ -271,15 +274,9 @@ export default function AblationPage() {
           Ablation Study
         </p>
         <h2 className="mt-2 text-3xl font-black text-[#111827]">Feature Set 비교</h2>
-        <p className="mt-2 max-w-2xl text-base leading-7 text-[#64748b]">
-          TinyML-AKF 입력 feature를 6개(메인) / 3개(잔차 통계만)로 줄였을 때의
-          R 라벨 추적도(MAE_R/MAPE_R)와 위치 RMSE 변화를 비교합니다.
+        <p className="mt-2 text-base leading-7 text-[#64748b]">
+          TinyML-AKF 입력 feature를 6개(메인) / 3개(잔차 통계만)로 줄였을 때의 R 라벨 추적도(MAE_R/MAPE_R)와 위치 RMSE 변화를 비교합니다.
         </p>
-        <div
-          className="mt-4 rounded-md border border-[#d9e0ea] px-4 py-2.5 text-sm font-semibold text-[#64748b]"
-        >
-          W=20 warm-up 제외 · MAE_R = mean(|tinyml_R − cm_R|) · MAPE_R = mean(|tinyml_R − cm_R| / cm_R) × 100
-        </div>
       </section>
 
       {/* R 라벨 추적도 */}
@@ -289,12 +286,10 @@ export default function AblationPage() {
             R 라벨 추적도 — 6-feature vs 3-feature
           </h3>
           <p className="mt-1 text-base text-[#64748b]">
-            MAE_R · MAPE_R · int8 양자화 영향. 평가: E1 Run4-5 + E5 전량.
+            MAE_R · MAPE_R · int8 양자화 영향
+            <br />
+            평가: E1 Run4-5 + E5 전량.
           </p>
-        </div>
-        <div className="rounded-md border border-[#d9e0ea] px-4 py-2 text-sm font-semibold text-[#64748b]">
-          6-feature: residual, residual_var, residual_mean, sensor_disagreement, measurement_rate(valid ratio), signal_rate |
-          3-feature: residual, residual_var, residual_mean
         </div>
         <Table4_10Card />
       </section>
@@ -310,7 +305,7 @@ export default function AblationPage() {
           </p>
         </div>
         <div className="rounded-md border border-[#fecaca] bg-[#fef2f2] px-4 py-2 text-sm font-semibold text-[#991b1b]">
-          ⚠ E2 아크릴: 3-feature 모델 97mm RMSE 열화 — 잔차 통계 외 feature 보완 필요.
+          ⚠ E2 아크릴: 3-feature 모델 97.00 mm, CM-AKF 대비 +64.14 mm — 상대 성능 열화.
           CM-AKF 대비 가중 평균 RMSE +24mm 열화.
         </div>
         <Table5_3Card state={holdoutState} />
@@ -323,7 +318,7 @@ export default function AblationPage() {
           본 ablation 결과는 잔차 통계 외 feature(F4·F6)의 기여가 <strong>시나리오 의존적</strong>임을 보인다.
           E1·E2 우드락처럼 학습 분포 내 정상 변동에서는 3-feature로도 충분하지만,
           E2 아크릴·E3와 같이 광학적 특이 표면 또는 동적 outlier 환경에서는
-          sensor_disagreement, signal_rate 등 multi-modal feature의 보완 필요성이 정량적으로 확인된다{" "}
+          sensor_disagreement, signal_rate 등 multi-modal feature가 안전장치 역할을 할 수 있음을 보여준다{" "}
           <a href="/results#rq3" className="font-semibold underline underline-offset-2">→ RQ3 상세 결과</a>.
         </p>
       </section>

@@ -163,14 +163,14 @@ export default function E2View({
 
         {/* 표면별 해석 */}
         <div className="mt-5 rounded-md bg-[#f8fafc] px-5 py-4 text-lg font-semibold leading-8 text-[#374151]">
-          {currentSurface === "white" && "흰 우드락: 높은 signal_rate(~15.5 MCps) — CM-AKF가 TinyML보다 낮은 RMSE. R̂ 단조성 유지 확인."}
-          {currentSurface === "black" && "검정 우드락: 낮은 signal_rate(~11 MCps) — CM-AKF 우위. TinyML은 저반사 환경에서 약간 성능 저하."}
+          {currentSurface === "white" && "흰 우드락: 높은 signal_rate(~15.5 Mcps) — CM-AKF가 TinyML보다 낮은 RMSE. R̂ 단조성 유지 확인."}
+          {currentSurface === "black" && "검정 우드락: 낮은 signal_rate(~11 Mcps) — CM-AKF 우위. TinyML은 저반사 환경에서 약간 성능 저하."}
           {currentSurface === "acryl" && "투명 아크릴: TinyML-AKF가 CM-AKF보다 근소하게 낮은 RMSE를 보였으나, 차이는 약 0.21 mm로 두 알고리즘은 거의 동등한 수준."}
         </div>
 
         <div className="mt-3 flex flex-wrap gap-4 text-base font-medium text-[#4b5563]">
           <span>cm_R 평균: {sel.cmRMean} mm²</span>
-          <span>Signal Rate: {sel.signalRate} MCps</span>
+          <span>Signal Rate: {sel.signalRate} Mcps</span>
           <span>TinyML R̂: {sel.tinymlR} mm²</span>
         </div>
       </div>
@@ -264,7 +264,7 @@ export default function E2View({
                     <td className="px-4 py-3 text-right font-semibold" style={{ color: E1_ALGORITHM_COLORS.cm }}>{s.cm.rmse}</td>
                     <td className={`px-4 py-3 text-right ${key === "acryl" ? "font-semibold" : ""}`} style={{ color: E1_ALGORITHM_COLORS.tinyml }}>{s.tinyml.rmse}</td>
                     <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.cmRMean}</td>
-                    <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.signalRate} MCps</td>
+                    <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.signalRate} Mcps</td>
                     <td className="px-4 py-3 text-right font-mono text-[#475569]">{s.tinymlR}{key === "acryl" && " ★"}</td>
                   </tr>
                 );
@@ -273,7 +273,7 @@ export default function E2View({
           </table>
         </div>
         <div className="px-6 py-3 text-xs text-[#64748b]">
-          단위: RMSE(mm), cm_R/TinyML R̂(mm²), Signal Rate(MCps). 표 행 클릭 시 해당 표면 선택.
+          단위: RMSE(mm), cm_R/TinyML R̂(mm²), Signal Rate(Mcps). 표 행 클릭 시 해당 표면 선택.
         </div>
       </div>
     </div>
