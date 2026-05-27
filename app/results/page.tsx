@@ -3,6 +3,7 @@ import { ALGO_COLORS, semanticColors } from "@/lib/palette";
 
 const RT = PAPER_RESULTS.realtime;
 const E4data = PAPER_RESULTS.E4;
+const E3_RECOVERY_SPEEDUP_TEXT = "약 2.7";
 
 // ── 게이지 컴포넌트 ────────────────────────────────────────────────────────
 
@@ -28,10 +29,10 @@ function GaugeSection({
   note?: string;
 }) {
   return (
-    <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 shadow-sm">
+    <div className="rounded-lg border border-[#d9e0ea] bg-white p-6 text-center shadow-sm">
       <p className="text-xl font-bold text-[#111827]">{title}</p>
       {subtitle && <p className="mt-1 text-sm text-[#94a3b8]">{subtitle}</p>}
-      <div className="mt-4 flex flex-wrap items-end gap-4">
+      <div className="mt-4 grid grid-cols-3 items-end gap-4 text-center">
         <div>
           <p className="text-sm text-[#64748b]">실측 평균</p>
           <p className="tabular-nums text-4xl font-black" style={{ color }}>
@@ -124,9 +125,6 @@ export default function ResultsPage() {
   const tinymlUsagePct = (RT.tinymlActual_us / RT.tinymlBudget_us) * 100;
   const mainLoopUsagePct = RT.mainLoopUsage;
 
-  // RQ2 답변에서 E3 개선율 계산
-  const e3CmVsFixedImprov = Math.round((1 - PAPER_RESULTS.E3.cm.rmse / PAPER_RESULTS.E3.fixed.rmse) * 1000) / 10;
-
   return (
     <div className="space-y-10">
       {/* 헤더 */}
@@ -169,18 +167,6 @@ export default function ResultsPage() {
           color={semanticColors.brand}
         />
 
-        <div
-          className="rounded-md border px-4 py-2 text-xs font-semibold"
-          style={{
-            borderColor: "#c7d2fe",
-            backgroundColor: "#eef2ff",
-            color: semanticColors.brand,
-          }}
-        >
-          DWT 사이클 카운터 기준. {RT.dwtCycles.toLocaleString()} cycles @ {RT.cpuFreqMHz} MHz = {RT.dwtToMs} ms.
-          측정 횟수: {E4data.tinymlInferCount.toLocaleString()}회.
-        </div>
-
         <div className="grid gap-4 lg:grid-cols-2">
           <GaugeSection
             title="TinyML 추론 시간"
@@ -207,7 +193,7 @@ export default function ResultsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 text-center shadow-sm">
             <p className="text-base font-bold" style={{ color: semanticColors.brand }}>TinyML 여유 마진</p>
             <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.brand }}>
               {RT.tinymlMarginX}×
@@ -216,7 +202,7 @@ export default function ResultsPage() {
               {RT.tinymlBudget_us.toLocaleString()} µs ÷ {RT.tinymlActual_us} µs
             </p>
           </div>
-          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 text-center shadow-sm">
             <p className="text-base font-bold" style={{ color: semanticColors.brand }}>오버런 횟수</p>
             <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.brand }}>
               {RT.overrunCount}
@@ -225,7 +211,7 @@ export default function ResultsPage() {
               / {RT.totalCycles.toLocaleString()} 루프 (0%)
             </p>
           </div>
-          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 shadow-sm">
+          <div className="rounded-lg border border-[#d9e0ea] bg-white p-5 text-center shadow-sm">
             <p className="text-base font-bold" style={{ color: semanticColors.brand }}>루프 사용률</p>
             <p className="tabular-nums mt-2 text-4xl font-black" style={{ color: semanticColors.brand }}>
               {RT.mainLoopUsage}%
@@ -241,11 +227,13 @@ export default function ResultsPage() {
         </div>
 
         <RQConclusion n={1}>
-          TinyML-AKF는 STM32F446RE 200Hz 루프에서 실시간 실행 가능하다.
-          평균 추론 {RT.tinymlActual_us}µs — 예산({RT.tinymlBudget_us}µs) 대비{" "}
-          {RT.tinymlMarginX}× 여유 확보.{" "}
-          {E4data.tinymlInferCount.toLocaleString()}회 전 측정 오버런 0건,
-          메인 루프는 4.5 ms overrun margin 기준 {RT.mainLoopUsage}%에서 안정적으로 동작하였다.
+          TinyML-AKF는 STM32F446RE 200Hz 루프에서 실시간 실행 가능
+          <br />
+          평균 추론 {RT.tinymlActual_us}µs — 예산({RT.tinymlBudget_us}µs) 대비 {RT.tinymlMarginX}× 여유 확보
+          <br />
+          {E4data.tinymlInferCount.toLocaleString()}회 전 측정 오버런 0건
+          <br />
+          메인 루프는 4.5 ms overrun margin 기준 {RT.mainLoopUsage}%에서 안정적 동작
         </RQConclusion>
       </section>
 
@@ -317,11 +305,15 @@ export default function ResultsPage() {
         </p>
 
         <RQConclusion n={2}>
-          위치 RMSE 기준으로 TinyML-AKF는 CM-AKF와 대체로 동등했으며,
-          E2 흰·검정 우드락에서는 CM-AKF보다 약 1~1.4 mm 높은 RMSE를 보였다.
-          반면 R 추정 거동 측면에서는 차단 이탈 후 회복 속도가 CM-AKF 대비 약{" "}
-          {PAPER_RESULTS.E3.recoverySpeedup}배 빠른 차별적 특성이 관찰되었다.
-          다만 본 실험 조건(평균 1초 내외 단발 외란)에서는 R̂ 회복 속도 차이가 위치 RMSE로 누적되지 않았다.
+          위치 RMSE 기준으로 TinyML-AKF는 CM-AKF와 대체로 동등
+          <br />
+          - E2 흰·검정 우드락: CM-AKF보다 약 1~1.4 mm 높은 RMSE를 보임
+          <br />
+          - 반면 R 추정 거동 측면: 차단 이탈 후 회복 속도가 CM-AKF 대비 약 2.7배 빠른 차별적 특성
+          <br />
+          다만 본 실험 조건에서는 R̂ 회복 속도 차이가 위치 RMSE로 누적되지 않음
+          <br />
+          두 알고리즘 모두 Fixed KF 대비 모든 시나리오에서 우위를 보임
         </RQConclusion>
       </section>
 
@@ -341,7 +333,7 @@ export default function ResultsPage() {
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: semanticColors.brand }}>증거 ①</p>
             <p className="mt-1 text-base font-black text-[#111827]">R̂ 회복 동역학</p>
             <p className="mt-3 tabular-nums text-4xl font-black" style={{ color: semanticColors.brand }}>
-              {PAPER_RESULTS.E3.recoverySpeedup}×
+              {E3_RECOVERY_SPEEDUP_TEXT}×
             </p>
             <p className="mt-1 text-sm font-semibold text-[#475569]">빠른 R̂ 회복</p>
             <p className="mt-2 text-xs leading-5 text-[#64748b]">
@@ -370,12 +362,12 @@ export default function ResultsPage() {
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: semanticColors.danger }}>증거 ③</p>
             <p className="mt-1 text-base font-black text-[#111827]">3-feature Ablation</p>
             <p className="mt-3 tabular-nums text-4xl font-black" style={{ color: semanticColors.danger }}>
-              97 mm
+              97.00 mm*
             </p>
-            <p className="mt-1 text-sm font-semibold text-[#475569]">E2 아크릴 RMSE 열화</p>
+            <p className="mt-1 text-sm font-semibold text-[#475569]">E2 아크릴 hold-out RMSE</p>
             <p className="mt-2 text-xs leading-5 text-[#64748b]">
-              잔차 통계 외 feature(F4·F6) 제거 시 E2 투명 아크릴·E3에서 위치 RMSE가 크게 열화.
-              E1·E2 우드락에서는 3-feature로도 CM-AKF에 근접.
+              E2 아크릴 조건에서 3-feature 모델의 상대 성능 열화가 관찰됨.
+              *1차 측정 데이터 기반 PC 사후추론 결과이며, 절대값보다 CM-AKF 대비 차이 중심으로 해석.
             </p>
           </div>
         </div>
@@ -398,7 +390,7 @@ export default function ResultsPage() {
                 { label: "E2 흰 우드락",        cm: PAPER_RESULTS.E2.surfaces.white.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.white.tinyml.rmse,   note: "CM 우세",                                              star: false },
                 { label: "E2 검정 우드락",      cm: PAPER_RESULTS.E2.surfaces.black.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.black.tinyml.rmse,   note: "CM 우세",                                              star: false },
                 { label: "E2 투명 아크릴",      cm: PAPER_RESULTS.E2.surfaces.acryl.cm.rmse,   tinyml: PAPER_RESULTS.E2.surfaces.acryl.tinyml.rmse,   note: "근소한 TinyML 우세",                                    star: true  },
-                { label: "E3 ToF 차단",         cm: PAPER_RESULTS.E3.cm.rmse,                  tinyml: PAPER_RESULTS.E3.tinyml.rmse,                  note: `TinyML R̂ 회복 ${PAPER_RESULTS.E3.recoverySpeedup}× 빠름`, star: false },
+                { label: "E3 ToF 차단",         cm: PAPER_RESULTS.E3.cm.rmse,                  tinyml: PAPER_RESULTS.E3.tinyml.rmse,                  note: `TinyML R̂ 회복 ${E3_RECOVERY_SPEEDUP_TEXT}× 빠름`, star: false },
                 { label: "E4 정적 안정성",      cm: PAPER_RESULTS.E4.cm.rmse,                  tinyml: PAPER_RESULTS.E4.tinyml.rmse,                  note: "거의 동등",                                             star: false },
                 { label: "E5 미지 표면",         cm: PAPER_RESULTS.E5.cm.rmse,                  tinyml: PAPER_RESULTS.E5.tinyml.rmse,                  note: "거의 동등, 발산 없음",                                   star: false },
               ].map(({ label, cm, tinyml, note, star }) => {
@@ -438,7 +430,7 @@ export default function ResultsPage() {
         <p className="text-xs text-[#94a3b8]">
           <span style={{ color: semanticColors.danger }} className="font-bold">★</span>{" "}
           E2 아크릴: TinyML-AKF가 CM-AKF보다 근소하게 낮은 RMSE를 보였으나, 차이는 약 0.21 mm로 거의 동등.
-          E3: RMSE는 CM이 낮지만 TinyML이 R̂ 회복 {PAPER_RESULTS.E3.recoverySpeedup}× 빠름
+          E3: RMSE는 CM이 낮지만 TinyML이 R̂ 회복 {E3_RECOVERY_SPEEDUP_TEXT}× 빠름
           ({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
         </p>
 
@@ -527,18 +519,22 @@ export default function ResultsPage() {
           </div>
           <p className="mt-3 text-xs text-[#94a3b8]">
             단위: mm (RMSE). CM-AKF = Covariance-Matching AKF. TinyML-AKF = 온-디바이스 R̂ 추론.
-            E3 TinyML {PAPER_RESULTS.E3.recoverySpeedup}× 빠른 R̂ 회복 ({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
+            E3 TinyML {E3_RECOVERY_SPEEDUP_TEXT}× 빠른 R̂ 회복 ({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
           </p>
         </div>
 
         <RQConclusion n={3}>
-          세 가지 결과는 다변량 feature가 잔차 통계 단일 기법의 한계를 보완할 수 있음을 정량적으로 뒷받침한다:
-          (1) E3 차단 이탈 후 TinyML R̂의 점진 감소 패턴이 잔차 단일 통계만으로 산출 불가능 —
-          회복 속도 {PAPER_RESULTS.E3.recoverySpeedup}×({PAPER_RESULTS.E3.recoveryTimeCM_ms}ms → {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms).
-          (2) F6 signal_rate가 차단 진입 시점보다 4 frame (80 ms) 먼저 baseline ±3σ 이탈하는 선행 지표 특성.
-          (3) 3-feature ablation에서 E2 투명 아크릴·E3의 성능 열화가 관찰되어,
-          F4 sensor_disagreement와 F6 signal_rate 등 잔차 외 feature의 보완 필요성이 확인되었다.
-          단, 본 학습 데이터에서 F4·F6 추가의 R̂ MAE 우위는 제한적.
+          세 가지 결과는 다변량 feature가 잔차 통계 단일 기법의 한계를 보완할 수 있음을 정량적으로 뒷받침 가능
+          <br />
+          (1) E3 차단 이탈 후 TinyML R̂의 점진 감소 패턴이 잔차 단일 통계만으로 산출 불가능 — 회복 속도 2.67×(160ms → 60ms)
+          <br />
+          (2) F6 signal_rate가 차단 진입 시점보다 4 frame (80 ms) 먼저 baseline ±3σ 이탈하는 선행 지표 특성
+          <br />
+          (3) 3-feature ablation에서 E2 투명 아크릴·E3의 성능 열화가 관찰
+          <br />
+          → F4 sensor_disagreement와 F6 signal_rate 등 잔차 외 feature의 보완 필요성 확인
+          <br />
+          단, 본 학습 데이터에서 F4·F6 추가의 R̂ MAE 우위는 제한적
         </RQConclusion>
       </section>
     </div>

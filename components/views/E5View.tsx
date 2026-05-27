@@ -194,11 +194,11 @@ export default function E5View() {
         <div className="mt-3 divide-y divide-[#f1f5f9]">
           <div className="flex items-center justify-between py-3">
             <span className="text-base text-[#475569]">회색 우드락 Signal Rate</span>
-            <span className="text-base font-semibold text-[#111827]">{E5.graySignalRate} MCps</span>
+            <span className="text-base font-semibold text-[#111827]">{E5.graySignalRate} Mcps</span>
           </div>
           <div className="flex items-center justify-between py-3">
             <span className="text-base text-[#475569]">흰 우드락 Signal Rate (비교)</span>
-            <span className="text-base font-semibold text-[#94a3b8]">~15.5 MCps</span>
+            <span className="text-base font-semibold text-[#94a3b8]">~15.5 Mcps</span>
           </div>
           <div className="flex items-center justify-between py-3">
             <span className="text-base text-[#475569]">차이</span>

@@ -3,11 +3,6 @@ import { PAPER_RESULTS } from "@/lib/paper-results";
 
 const NAVY = "#1E3A8A";
 
-// ── 논문 확정값 기반 KPI 계산 ────────────────────────────────────────────
-const e3RmseImprovement = Math.round(
-  (1 - PAPER_RESULTS.E3.cm.rmse / PAPER_RESULTS.E3.raw.rmse) * 1000,
-) / 10; // 70.1%
-
 const totalFrames =
   PAPER_RESULTS.E1.totalFrames +
   PAPER_RESULTS.E2.surfaces.white.totalFrames +
@@ -19,11 +14,11 @@ const totalFrames =
 
 const KPI_CARDS = [
   {
-    label: "E3 RMSE 개선",
-    value: `${e3RmseImprovement}%`,
+    label: "E3 차단 구간 개선",
+    value: "적응형 R",
     color: NAVY,
-    sub: `Raw ${PAPER_RESULTS.E3.raw.rmse} mm → CM-AKF ${PAPER_RESULTS.E3.cm.rmse} mm`,
-    detail: "ToF 차단 구간에서 CM-AKF가 Raw 센서값 대비 달성한 오차 감소율",
+    sub: "Fixed KF 한계 확인",
+    detail: "Fixed KF의 한계 확인, CM-AKF·TinyML-AKF 모두 적응형 R 조정으로 위치 오차 감소",
   },
   {
     label: "TinyML 추론 마진",
@@ -44,11 +39,11 @@ const KPI_CARDS = [
     detail: "STM32에서 수집·필터링된 전체 센서 프레임 수",
   },
   {
-    label: "E3 회복 배속",
-    value: `${PAPER_RESULTS.E3.recoverySpeedup}×`,
+    label: "E3 R̂ 회복 배속",
+    value: "약 2.7×",
     color: NAVY,
-    sub: `CM ${PAPER_RESULTS.E3.recoveryTimeCM_ms} ms → TinyML ${PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms`,
-    detail: "ToF 차단 해제 후 R̂ 회복 시간 — TinyML-AKF가 CM-AKF보다 빠른 이유",
+    sub: `CM-AKF ${PAPER_RESULTS.E3.recoveryTimeCM_ms} ms → TinyML-AKF ${PAPER_RESULTS.E3.recoveryTimeTinyML_ms} ms`,
+    detail: "E3 차단 이탈 후 R̂ 회복 시간",
   },
 ];
 
@@ -92,13 +87,16 @@ export default function HomePage() {
           Edge AI Kalman Dashboard
         </p>
         <h2 className="mt-4 max-w-5xl text-4xl font-bold leading-tight text-[#111827]">
-          STM32 센서 데이터 파이프라인 · 실시간 시각화 풀스택 시스템
+          STM32 센서 로그 분석 · TinyML-AKF 실험 시각화 시스템
         </h2>
-        <p className="mt-5 max-w-4xl text-lg leading-8 text-[#374151]">
-          STM32F446RE에서 수집한 VL53L0X ToF 센서 데이터를 CSV로 내보내
-          Fixed KF · CM-AKF · TinyML-AKF의 정확도와 실시간성 지표를 논문 정의에 맞춰 분석합니다.
-          CSV 파싱부터 지표 계산·시각화까지 TypeScript로 구현한 단일 데이터 파이프라인입니다.
-        </p>
+        <div className="mt-5 max-w-4xl space-y-2 text-lg leading-8 text-[#374151]">
+          <p>
+            STM32F446RE에서 수집한 VL53L0X ToF, 엔코더, 보조 센서 기반 실험 CSV를 파싱하여 Fixed KF · CM-AKF · TinyML-AKF의 정확도 지표와 TinyML 추론 시간 지표를 논문 정의에 맞춰 분석합니다.
+          </p>
+          <p>
+            CSV 파싱, 지표 계산, 시나리오별 결과 시각화까지 TypeScript로 구현한 재현 가능한 실험 데이터 파이프라인입니다.
+          </p>
+        </div>
       </section>
 
       {/* ── KPI 카드 4개 ─────────────────────────────────────────────── */}

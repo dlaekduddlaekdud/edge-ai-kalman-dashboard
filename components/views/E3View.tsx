@@ -595,7 +595,7 @@ export default function E3View() {
           </div>
           <div className="mt-3 rounded-md bg-[#f3f4f6] px-4 py-2">
             <p className="text-sm font-semibold text-[#374151]">
-              → TinyML {PAPER_RESULTS.E3.recoverySpeedup}× 빠른 회복
+              → TinyML 약 2.7× 빠른 회복
             </p>
             <p className="mt-0.5 text-xs text-[#4b5563]">
               CM-AKF는 R̂ 재학습(160ms), TinyML은 추론 즉시 반응(60ms)
