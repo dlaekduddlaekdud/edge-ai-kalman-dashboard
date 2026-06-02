@@ -114,7 +114,7 @@ function RQConclusion({ n, children }: { n: 1 | 2 | 3; children: React.ReactNode
       >
         핵심 결론 {n}
       </p>
-      <p className="mt-2 text-base font-semibold leading-7 text-[#111827]">{children}</p>
+      <div className="mt-2 text-base font-semibold leading-7 text-[#111827]">{children}</div>
     </div>
   );
 }
@@ -227,13 +227,17 @@ export default function ResultsPage() {
         </div>
 
         <RQConclusion n={1}>
-          TinyML-AKF는 STM32F446RE 200Hz 루프에서 실시간 실행 가능
-          <br />
-          평균 추론 {RT.tinymlActual_us}µs — 예산({RT.tinymlBudget_us}µs) 대비 {RT.tinymlMarginX}× 여유 확보
-          <br />
-          {E4data.tinymlInferCount.toLocaleString()}회 전 측정 오버런 0건
-          <br />
-          메인 루프는 4.5 ms overrun margin 기준 {RT.mainLoopUsage}%에서 안정적 동작
+          <p className="font-black" style={{ color: semanticColors.brand }}>
+            답: 가능하다. 200Hz 루프 안에서 결정론적으로 동작한다.
+          </p>
+          <ul className="mt-2 space-y-1 pl-1">
+            <li>· 추론 {RT.tinymlActual_us}µs = 예산 {RT.tinymlBudget_us}µs의 7.1%, {RT.tinymlMarginX}× 마진</li>
+            <li>· std {E4data.tinymlInferStd_us}µs → 입력값 무관 결정론적 추론 (INT8 정수연산, {E4data.tinymlInferCount.toLocaleString()}회 측정)</li>
+            <li>· {RT.totalCycles.toLocaleString()} 루프 (30분 × 3 run) 오버런 0</li>
+          </ul>
+          <p className="mt-2 text-sm font-semibold text-[#78350f]">
+            단서: E4 정적 조건 기준 — 동적 주행 시 루프 부하는 별도 검증 필요
+          </p>
         </RQConclusion>
       </section>
 
@@ -305,15 +309,16 @@ export default function ResultsPage() {
         </p>
 
         <RQConclusion n={2}>
-          위치 RMSE 기준으로 TinyML-AKF는 CM-AKF와 대체로 동등
-          <br />
-          - E2 흰·검정 우드락: CM-AKF보다 약 1~1.4 mm 높은 RMSE를 보임
-          <br />
-          - 반면 R 추정 거동 측면: 차단 이탈 후 회복 속도가 CM-AKF 대비 약 2.7배 빠른 차별적 특성
-          <br />
-          다만 본 실험 조건에서는 R̂ 회복 속도 차이가 위치 RMSE로 누적되지 않음
-          <br />
-          두 알고리즘 모두 Fixed KF 대비 모든 시나리오에서 우위를 보임
+          <p className="font-black" style={{ color: semanticColors.brand }}>
+            답: 위치 정확도는 CM-AKF와 동등, R̂ 회복 속도는 TinyML이 앞선다. (둘 다 Fixed보다 우위)
+          </p>
+          <ul className="mt-2 space-y-1 pl-1">
+            <li>· 위치 RMSE: 정상 변동 환경에서 CM과 동등 (우드락에서 ~1.4mm 열위), Fixed 대비 우위 (E3 약 1/3, E2 우드락 약 1/2~2/3)</li>
+            <li>· R̂ 회복: 차단 이탈 후 TinyML {PAPER_RESULTS.E3.recoveryTimeTinyML_ms}ms vs CM {PAPER_RESULTS.E3.recoveryTimeCM_ms}ms = 2.7배 빠름</li>
+          </ul>
+          <p className="mt-2 text-sm font-semibold text-[#78350f]">
+            단서: 외란이 짧아 (~1초) R̂ 회복 우위가 위치 RMSE로는 누적되지 않음
+          </p>
         </RQConclusion>
       </section>
 
@@ -524,18 +529,35 @@ export default function ResultsPage() {
         </div>
 
         <RQConclusion n={3}>
-          세 가지 결과는 다변량 feature가 잔차 통계 단일 기법의 한계를 보완할 수 있음을 정량적으로 뒷받침 가능
-          <br />
-          (1) E3 차단 이탈 후 TinyML R̂의 점진 감소 패턴이 잔차 단일 통계만으로 산출 불가능 — 회복 속도 2.67×(160ms → 60ms)
-          <br />
-          (2) F6 signal_rate가 차단 진입 시점보다 4 frame (80 ms) 먼저 baseline ±3σ 이탈하는 선행 지표 특성
-          <br />
-          (3) 3-feature ablation에서 E2 투명 아크릴·E3의 성능 열화가 관찰
-          <br />
-          → F4 sensor_disagreement와 F6 signal_rate 등 잔차 외 feature의 보완 필요성 확인
-          <br />
-          단, 본 학습 데이터에서 F4·F6 추가의 R̂ MAE 우위는 제한적
+          <p className="font-black" style={{ color: semanticColors.brand }}>
+            답: 기여한다 — 단, 시나리오에 따라 다르다. 정상 주행은 잔차 통계로 충분, 까다로운 환경에선 F4·F6가 필요.
+          </p>
+          <ul className="mt-2 space-y-1 pl-1">
+            <li>· F6 signal_rate가 차단보다 80ms (4 frame) 먼저 반응 = 잔차가 못 보는 선행 지표</li>
+            <li>· 3-feature(잔차만)는 정상 우드락에선 CM급이지만, E2 아크릴·E3에선 발산/열위</li>
+            <li>· R̂ MAE 자체의 6-feature 우위는 본 데이터에선 제한적 (F5 상수 영향)</li>
+            <li>· 비교 조건 주의: Ablation은 1차 측정·엔코더 GT, 본문 RMSE는 2차·ToF anchor GT → 절대값 비교 불가, 방향성만 해석</li>
+          </ul>
+          <p className="mt-2 text-sm font-semibold text-[#78350f]">
+            단서: F5가 전 구간 상수여서, 측정된 다변량 기여는 사실상 F4·F6에 한정
+          </p>
         </RQConclusion>
+        {/* ── 주요 한계 ─────────────────────────────────────────────── */}
+        <div
+          className="rounded-lg border-l-4 bg-[#fffbeb] px-5 py-4"
+          style={{ borderColor: "#D97706" }}
+        >
+          <p className="text-lg font-black" style={{ color: "#D97706" }}>
+            주요 한계
+          </p>
+          <div className="mt-2 text-base font-semibold leading-7 text-[#111827]">
+            <ul className="space-y-1 pl-1">
+              <li>· 단일 거리(500mm)·단일 조명·재질 3종 — 일반화는 E5(회색 우드락) 1종에서만 검증</li>
+              <li>· F5 전 구간 상수 (range_status≠0 미발생) — 다변량 기여 측정이 F4·F6에 한정됨</li>
+              <li>· E3 외란 짧음 (~1초) — R̂ 회복 우위의 위치 정확도 효과는 미검증 (향후 과제)</li>
+            </ul>
+          </div>
+        </div>
       </section>
     </div>
   );
