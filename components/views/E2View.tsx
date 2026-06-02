@@ -163,7 +163,7 @@ export default function E2View({
 
         {/* 표면별 해석 */}
         <div className="mt-5 rounded-md bg-[#f8fafc] px-5 py-4 text-lg font-semibold leading-8 text-[#374151]">
-          {currentSurface === "white" && "흰 우드락: 높은 signal_rate(~15.5 Mcps) — CM-AKF가 TinyML보다 낮은 RMSE. R̂ 단조성 유지 확인."}
+          {currentSurface === "white" && "흰 우드락: 높은 signal_rate(~20.5 Mcps) — CM-AKF가 TinyML보다 낮은 RMSE. R̂ 단조성 유지 확인."}
           {currentSurface === "black" && "검정 우드락: 낮은 signal_rate(~11 Mcps) — CM-AKF 우위. TinyML은 저반사 환경에서 약간 성능 저하."}
           {currentSurface === "acryl" && "투명 아크릴: TinyML-AKF가 CM-AKF보다 근소하게 낮은 RMSE를 보였으나, 차이는 약 0.21 mm로 두 알고리즘은 거의 동등한 수준."}
         </div>

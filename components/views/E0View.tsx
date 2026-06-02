@@ -36,7 +36,7 @@ export default function E0View() {
               E0 — Python 합성 시뮬레이션
             </p>
             <p className="mt-1 text-sm text-[#374151]">
-              2,000 step, σ_process=0.5mm, σ_meas=5mm, Fixed KF 단독 검증
+              2,000 step, 초기위치 100mm, 등속 200mm/s, σ_meas=20mm (R=400mm²), Q=1.0mm², seed=42, Fixed KF 단독 검증
             </p>
           </div>
           <span className="rounded-full border border-[#d1d5db] bg-white px-3 py-1 text-xs text-[#111827]">

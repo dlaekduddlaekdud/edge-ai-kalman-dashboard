@@ -194,8 +194,8 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
           {(rows.find((r) => r.scenario.toLowerCase().includes("acryl") && r.scenario.includes("03"))?.tinyml3f?.toFixed(2) ?? "97.00")} mm,
           CM-AKF 대비 +64.14 mm — 상대 성능 열화가 관찰됨.
         </p>
-        <p>※ 1차 측정 데이터 기반 PC 사후추론 결과입니다.</p>
-        <p>GT 산출 오차의 영향이 있으므로 절대 RMSE 값보다 알고리즘 간 상대 비교를 중심으로 해석합니다.</p>
+        <p>※ 1차 측정·엔코더 누적 GT 기반 PC 사후추론 결과. 절대값 부풀려짐 — 표 5-2와 직접 비교 금지.</p>
+        <p>모델 간 상대 비교(vs CM 열)만 유효.</p>
       </div>
     </div>
   );
@@ -288,7 +288,7 @@ export default function AblationPage() {
           <p className="mt-1 text-base text-[#64748b]">
             MAE_R · MAPE_R · int8 양자화 영향
             <br />
-            평가: E1 Run4-5 + E5 전량.
+            평가: E2 white/black/acryl run03 + E3 run04-05 (5 run, 1,072 rows) — 논문 표 4-8.
           </p>
         </div>
         <Table4_10Card />
@@ -301,12 +301,12 @@ export default function AblationPage() {
             3-feature Hold-out 위치 RMSE
           </h3>
           <p className="mt-1 text-base text-[#64748b]">
-            1차 측정 데이터 기준 — GT 산출 오차 영향으로 상대 비교만 유효.
+            1차 측정·엔코더 누적 GT 기반이라 절대값 부풀려짐. 표 5-2와 직접 비교 금지, 모델 간 상대 비교(vs CM 열)만 유효.
           </p>
         </div>
         <div className="rounded-md border border-[#fecaca] bg-[#fef2f2] px-4 py-2 text-sm font-semibold text-[#991b1b]">
           ⚠ E2 아크릴: 3-feature 모델 97.00 mm, CM-AKF 대비 +64.14 mm — 상대 성능 열화.
-          CM-AKF 대비 가중 평균 RMSE +24mm 열화.
+          CM-AKF 대비 가중 평균 RMSE +24mm 열화. (표 5-2와 절대값 직접 비교 불가)
         </div>
         <Table5_3Card state={holdoutState} />
       </section>

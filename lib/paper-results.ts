@@ -129,15 +129,15 @@ export const PAPER_RESULTS = {
 
   // ── E5: 미지 표면 일반화 ───────────────────────────────────────────────
   E5: {
-    description: "회색 단면 우드락 미지 표면 — 5 run, 963 frames",
+    description: "회색 단면 우드락 미지 표면 — 5 run, 964 frames",
     runs: 5,
-    totalFrames: 963,
+    totalFrames: 964,
     raw:    { rmse: 8.40, mae: 6.38 } as AlgoMetrics,
     fixed:  { rmse: 6.18, mae: 4.59, nis: 0.928, rmseSS: 1.36, tconv: 3692 } as AlgoMetrics,
     cm:     { rmse: 5.09, mae: 3.92, nis: 0.961, rmseSS: 1.63, tconv: 3652 } as AlgoMetrics,
     tinyml: { rmse: 5.62, mae: 4.24, nis: undefined, rmseSS: 1.57, tconv: 3664 } as AlgoMetrics,
     run5CmRMax: 489.5,           // mm² anomaly (비정상 피크)
-    graySignalRate: 14.98,       // MCps
+    graySignalRate: 16.3,        // MCps (5 run 평균, 논문 5.1.6절)
     note: "E5 표면은 E2 학습 데이터에 없지만, TinyML-AKF는 R clamp 한계에 도달하지 않고 발산 없이 동작.",
   },
 
@@ -155,14 +155,14 @@ export const PAPER_RESULTS = {
     cpuFreqMHz: 180,
     dwtToMs: 0.5,                 // 90000 cycles @ 180MHz = 0.5ms
     overrunCount: 0,
-    totalCycles: 360000,
-    note: "실측값은 E4 정적 실험(30분) 기준. 메인 루프 사용률은 4.5 ms overrun margin 기준이며, 동적 조건에서 달라질 수 있음.",
+    totalCycles: 1080000,  // 360,000 loops × 3 run (논문 5.2.1 RQ1 누적 기준)
+    note: "실측값은 E4 정적 실험(30분 × 3 run) 기준. 메인 루프 사용률은 4.5 ms overrun margin 기준이며, 동적 조건에서 달라질 수 있음.",
   },
 
   // ── Ablation 표 4-10 (논문 4.3.5 확정값) ─────────────────────────────
   TABLE_4_10: {
     title: "표 4-10 Ablation 결과 — TinyML R̂ 라벨 추적도",
-    description: "평가: E1 Run 4-5 + E5 전량 (논문 4.3.5)",
+    description: "평가: E2 white/black/acryl run03 + E3 run04-05 (5 run, 1,072 rows) — 논문 표 4-8",
     rows: [
       {
         featureSet: "6-feature (메인)",
@@ -202,7 +202,7 @@ export const PAPER_RESULTS = {
     ],
     weightedAvg: { n: 1165, fixed: 42.59, cm: 30.80, tinyml3f: 55.08, cmVs3fDiff: +24.28 },
     // diverged: E2 acryl에서 3-feature 모델이 97mm RMSE로 열화 → 잔차 외 feature 보완 필요성 확인
-    note: "1차 측정 GT는 encoder 기반 역산. 절대값보다 알고리즘 간 상대 비교만 신뢰 가능.",
+    note: "1차 측정·엔코더 누적 GT 기반이라 절대값 부풀려짐. 표 5-2와 직접 비교 금지, 모델 간 상대 비교(vs CM 열)만 유효.",
   },
 
 } as const;

@@ -39,7 +39,7 @@ const SCENARIOS: ScenarioCfg[] = [
   { label: "E2", title: "E2 — 벽 재질별", desc: "3 surface × 3 run" },
   { label: "E3", title: "E3 — ToF 차단 구간", desc: "5 run · ~1,152 frames" },
   { label: "E4", title: "E4 — 정적 장기 안정성", desc: "3 run · 각 30분 정적 안정성" },
-  { label: "E5", title: "E5 — 미지 표면 일반화", desc: "5 run · ~963 frames" },
+  { label: "E5", title: "E5 — 미지 표면 일반화", desc: "5 run · ~964 frames" },
 ];
 
 interface LoadState {

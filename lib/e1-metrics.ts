@@ -8,11 +8,37 @@ import {
 } from "@/lib/metrics";
 
 /**
- * CSV gt_distance_mm 컬럼값 그대로 반환.
- * 데모 CSV는 gt=0이므로, 차트 등에서 showGT 가드로 숨김 처리한다.
+ * GT 복원: CSV gt_distance_mm가 모두 0인 경우 ToF 앵커 + 엔코더 보간으로 재산출.
+ * 논문 4.1.2절: GT(k) = ToF_start − (enc(k)/enc_last) × (ToF_start − ToF_end)
+ * ToF_start/ToF_end = 양 끝 5 frame tof_distance_mm 평균 (앵커).
+ * enc_last < 1 (정적 시나리오)이면 전체 ToF 평균을 상수 GT로 사용.
  */
 export function getGroundTruth(rows: E1Row[]): number[] {
-  return rows.map((r) => r.gt_distance_mm);
+  if (rows.length === 0) return [];
+
+  // CSV에 유효한 GT 값이 있으면 그대로 사용
+  if (rows.some((r) => r.gt_distance_mm !== 0)) {
+    return rows.map((r) => r.gt_distance_mm);
+  }
+
+  const ANCHOR = 5;
+  const firstN = rows.slice(0, Math.min(ANCHOR, rows.length));
+  const lastN  = rows.slice(Math.max(0, rows.length - ANCHOR));
+
+  const tofStart = firstN.reduce((s, r) => s + r.tof_distance_mm, 0) / firstN.length;
+  const tofEnd   = lastN.reduce((s, r)  => s + r.tof_distance_mm, 0) / lastN.length;
+  const encLast  = rows[rows.length - 1].encoder_distance_mm;
+
+  // 정적 시나리오 (enc_last < 1mm): 전체 ToF 평균을 상수 GT로
+  if (encLast < 1) {
+    const meanToF = rows.reduce((s, r) => s + r.tof_distance_mm, 0) / rows.length;
+    return rows.map(() => meanToF);
+  }
+
+  // 동적 시나리오: ToF 앵커 + 엔코더 비율 보간
+  return rows.map((r) =>
+    tofStart - (r.encoder_distance_mm / encLast) * (tofStart - tofEnd),
+  );
 }
 
 /** encoder > 0 인 첫 행 인덱스 (moving phase 시작). 없으면 0. */

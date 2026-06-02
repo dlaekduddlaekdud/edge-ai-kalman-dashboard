@@ -17,8 +17,8 @@ const SCENARIO_DESCRIPTIONS: Record<ScenarioLabel, string> = {
   E1: "정상 baseline — 알고리즘 비교",
   E2: "벽 재질별 — 알고리즘 비교",
   E3: "ToF 차단 구간 — 알고리즘 비교",
-  E4: "R_hat drift — 알고리즘 비교",
-  E5: "신호 감쇠 — 알고리즘 비교",
+  E4: "정적 장기 안정성 — 알고리즘 비교",
+  E5: "미지 표면 일반화 — 알고리즘 비교",
 };
 
 export default function DashboardPage() {

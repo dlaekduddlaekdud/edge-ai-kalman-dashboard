@@ -134,7 +134,7 @@ gt[k]      = base − encoder_distance_mm[k]
 
 - [ ] E0 — Python 합성 데이터 2,000 step, Raw 20.04mm vs KF 4.26mm RMSE, NIS 92.6%
 - [ ] E2 — 벽 3종(흰/검정 우드락, 투명 아크릴) × 5회 = 15회 그룹 비교
-- [ ] E4 — 500mm 정적 30분 × 3회, R_hat drift, 추론 시간
+- [ ] E4 — 500mm 정적 장기 안정성 (30분 × 3회), 추론 시간
 - [ ] E5 — 미지 표면 일반화, E2 교차 분석
 
 ---
