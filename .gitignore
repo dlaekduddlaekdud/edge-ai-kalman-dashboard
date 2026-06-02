@@ -29,3 +29,4 @@ pnpm-debug.log*
 # Claude Code local settings (machine-specific paths)
 .claude/settings.local.json
 screenshot-*.png
+.vercel
