@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         destination: "/icon.png",
         permanent: false,
       },
+      // /realtime 페이지를 /results로 통합. 기존 링크 유지를 위해 영구 이동으로 처리
+      {
+        source: "/realtime",
+        destination: "/results",
+        permanent: true,
+      },
     ];
   },
 };
