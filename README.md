@@ -1,5 +1,9 @@
 # Edge AI Kalman Dashboard
 
+**Live**: https://edge-ai-kalman-dashboard.vercel.app
+
+![대시보드](./public/screenshots/nav-dashboard.png)
+
 STM32F446RE에서 수집한 적응형 칼만 필터 실험 데이터를 웹에서 검증할 수 있도록 재구성한 **Next.js 기반 연구 데이터 대시보드**입니다.
 
 졸업논문 「Edge AI 기반 적응형 칼만 필터의 임베디드 실시간 적용 연구」의 실험 CSV를 입력으로 받아, 스키마 검증 → 지표 계산 → 시각화까지의 파이프라인을 구현했습니다. 새로운 성능을 예측하는 도구가 아니라, 이미 확정된 실험 결과를 재현 가능한 형태로 검증하는 도구입니다.
@@ -11,12 +15,12 @@ npm install
 npm run dev
 ```
 
-`http://localhost:3000` 접속 후 `분석하기` 페이지에서 시나리오를 선택하면 내장 CSV를 로드해 바로 확인할 수 있습니다.
+`http://localhost:3000` 접속 후 `Analyze` 페이지에서 시나리오를 선택하면 내장 CSV를 로드해 바로 확인할 수 있습니다.
 
 ## Testing
 
 ```bash
-npm test          # 단위 테스트 실행 (18 케이스)
+npm test          # 단위 테스트 실행 (N 케이스)
 npm run test:watch
 npm run verify    # typecheck → test → build
 ```
@@ -24,9 +28,11 @@ npm run verify    # typecheck → test → build
 `verify`는 세 단계를 순차 실행하며, 하나라도 실패하면 중단됩니다.
 
 | 대상 | 파일 | 케이스 |
-|---|---|---|
+|---|---|---:|
 | 지표 계산 순수 함수 | [lib/metrics.test.ts](./lib/metrics.test.ts) | 12 |
 | CSV 파서 스키마 검증 | [lib/csv-parser.test.ts](./lib/csv-parser.test.ts) | 6 |
+| E3 차단 탐지 로직 | [lib/e3-blocking.test.ts](./lib/e3-blocking.test.ts) | N |
+| **합계** | | **N** |
 
 지표 함수는 외부 상태에 의존하지 않는 순수 함수로 분리해 두었기 때문에, 논문 정의와 구현이 일치하는지 단위 테스트로 직접 검증할 수 있습니다.
 
@@ -141,11 +147,23 @@ TinyML-AKF에는 `innovation_cov` 컬럼이 없어 NIS를 계산할 수 없으�
 | Route | 역할 |
 |---|---|
 | `/upload` | 시나리오 선택, 내장 CSV 로드, 직접 CSV 업로드, 인라인 대시보드 |
-| `/results` | RQ1~RQ3 결과 요약, 논문 표 기반 종합 비교 |
+| `/results` | RQ1~RQ3 결과 요약, 논문 표 기반 종합 비교, 실시간 성능 게이지 |
 | `/method` | 지표 정의, 필터 파라미터, 코드 매핑 |
 | `/dashboard` | 시나리오별 view 렌더링 |
 | `/ablation` | 6-feature vs 3-feature TinyML ablation |
-| `/realtime` | 실시간 성능 게이지, DWT 사이클 변환, 추론 마진 |
+
+<details>
+<summary>화면 미리보기 (업로드 / 결과 / Ablation / 방법론)</summary>
+
+![업로드](./public/screenshots/nav-upload.png)
+
+![결과](./public/screenshots/nav-results.png)
+
+![Ablation](./public/screenshots/nav-ablation.png)
+
+![방법론](./public/screenshots/nav-method.png)
+
+</details>
 
 ## Demo Flow
 
@@ -165,7 +183,13 @@ TinyML-AKF에는 `innovation_cov` 컬럼이 없어 NIS를 계산할 수 없으�
 | Chart | Recharts | React 컴포넌트로 시계열, 막대, 게이지 구성 |
 | Data source | `public/data` 정적 CSV | 실험 데이터가 고정되어 서버 없이 재현 가능 |
 | Test | Vitest | Next.js 15 + TypeScript 환경에서 별도 설정 없이 동작 |
-| Database | 미도입 | 데이터가 읽기 전용 고정 자산이므로 영속 계층이 불필요 |
+| Deploy | Vercel | `main` 푸시 시 자동 배포, 정적 산출물 호스팅 |
+
+### 서버·영속 계층을 두지 않은 이유
+
+입력 데이터가 논문 확정본 26종으로 고정되어 있고, 이후 변경되지 않습니다. RDB를 도입하면 스키마 마이그레이션이라는 변경 대상이 새로 생기고, 클론 후 `npm run dev` 한 번으로 논문 수치를 재현한다는 목표가 깨집니다. 데이터를 정적 자산으로 두고 파싱·지표 계산을 클라이언트에서 수행하는 구성을 선택했습니다.
+
+데이터가 축적되는 요구(다회 실험 이력 비교, 여러 사용자의 CSV 보관)가 생기는 시점에 `/upload`의 파싱 경로를 서버로 옮기고 그 뒤에 영속 계층을 붙이는 것이 다음 단계입니다.
 
 ## Data Assets
 
@@ -174,10 +198,12 @@ TinyML-AKF에는 `innovation_cov` 컬럼이 없어 NIS를 계산할 수 없으�
 | `public/data/E1_run01.csv` ~ `E1_run05.csv` | E1 baseline 5 run |
 | `public/data/E2_white_*`, `E2_black_*`, `E2_acryl_*` | E2 표면별 실험 CSV |
 | `public/data/E3_run01.csv` ~ `E3_run05.csv` | E3 ToF 차단 실험 |
-| `public/data/E4_run01.csv` ~ `E4_run03.csv` | E4 정적 장기 안정성 |
+| `public/data/E4_run01.csv` ~ `E4_run03.csv` | E4 정적 장기 안정성 (파일당 약 14 MB) |
 | `public/data/E5_run01.csv` ~ `E5_run05.csv` | E5 미지 표면 일반화 |
 | `public/data/ablation_holdout_results.csv` | hold-out ablation 결과 |
 | [docs/paper-summary.md](./docs/paper-summary.md) | 논문 요약 및 실험 조건 |
+
+E4는 30분 × 3 run 정적 측정으로 파일당 약 14 MB이며, 브라우저에서 파싱하면 초기 로딩이 다른 시나리오 대비 수백 배로 늘어납니다. E4는 장기 안정성 확인용이라 시계열 탐색이 필요하지 않으므로, 대시보드 로드 대상에서 제외하고 논문 확정 수치(`paper-results.ts`)를 표시합니다. 원본 CSV는 검증 목적으로 저장소에 유지합니다.
 
 ## Project Structure
 
@@ -188,7 +214,6 @@ app/
   method/page.tsx       # 지표 정의와 코드 매핑
   dashboard/page.tsx    # 시나리오별 view 렌더링
   ablation/page.tsx     # TinyML feature ablation
-  realtime/page.tsx     # 실시간 성능 게이지
 
 components/
   views/                # E0~E5 시나리오 view
@@ -202,6 +227,7 @@ lib/
   metrics.ts            # 논문 지표 순수 함수
   metrics.test.ts       # 지표 함수 단위 테스트
   csv-parser.test.ts    # 파서 스키마 검증 테스트
+  e3-blocking.test.ts   # E3 차단 탐지 로직 테스트
   paper-results.ts      # 논문 확정값 단일 진실 소스
 ```
 
@@ -215,13 +241,15 @@ lib/
 | E0~E5 scenario dashboard | Done |
 | Results / method 설명 페이지 | Done |
 | 단위 테스트 및 검증 파이프라인 | Done |
-| Vercel 배포 | Planned |
+| Vercel 배포 | Done |
 
 ## Limitations
 
+- 이 저장소는 프론트엔드·데이터 시각화 범위의 프로젝트입니다. 서버 API와 영속 계층은 위 근거에 따라 의도적으로 두지 않았습니다.
 - 논문 실험 결과를 재현·검증하는 도구이며, 새로운 조건의 성능을 예측하지 않습니다.
 - E0~E5 외 실험 조건은 검증된 결과처럼 표현하지 않습니다.
 - TinyML NIS는 `innovation_cov` 컬럼이 없어 계산하지 않습니다.
 - GT 복원은 정지 구간이 존재하는 데이터에서만 유효합니다.
-- 영속 저장, WebSocket/SSE 스트리밍, 사용자 계정 기능은 범위에 포함되지 않습니다.
+- E4는 파일 크기 때문에 브라우저 파싱 대상에서 제외되어 있으며, 논문 확정 수치로만 표시됩니다.
+- 사용자 계정, 실시간 스트리밍(WebSocket/SSE)은 범위에 포함되지 않습니다.
 - 논문 본문, `paper-results.ts`, README가 충돌하면 앞의 두 항목이 우선합니다.
