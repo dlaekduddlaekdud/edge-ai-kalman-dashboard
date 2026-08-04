@@ -30,3 +30,7 @@ pnpm-debug.log*
 .claude/settings.local.json
 screenshot-*.png
 .vercel
+
+# AI agent configs
+.claude/
+.codex/
