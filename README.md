@@ -15,7 +15,7 @@ npm install
 npm run dev
 ```
 
-`http://localhost:3000` 접속 후 `Analyze` 페이지에서 시나리오를 선택하면 내장 CSV를 로드해 바로 확인할 수 있습니다.
+`http://localhost:3000` 접속 후 `분석하기` 페이지에서 시나리오를 선택하면 내장 CSV를 로드해 바로 확인할 수 있습니다.
 
 ## Testing
 
