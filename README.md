@@ -33,8 +33,10 @@ npm run verify    # typecheck → test → build
 | CSV 파서 스키마 검증 | [lib/csv-parser.test.ts](./lib/csv-parser.test.ts) | 6 |
 | E3 차단 탐지 로직 | [lib/e3-blocking.test.ts](./lib/e3-blocking.test.ts) | 13 |
 | GT 복원 로직 | [lib/e1-metrics.test.ts](./lib/e1-metrics.test.ts) | 9 |
+| Ablation 파싱·열화 판정 | [lib/ablation-holdout.test.ts](./lib/ablation-holdout.test.ts) | 13 |
 
-| **합계** | | **40** |
+
+| **합계** | | **53** |
 
 지표 함수는 외부 상태에 의존하지 않는 순수 함수로 분리해 두었기 때문에, 논문 정의와 구현이 일치하는지 단위 테스트로 직접 검증할 수 있습니다.
 
@@ -140,7 +142,7 @@ nullable 컬럼(`tof_signal_rate`, `tof_range_status`, `us_distance_mm`, `sensor
 | NIS pass rate | [lib/metrics.ts](./lib/metrics.ts) | chi-square df=1, 95% interval `[0.00098, 5.024]` |
 | RMSEss | [lib/metrics.ts](./lib/metrics.ts) | 후반 50 frame steady-state RMSE |
 | Tconv | [lib/metrics.ts](./lib/metrics.ts) | 50 frame sliding RMSE가 `1.1 × RMSEss` 이하가 되는 최초 시각 |
-| MAE_R / MAPE_R | [app/ablation/page.tsx](./app/ablation/page.tsx) | TinyML R 추정값과 CM pseudo-label 비교 |
+| MAE_R / MAPE_R | [lib/ablation-holdout.ts](./lib/ablation-holdout.ts) | TinyML R 추정값과 CM pseudo-label 비교 |
 
 TinyML-AKF에는 `innovation_cov` 컬럼이 없어 NIS를 계산할 수 없으므로 `—`로 표시합니다. 계산 불가와 값이 0인 경우를 구분하기 위한 처리입니다.
 
