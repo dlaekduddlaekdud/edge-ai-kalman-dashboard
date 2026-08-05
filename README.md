@@ -165,6 +165,13 @@ TinyML-AKF에는 `innovation_cov` 컬럼이 없어 NIS를 계산할 수 없으�
 
 </details>
 
+## Usage Context
+
+졸업논문 최종 발표에서 실험 결과를 설명하는 화면으로 사용했습니다.
+
+아래 Demo Flow는 논문 5장의 서술 순서(시나리오 선택 → 위치 추정 비교 → R 회복 분석 → RQ별 결론)를 화면 흐름으로 옮긴 것입니다. 
+실제 사용자를 관찰해 도출한 동선이 아니므로, 논문을 읽지 않은 사용자에게 이 순서가 최적인지는 검증되지 않았습니다.
+
 ## Demo Flow
 
 https://github.com/user-attachments/assets/5c0dbb05-3715-4fea-835d-8a8f53be8f20
