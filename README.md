@@ -167,11 +167,12 @@ TinyML-AKF에는 `innovation_cov` 컬럼이 없어 NIS를 계산할 수 없으�
 
 ## Demo Flow
 
+https://github.com/user-attachments/assets/5c0dbb05-3715-4fea-835d-8a8f53be8f20
+
 1. `/upload`에서 `E3 - ToF 차단 구간` 선택
 2. 내장 CSV 로드 후 Raw, Fixed, CM-AKF, TinyML-AKF 위치 추정 시계열 확인
 3. `R` 회복 시계열에서 CM-AKF와 TinyML-AKF의 회복 속도 차이 확인
 4. `/results`에서 RQ1~RQ3 요약 확인
-5. `/method`에서 RMSE, NIS, RMSEss, Tconv 정의와 코드 위치 확인
 
 ## Technical Decisions
 
