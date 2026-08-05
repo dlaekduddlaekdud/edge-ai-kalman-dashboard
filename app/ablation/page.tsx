@@ -1,31 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Papa from "papaparse";
 import { PAPER_RESULTS } from "@/lib/paper-results";
 import { ALGO_COLORS, algorithmStyles, semanticColors } from "@/lib/palette";
-
-// ── 표 5-3 동적 CSV 로드 ────────────────────────────────────────────────
-
-interface AblationHoldoutRow {
-  scenario: string;
-  n: number;
-  fixed: number;
-  cm: number;
-  tinyml3f: number;
-  cmVs3fDiff: number;
-  diverged: boolean;
-}
+import {
+  parseAblationHoldout,
+  type AblationHoldoutRow,
+  type AblationWeightedAvg,
+} from "@/lib/ablation-holdout";
 
 interface AblationHoldoutState {
   loading: boolean;
   rows: AblationHoldoutRow[] | null;
-  weightedAvg: { n: number; fixed: number; cm: number; tinyml3f: number; cmVs3fDiff: number } | null;
+  weightedAvg: AblationWeightedAvg | null;
   source: "csv" | "fallback";
-}
-
-function formatScenarioName(raw: string): string {
-  return raw.replace(/_/g, " ");
+  /** 수치 파싱 실패로 제외된 행 번호. 비어 있지 않으면 화면에 알린다. */
+  droppedRows: number[];
 }
 
 // ── 표 4-10 ────────────────────────────────────────────────────────────────
@@ -114,6 +104,14 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
           {state.loading ? "로딩 중..." : state.source === "csv" ? "CSV 실측값" : "논문 확정값"}
         </span>
       </div>
+
+      {state.droppedRows.length > 0 && (
+        <div className="border-b border-[#fde68a] bg-[#fffbeb] px-6 py-2 text-xs font-semibold text-[#92400e]">
+          CSV {state.droppedRows.length}개 행이 수치 파싱 실패로 제외됨 (행 번호: {state.droppedRows.join(", ")}).
+          아래 값과 가중 평균은 제외 후 기준입니다.
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-[#e2e8f0] text-base">
           <thead>
@@ -205,10 +203,11 @@ function Table5_3Card({ state }: { state: AblationHoldoutState }) {
 
 export default function AblationPage() {
   const [holdoutState, setHoldoutState] = useState<AblationHoldoutState>({
-    loading: true, rows: null, weightedAvg: null, source: "fallback",
+    loading: true, rows: null, weightedAvg: null, source: "fallback", droppedRows: [],
   });
 
-  // ablation_holdout_results.csv 동적 로드 (public/data에 존재)
+  // ablation_holdout_results.csv 동적 로드.
+  // 파싱·판정·가중평균은 lib/ablation-holdout.ts에 있다 (단위 테스트 대상).
   useEffect(() => {
     fetch("/data/ablation_holdout_results.csv")
       .then((res) => {
@@ -216,50 +215,26 @@ export default function AblationPage() {
         return res.text();
       })
       .then((text) => {
-        const result = Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: true });
-        // NaN 방어: parseFloat 결과가 NaN인 row는 제외
-        const parsed: AblationHoldoutRow[] = result.data.reduce<AblationHoldoutRow[]>((acc, r) => {
-          const fixed = parseFloat(r.rmse_fixed);
-          const cm = parseFloat(r.rmse_cm);
-          const tinyml3f = parseFloat(r.rmse_3feat);
-          const n = parseInt(r.n, 10);
-          if (isNaN(fixed) || isNaN(cm) || isNaN(tinyml3f) || isNaN(n)) return acc;
-          acc.push({
-            scenario: formatScenarioName(r.scenario),
-            n,
-            fixed,
-            cm,
-            tinyml3f,
-            cmVs3fDiff: tinyml3f - cm,
-            diverged: tinyml3f > 50 || tinyml3f > cm * 2,
+        const { rows, weightedAvg, droppedRows } = parseAblationHoldout(text);
+        if (!weightedAvg) {
+          // 유효 행이 0이면 가중 평균을 낼 수 없다 → 논문 확정값으로 전환
+          setHoldoutState({
+            loading: false, rows: null, weightedAvg: null,
+            source: "fallback", droppedRows,
           });
-          return acc;
-        }, []);
-
-        const totalN = parsed.reduce((s, r) => s + r.n, 0);
-        // totalN이 0이면 가중 평균 계산 불가 → fallback으로 전환
-        if (totalN === 0) {
-          setHoldoutState({ loading: false, rows: null, weightedAvg: null, source: "fallback" });
           return;
         }
-        const wavg = (getter: (r: AblationHoldoutRow) => number) =>
-          parsed.reduce((s, r) => s + getter(r) * r.n, 0) / totalN;
-
         setHoldoutState({
-          loading: false,
-          rows: parsed,
-          weightedAvg: {
-            n: totalN,
-            fixed: wavg((r) => r.fixed),
-            cm: wavg((r) => r.cm),
-            tinyml3f: wavg((r) => r.tinyml3f),
-            cmVs3fDiff: wavg((r) => r.cmVs3fDiff),
-          },
-          source: "csv",
+          loading: false, rows, weightedAvg, source: "csv", droppedRows,
         });
       })
-      .catch(() => {
-        setHoldoutState({ loading: false, rows: null, weightedAvg: null, source: "fallback" });
+      .catch((err) => {
+        // 네트워크 실패와 파싱 실패를 구분할 수 있도록 원인을 남긴다.
+        console.error("ablation hold-out CSV 로드 실패:", err);
+        setHoldoutState({
+          loading: false, rows: null, weightedAvg: null,
+          source: "fallback", droppedRows: [],
+        });
       });
   }, []);
 
