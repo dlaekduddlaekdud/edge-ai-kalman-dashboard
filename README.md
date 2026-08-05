@@ -20,7 +20,7 @@ npm run dev
 ## Testing
 
 ```bash
-npm test          # 단위 테스트 실행 (N 케이스)
+npm test          # 단위 테스트 실행 (40 케이스)
 npm run test:watch
 npm run verify    # typecheck → test → build
 ```
@@ -31,8 +31,10 @@ npm run verify    # typecheck → test → build
 |---|---|---:|
 | 지표 계산 순수 함수 | [lib/metrics.test.ts](./lib/metrics.test.ts) | 12 |
 | CSV 파서 스키마 검증 | [lib/csv-parser.test.ts](./lib/csv-parser.test.ts) | 6 |
-| E3 차단 탐지 로직 | [lib/e3-blocking.test.ts](./lib/e3-blocking.test.ts) | N |
-| **합계** | | **N** |
+| E3 차단 탐지 로직 | [lib/e3-blocking.test.ts](./lib/e3-blocking.test.ts) | 13 |
+| GT 복원 로직 | [lib/e1-metrics.test.ts](./lib/e1-metrics.test.ts) | 9 |
+
+| **합계** | | **40** |
 
 지표 함수는 외부 상태에 의존하지 않는 순수 함수로 분리해 두었기 때문에, 논문 정의와 구현이 일치하는지 단위 테스트로 직접 검증할 수 있습니다.
 
