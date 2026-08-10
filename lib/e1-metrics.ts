@@ -79,17 +79,25 @@ export interface E1RunMetrics {
   cmRMax: number;
 }
 
+/**
+ * NIS pass rate 계산. undefined는 "유효 샘플 없음"만을 의미한다.
+ *
+ * calculateNISPassRate는 (1) 길이 불일치 (2) 빈 배열 (3) 비유한 값 (4) S <= 0
+ * 에서 throw하지만, 네 조건 모두 이 함수에서는 도달 불가하다.
+ *   (1) nu에서 map/filter한 같은 배열이므로 길이가 항상 같다
+ *   (2) 아래 early return이 막는다
+ *   (3) 파서가 Number.isFinite를 통과시킨 값만 넣는다 (e1-csv-parser.ts)
+ *   (4) filter(p => p.s > 0)가 제거한다
+ * 따라서 예외를 잡지 않는다. 잡으면 위 불변식이 깨졌을 때 그 사실이
+ * 화면의 "—" 뒤에 숨어 원인 추적이 불가능해진다.
+ */
 function safeNISPassRate(nu: number[], S: number[]): number | undefined {
   const paired = nu.map((v, i) => ({ v, s: S[i] })).filter((p) => p.s > 0);
   if (paired.length === 0) return undefined;
-  try {
-    return calculateNISPassRate(
-      paired.map((p) => p.v),
-      paired.map((p) => p.s),
-    );
-  } catch {
-    return undefined;
-  }
+  return calculateNISPassRate(
+    paired.map((p) => p.v),
+    paired.map((p) => p.s),
+  );
 }
 
 /** 트림 적용 rows + CSV gt_distance_mm로 알고리즘별 메트릭 계산 */
