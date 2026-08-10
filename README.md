@@ -20,7 +20,7 @@ npm run dev
 ## Testing
 
 ```bash
-npm test          # 단위 테스트 실행 (40 케이스)
+npm test          # 단위 테스트 실행 (53 케이스)
 npm run test:watch
 npm run verify    # typecheck → test → build
 ```
@@ -34,8 +34,6 @@ npm run verify    # typecheck → test → build
 | E3 차단 탐지 로직 | [lib/e3-blocking.test.ts](./lib/e3-blocking.test.ts) | 13 |
 | GT 복원 로직 | [lib/e1-metrics.test.ts](./lib/e1-metrics.test.ts) | 9 |
 | Ablation 파싱·열화 판정 | [lib/ablation-holdout.test.ts](./lib/ablation-holdout.test.ts) | 13 |
-
-
 | **합계** | | **53** |
 
 지표 함수는 외부 상태에 의존하지 않는 순수 함수로 분리해 두었기 때문에, 논문 정의와 구현이 일치하는지 단위 테스트로 직접 검증할 수 있습니다.
@@ -233,19 +231,26 @@ components/
   ui/                   # 공통 panel, metric card, table
 
 lib/
-  e1-csv-parser.ts      # 25/28컬럼 CSV parser
+  csv-parser.ts         # 공통 12 + 알고리즘별 컬럼 스키마 검증
+  e1-csv-parser.ts      # 25/28컬럼 dual-schema parser
   e1-metrics.ts         # run별 metric aggregation, GT 복원
-  e1-store.ts           # Zustand scenario/run state
-  metrics.ts            # 논문 지표 순수 함수
-  metrics.test.ts       # 지표 함수 단위 테스트
-  csv-parser.test.ts    # 파서 스키마 검증 테스트
-  e3-blocking.test.ts   # E3 차단 탐지 로직 테스트
+  e3-blocking.ts        # ToF 차단 구간 탐지 (range_status 우선, 30% fallback)
+  ablation-holdout.ts   # 표 5-3 CSV 파싱, 열화 판정, N 가중 평균
+  metrics.ts            # 논문 지표 순수 함수 (RMSE, NIS, RMSEss, Tconv)
   paper-results.ts      # 논문 확정값 단일 진실 소스
+  palette.ts            # 알고리즘·시맨틱 색상 단일 진실 소스
+  e1-store.ts           # Zustand scenario/run state
+  ablation-store.ts     # ablation 6f/3f 슬롯 state
+  dataset.ts            # 알고리즘 라벨, 파일명 시나리오 파싱
+  export.ts             # 분석 결과 CSV 다운로드
+
+  *.test.ts             # 검증 대상은 Testing 섹션 참고
 ```
 
 ## Roadmap
 
-진행 이력은 [ROADMAP.md](./ROADMAP.md)를 참고하세요.
+진행 이력은 [ROADMAP.md](./ROADMAP.md), 논문 최종본 반영 계획은 [docs/UPGRADE_PLAN.md](./docs/UPGRADE_PLAN.md)를 참고하세요.
+LLM을 어디에 사용하고 어디에 사용하지 않았는지는 [docs/ai-collaboration.md](./docs/ai-collaboration.md)에 기록했습니다.
 
 | 단계 | 상태 |
 |---|---|
